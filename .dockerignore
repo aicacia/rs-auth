@@ -1,0 +1,7 @@
+.vscode
+target
+.cargo/config.toml
+config/*.toml
+!config/default.toml
+.env
+!.env.example

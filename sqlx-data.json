@@ -1,0 +1,498 @@
+{
+  "db": "PostgreSQL",
+  "12e034e5299edfb76a7b5cc1d4c1d9cb7d0663fe1e5b7bbb84193df79b821768": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE users SET \"email_id\" = $2 WHERE id = $1;"
+  },
+  "56b872d8cda36df8b1cf76e95089006637a4daeb857e0c377e4feebd3ad2b268": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "role_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "email_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "username",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "encrypted_password",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "reset_password_token",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT\n      u.id, u.role_id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at\n    FROM users u LEFT JOIN emails e ON e.id = u.email_id\n    WHERE u.id = $1\n    LIMIT 1;"
+  },
+  "6044e4d6d5bc6d4625f74f4f1b8307796819b0763322c5c81c42a3a7e82d61ab": {
+    "describe": {
+      "columns": [
+        {
+          "name": "value",
+          "ordinal": 0,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT value FROM config WHERE name = $1 LIMIT 1;"
+  },
+  "61cc1f5d6c889dabd5dbcc954e6b379476da46808b925ba7625bfb737eec800b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "role_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "username",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "encrypted_password",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "reset_password_token",
+          "ordinal": 4,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 5,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "email_id",
+          "ordinal": 7,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "INSERT INTO users (role_id, username, encrypted_password) VALUES ($1, $2, $3) RETURNING *;"
+  },
+  "6c4415e0e203f7b937d6e36663de7f14f450293c668143e85583bde370ceee4c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "role_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "email_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "username",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "encrypted_password",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "reset_password_token",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT\n          u.id, u.role_id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at\n        FROM users u\n        WHERE u.reset_password_token=$1\n        LIMIT 1;"
+  },
+  "71657adde1ec4a0d13da8084b87439b7c25b56da867cc2c0dd3c43faa71120bb": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "email",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "confirmed",
+          "ordinal": 3,
+          "type_info": "Bool"
+        },
+        {
+          "name": "confirmation_token",
+          "ordinal": 4,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 5,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT\n      e.id, e.user_id, e.email, e.confirmed, e.confirmation_token, e.created_at, e.updated_at\n    FROM emails e\n    WHERE e.user_id = $1;"
+  },
+  "a8d98643f558d5c0e18c688abf890c9e00fb077c428195d152f8c462e911cdf7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "email",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "confirmed",
+          "ordinal": 3,
+          "type_info": "Bool"
+        },
+        {
+          "name": "confirmation_token",
+          "ordinal": 4,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 5,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "INSERT INTO emails (\"user_id\", \"email\", \"confirmation_token\") VALUES ($1, $2, $3) RETURNING *;"
+  },
+  "b888f65b9b62725e3a184a56995fe5d57a87337cb6ccae05f10ba1149d2fc0b0": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE users SET encrypted_password = $1, reset_password_token = null WHERE id = $2"
+  },
+  "ddba511fe7bccd3e72e07dfec4879cc6b9317f8e9c0ee1abd61ce22267416895": {
+    "describe": {
+      "columns": [
+        {
+          "name": "value",
+          "ordinal": 0,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT CASE WHEN rp.\"value\" IS NULL THEN p.\"default\" ELSE rp.\"value\" END as \"value\"\n        FROM \"users\" u\n        JOIN \"roles\" r ON r.\"id\" = u.role_id\n        LEFT JOIN \"role_permissions\" rp on rp.\"role_id\" = r.\"id\"\n        LEFT JOIN \"permissions\" p ON p.\"id\" = rp.\"permission_id\"\n        WHERE p.\"application_id\" = $1 AND u.\"id\" = $2 AND p.\"uri\" = $3\n        LIMIT 1;"
+  },
+  "ec17a2d2b294007f0a007f4e96a98ca9961aea5960568345ce2275ff278bb377": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "role_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "username",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "encrypted_password",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "reset_password_token",
+          "ordinal": 4,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 5,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "email_id",
+          "ordinal": 7,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "UPDATE users u SET reset_password_token=$1 FROM emails e WHERE e.user_id=u.id AND e.email=$2 RETURNING u.*;"
+  },
+  "edc420dcafa764b94382bdae4c95232c108157edd738033a0256deec2fbb072c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "role_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "email_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "username",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "encrypted_password",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "reset_password_token",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 7,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT\n      u.id, u.role_id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at\n    FROM users u\n    LEFT JOIN emails e ON e.id=u.email_id\n    WHERE e.email = $1 OR u.username = $1\n    LIMIT 1;"
+  }
+}
