@@ -7,8 +7,6 @@ env:
 
 jobs:
   test:
-    env:
-      DATABASE_URI: postgres://postgres:postgres@localhost:5432/postgres
     name: Test
     runs-on: ubuntu-latest
     services:
@@ -33,5 +31,7 @@ jobs:
           cargo install sqlx-cli --no-default-features --features postgres
           sqlx database create --database-url postgres://postgres:postgres@localhost:5432/postgres
       - uses: actions-rs/cargo@v1
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
         with:
           command: test
