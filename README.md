@@ -9,6 +9,7 @@ aicacia auth api
 
 - install [rustup](https://rustup.rs/)
 - install [cargo-watch](https://crates.io/crates/cargo-watch)
+- install [sqlx-cli](https://github.com/launchbadge/sqlx/tree/main/sqlx-cli)
 - rename .env file `cp .env.example .env`
 - Startup main web service `cargo watch -c -w src -x run`
 - Local mailer (Optional) `docker run --name=mailhog -p 25:1025 -p 8025:8025 --rm mailhog/mailhog`

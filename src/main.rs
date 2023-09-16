@@ -38,12 +38,15 @@ async fn main() -> Result<()> {
     .unwrap_or(get_config().server.port);
 
   let http_pool = pool.clone();
-  HttpServer::new(move || create_app(&http_pool))
+  let server = HttpServer::new(move || create_app(&http_pool))
     .bind((host, port))?
-    .run()
-    .await?;
+    .run();
 
+  let server_result = server.await;
   pool.close().await;
 
-  Ok(())
+  match server_result {
+    Ok(_) => Ok(()),
+    Err(e) => Err(anyhow::Error::from(e)),
+  }
 }
