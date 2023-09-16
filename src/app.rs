@@ -1,7 +1,7 @@
 use crate::model::error::ErrorResponse;
 use crate::{
   core::openapi::SecurityAddon, model::auth as auth_model, model::error as error_model,
-  model::util as util_model,
+  model::user as user_model, model::util as util_model,
 };
 use actix_cors::Cors;
 use actix_web::{
@@ -28,7 +28,9 @@ use crate::controller::{auth, user, util};
     auth::sign_up_with_password,
     auth::request_reset_password,
     auth::reset_password,
-    user::current
+    user::current,
+    user::confirm_email,
+    user::set_primary_email
   ),
   components(
     schemas(
@@ -39,8 +41,10 @@ use crate::controller::{auth, user, util};
       error_model::MessageResponse,
       auth_model::SignInWithPasswordRequest,
       auth_model::SignUpWithPasswordRequest,
-      auth_model::ResetPasswrodRequest,
-      auth_model::RequestResetPasswrodRequest,
+      auth_model::ResetPasswordRequest,
+      auth_model::RequestResetPasswordRequest,
+      user_model::EmailResponse,
+      user_model::UserResponse,
     )
   ),
   tags(

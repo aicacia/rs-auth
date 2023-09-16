@@ -5,12 +5,14 @@ use validator::Validate;
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct SignInWithPasswordRequest {
+  pub application_id: i32,
   pub username_or_email: String,
   pub password: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct SignUpWithPasswordRequest {
+  pub application_id: i32,
   pub username: String,
   #[validate(email)]
   pub email: Option<String>,
@@ -21,7 +23,8 @@ pub struct SignUpWithPasswordRequest {
 }
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
-pub struct ResetPasswrodRequest {
+pub struct ResetPasswordRequest {
+  pub application_id: i32,
   pub reset_password_token: Uuid,
   #[validate(length(min = 1, max = 256))]
   pub password: String,
@@ -30,7 +33,8 @@ pub struct ResetPasswrodRequest {
 }
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
-pub struct RequestResetPasswrodRequest {
+pub struct RequestResetPasswordRequest {
+  pub application_id: i32,
   #[validate(email)]
   pub email: String,
 }

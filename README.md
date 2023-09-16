@@ -11,8 +11,9 @@ aicacia auth api
 - install [cargo-watch](https://crates.io/crates/cargo-watch)
 - rename .env file `cp .env.example .env`
 - Startup main web service `cargo watch -c -w src -x run`
+- Local mailer (Optional) `docker run --name=mailhog -p 25:1025 -p 8025:8025 --rm mailhog/mailhog`
 - create postgres `docker compose -f postgres-docker-compose.yaml up -d`
-- delete postgres `docker compose -f postgres-docker-compose.yaml down` and `docker volume rm rs-object_storage_aicacia_object_storage-postgres`
+- delete postgres `docker compose -f postgres-docker-compose.yaml down` and `docker volume rm auth_auth-postgres`
 
 ## Build
 

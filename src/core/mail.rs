@@ -3,10 +3,10 @@ use chrono::Datelike;
 use lettre::{transport::smtp::authentication::Credentials, SmtpTransport, Transport};
 use sqlx::{Pool, Postgres};
 
-use super::settings::get_setting;
+use crate::service::application::get_application_config;
 
-pub async fn create_mailer(pool: &Pool<Postgres>) -> Result<SmtpTransport> {
-  let relay = get_setting(pool, "mail.relay")
+pub async fn create_mailer(pool: &Pool<Postgres>, application_id: i32) -> Result<SmtpTransport> {
+  let relay = get_application_config(pool, application_id, "mail.relay")
     .await
     .as_str()
     .unwrap_or_default()
@@ -14,12 +14,12 @@ pub async fn create_mailer(pool: &Pool<Postgres>) -> Result<SmtpTransport> {
   if relay.is_empty() {
     Ok(SmtpTransport::unencrypted_localhost())
   } else {
-    let username = get_setting(pool, "mail.username")
+    let username = get_application_config(pool, application_id, "mail.username")
       .await
       .as_str()
       .unwrap_or_default()
       .to_owned();
-    let password = get_setting(pool, "mail.password")
+    let password = get_application_config(pool, application_id, "mail.password")
       .await
       .as_str()
       .unwrap_or_default()
@@ -30,13 +30,21 @@ pub async fn create_mailer(pool: &Pool<Postgres>) -> Result<SmtpTransport> {
   }
 }
 
-pub async fn send_mail<F>(pool: &Pool<Postgres>, msg_builder: F)
+pub fn send_mail<F>(pool: Pool<Postgres>, application_id: i32, msg_builder: F)
 where
   F: Fn() -> Result<lettre::Message>,
 {
-  match create_mailer(pool).await {
-    Ok(mailer) => match msg_builder() {
-      Ok(msg) => match mailer.send(&msg) {
+  let msg = match msg_builder() {
+    Ok(msg) => msg,
+    Err(e) => {
+      log::error!("Failed to send email: {}", e);
+      return;
+    }
+  };
+
+  let _ = tokio::spawn(async move {
+    match create_mailer(&pool, application_id).await {
+      Ok(mailer) => match mailer.send(&msg) {
         Ok(_) => (),
         Err(e) => {
           log::error!("Failed to send email: {}", e);
@@ -45,11 +53,8 @@ where
       Err(e) => {
         log::error!("Failed to build email: {}", e);
       }
-    },
-    Err(e) => {
-      log::error!("Failed to create mailer: {}", e);
     }
-  }
+  });
 }
 
 pub fn mail_html(html: String) -> String {
@@ -98,7 +103,7 @@ pub fn mail_html(html: String) -> String {
     <div class="content">{}</div>
     <div class="footer">
       <p>If you have any questions, contact us at support@aicacia.com.</p>
-      <p>&copy; {} BeautyHolic. All rights reserved.</p>
+      <p>&copy; {}. All rights reserved.</p>
     </div>
   </div>
 </body>

@@ -8,7 +8,6 @@ use uuid::Uuid;
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct User {
   pub id: i32,
-  pub role_id: i32,
   pub username: String,
   pub email_id: Option<i32>,
   pub encrypted_password: String,

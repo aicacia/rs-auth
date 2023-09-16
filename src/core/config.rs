@@ -1,0 +1,70 @@
+use anyhow::Result;
+use once_cell::sync::OnceCell;
+use serde::Deserialize;
+use sqlx::{Pool, Postgres};
+use std::net::IpAddr;
+
+use crate::service::config::get_config_map;
+
+static CONFIG: OnceCell<Config> = OnceCell::new();
+
+pub async fn init_config(pool: &Pool<Postgres>) -> Result<()> {
+  CONFIG
+    .set(Config::new(pool).await?)
+    .expect("Config is already initialized");
+  Ok(())
+}
+
+pub fn get_config() -> &'static Config {
+  CONFIG.get().expect("Config is not initialized")
+}
+
+#[derive(Debug, Deserialize, Default)]
+#[allow(unused)]
+pub struct ServerConfig {
+  pub address: Option<IpAddr>,
+  pub port: u16,
+  pub uri: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+#[allow(unused)]
+pub struct Config {
+  pub server: ServerConfig,
+  pub log_level: String,
+}
+
+impl Config {
+  pub async fn new(pool: &Pool<Postgres>) -> Result<Self> {
+    let config_builder = config::Config::builder()
+      .add_source(RawSource::new(get_config_map(pool).await?))
+      // App
+      .set_default("log_level", "info")?
+      // build
+      .build()?;
+
+    let config = config_builder.try_deserialize()?;
+    Ok(config)
+  }
+}
+
+#[derive(Clone, Debug)]
+pub struct RawSource {
+  map: config::Map<String, config::Value>,
+}
+
+impl RawSource {
+  pub fn new(map: config::Map<String, config::Value>) -> Self {
+    Self { map }
+  }
+}
+
+impl config::Source for RawSource {
+  fn clone_into_box(&self) -> Box<dyn config::Source + Send + Sync> {
+    Box::new(self.clone())
+  }
+
+  fn collect(&self) -> Result<config::Map<String, config::Value>, config::ConfigError> {
+    Ok(self.map.clone())
+  }
+}

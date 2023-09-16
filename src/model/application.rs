@@ -4,7 +4,6 @@ use chrono::{DateTime, Utc};
 pub struct Application {
   pub id: i32,
   pub name: String,
-  pub admin: bool,
   pub uri: String,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,

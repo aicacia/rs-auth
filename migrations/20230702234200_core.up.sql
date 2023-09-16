@@ -12,7 +12,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TABLE "config" (
 	"name" TEXT NOT NULL PRIMARY KEY,
-	"value" JSONB,
+	"value" JSONB NOT NULL DEFAULT 'null',
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -22,10 +22,7 @@ INSERT INTO "config" ("name", "value") VALUES
   ('server.address', '"0.0.0.0"'),
   ('server.port', '8080'),
   ('server.uri', '"http://localhost:8080"'),
-  ('jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(256), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
-  ('jwt.expires_in_seconds', '86400'),
-  ('log_level', '"debug"'),
-  ('disable_public_signup', 'true');
+  ('log_level', '"debug"');
 
 
 CREATE TABLE "applications" (
@@ -38,28 +35,27 @@ CREATE TABLE "applications" (
 CREATE TRIGGER "applications_set_timestamp" BEFORE UPDATE ON "applications" FOR EACH ROW EXECUTE PROCEDURE "trigger_set_timestamp"();
 
 INSERT INTO "applications" ("name", "uri") VALUES
-  ('Admin', 'http://localhost:8080');
+  ('Admin', 'admin');
 
 
-CREATE TABLE "application_settings" (
+CREATE TABLE "application_configs" (
   "application_id" INT4 NOT NULL,
 	"name" TEXT NOT NULL,
-	"value" JSONB,
+	"value" JSONB NOT NULL DEFAULT 'null',
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT "application_settings_application_id_fk" FOREIGN KEY("application_id") REFERENCES "applications"("id") ON DELETE CASCADE,
+  CONSTRAINT "application_configs_application_id_fk" FOREIGN KEY("application_id") REFERENCES "applications"("id") ON DELETE CASCADE,
   PRIMARY KEY("application_id", "name")
 );
-CREATE TRIGGER "application_settings_set_timestamp" BEFORE UPDATE ON "application_settings" FOR EACH ROW EXECUTE PROCEDURE "trigger_set_timestamp"();
+CREATE TRIGGER "application_configs_set_timestamp" BEFORE UPDATE ON "application_configs" FOR EACH ROW EXECUTE PROCEDURE "trigger_set_timestamp"();
 
-INSERT INTO "application_settings" ("application_id", "name", "value") VALUES
+INSERT INTO "application_configs" ("application_id", "name", "value") VALUES
   (1, 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(256), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
   (1, 'jwt.expires_in_seconds', '86400'),
   (1, 'disable_public_signup', 'true'),
-  (1, 'default_role', '2');
-
-
-CREATE TYPE "sex" AS ENUM ('male', 'female');
+  (1, 'default_role', '2'),
+  (1, 'uri', '"http://localhost:8080"'),
+  (1, 'mail.support', 'admin@localhost.com');
 
 
 CREATE TABLE "users"(

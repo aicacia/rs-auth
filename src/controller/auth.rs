@@ -3,21 +3,19 @@ use crate::{
     encryption::{encrypt_password, verify_password},
     jwt::Claims,
     mail::{mail_html, send_mail},
-    settings::get_setting,
   },
   model::{
     auth::{
-      RequestResetPasswrodRequest, ResetPasswrodRequest, SignInWithPasswordRequest,
+      RequestResetPasswordRequest, ResetPasswordRequest, SignInWithPasswordRequest,
       SignUpWithPasswordRequest,
     },
     error::ErrorResponse,
-    user::User,
   },
-  service::user::request_user_password_reset,
   service::user::{
     create_user, get_user_by_reset_token, get_user_by_username_or_email, reset_user_password,
     CreateUser,
   },
+  service::{application::get_application_config, user::request_user_password_reset},
 };
 use actix_web::{
   post,
@@ -25,10 +23,8 @@ use actix_web::{
   HttpResponse, Responder,
 };
 use actix_web_validator::Json;
-use anyhow::Result;
 use lettre::{message::header::ContentType, Message};
 use sqlx::{Pool, Postgres};
-use uuid::Uuid;
 
 #[utoipa::path(
     request_body = SignInWithPasswordRequest,
@@ -62,7 +58,30 @@ pub async fn sign_in_with_password(
     }
   }
 
-  let jwt = match Claims::new_encoded(pool.as_ref(), user.id).await {
+  let now_in_seconds = chrono::Utc::now().timestamp() as usize;
+  let expires_in_seconds =
+    get_application_config(pool.as_ref(), body.application_id, "jwt.expires_in_seconds")
+      .await
+      .as_u64()
+      .unwrap_or(3600) as usize;
+  let iss = get_application_config(pool.as_ref(), body.application_id, "uri")
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+  let secret = get_application_config(pool.as_ref(), body.application_id, "jwt.secret")
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+  let jwt = match Claims::new_encoded(
+    body.application_id,
+    user.id,
+    now_in_seconds,
+    expires_in_seconds,
+    &iss,
+    &secret,
+  ) {
     Ok(jwt) => jwt,
     Err(e) => {
       log::error!("{}", e);
@@ -86,20 +105,15 @@ pub async fn sign_up_with_password(
   pool: Data<Pool<Postgres>>,
   body: Json<SignUpWithPasswordRequest>,
 ) -> impl Responder {
-  if get_setting(pool.as_ref(), "disable_public_signup").await != serde_json::Value::Bool(false) {
+  if get_application_config(pool.as_ref(), body.application_id, "disable_public_signup").await
+    != serde_json::Value::Bool(false)
+  {
     return HttpResponse::BadRequest().json(ErrorResponse::from("sign_up_disabled"));
   }
   if body.password != body.password_confirmation {
     return HttpResponse::BadRequest()
       .json(ErrorResponse::new().error("password_confirmation", "password_confirmation_mismatch"));
   }
-  let default_role_id = match get_setting(pool.as_ref(), "default_role_id").await.as_i64() {
-    Some(r) => r as i32,
-    None => {
-      log::error!("Missing settings for default_role_id");
-      return HttpResponse::InternalServerError().json(ErrorResponse::internal_error());
-    }
-  };
 
   let encrypted_password_result = match encrypt_password(&body.password) {
     Ok(r) => r,
@@ -112,7 +126,6 @@ pub async fn sign_up_with_password(
   let (user, email) = match create_user(
     pool.as_ref(),
     CreateUser {
-      role_id: default_role_id,
       username: body.username.to_owned(),
       email: body.email.clone(),
       encrypted_password: encrypted_password_result,
@@ -129,20 +142,57 @@ pub async fn sign_up_with_password(
 
   if let Some(email) = email.as_ref() {
     if let Some(confirmation_token) = email.confirmation_token.as_ref() {
-      match create_confirmation_mail(&confirmation_token, &user.username, &email.email) {
-        Ok(_) => {}
-        Err(e) => {
-          log::error!("{}", e);
-          return HttpResponse::InternalServerError().json(ErrorResponse::internal_error());
-        }
-      }
+      let support_email =
+        get_application_config(pool.as_ref(), body.application_id, "mail.support")
+          .await
+          .as_str()
+          .unwrap_or_default()
+          .to_owned();
+      let username = user.username.clone();
+      let email = email.email.clone();
+      send_mail(pool.as_ref().clone(), body.application_id, || {
+        let msg = Message::builder()
+          .from(format!("Support <{}>", support_email).parse()?)
+          .to(format!("{} <{}>", username, email).parse()?)
+          .subject("Confirmation Token")
+          .header(ContentType::TEXT_HTML)
+          .body(mail_html(format!(
+            r#"<h1>Welcome!</h1>
+              <p>Your confirmation token is: <code>{}</code></p>"#,
+            confirmation_token.to_string()
+          )))?;
+        Ok(msg)
+      });
     } else {
       log::error!("No confirmation token created");
       return HttpResponse::InternalServerError().json(ErrorResponse::internal_error());
     }
   }
 
-  let jwt = match Claims::new_encoded(pool.as_ref(), user.id).await {
+  let now_in_seconds = chrono::Utc::now().timestamp() as usize;
+  let expires_in_seconds =
+    get_application_config(pool.as_ref(), body.application_id, "jwt.expires_in_seconds")
+      .await
+      .as_u64()
+      .unwrap_or(3600) as usize;
+  let iss = get_application_config(pool.as_ref(), body.application_id, "uri")
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+  let secret = get_application_config(pool.as_ref(), body.application_id, "jwt.secret")
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+  let jwt = match Claims::new_encoded(
+    body.application_id,
+    user.id,
+    now_in_seconds,
+    expires_in_seconds,
+    &iss,
+    &secret,
+  ) {
     Ok(jwt) => jwt,
     Err(e) => {
       log::error!("{}", e);
@@ -153,7 +203,7 @@ pub async fn sign_up_with_password(
 }
 
 #[utoipa::path(
-    request_body = RequestResetPasswrodRequest,
+    request_body = RequestResetPasswordRequest,
     responses(
         (status = 204, description = "Reset password token created"),
         (status = 400, body = ErrorResponse),
@@ -163,7 +213,7 @@ pub async fn sign_up_with_password(
 #[post("/auth/request-reset-password")]
 pub async fn request_reset_password(
   pool: Data<Pool<Postgres>>,
-  body: Json<RequestResetPasswrodRequest>,
+  body: Json<RequestResetPasswordRequest>,
 ) -> impl Responder {
   let (user, reset_password_token) =
     match request_user_password_reset(pool.as_ref(), &body.email).await {
@@ -173,15 +223,31 @@ pub async fn request_reset_password(
         return HttpResponse::InternalServerError().json(ErrorResponse::internal_error());
       }
     };
-  send_mail(pool.as_ref(), || {
-    create_reset_password_mail(&user, &reset_password_token, &body.email)
-  })
-  .await;
+  let support_email = get_application_config(pool.as_ref(), body.application_id, "mail.support")
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+  let username = user.username.clone();
+  let email = body.email.clone();
+  send_mail(pool.as_ref().clone(), body.application_id, || {
+    let msg = Message::builder()
+      .from(format!("Support <{}>", support_email).parse()?)
+      .to(format!("{} <{}>", username, email).parse()?)
+      .subject("Reset Password Request")
+      .header(ContentType::TEXT_HTML)
+      .body(mail_html(format!(
+        r#"<h1>A Request to reset your password was made.</h1>
+        <p>Your password reset token is: <code>{}</code></p>"#,
+        reset_password_token
+      )))?;
+    Ok(msg)
+  });
   HttpResponse::NoContent().finish()
 }
 
 #[utoipa::path(
-    request_body = ResetPasswrodRequest,
+    request_body = ResetPasswordRequest,
     responses(
         (status = 200, description = "Resets User's password", content_type = "text/plain", body = String),
         (status = 400, body = ErrorResponse),
@@ -191,7 +257,7 @@ pub async fn request_reset_password(
 #[post("/auth/reset-password")]
 pub async fn reset_password(
   pool: Data<Pool<Postgres>>,
-  body: Json<ResetPasswrodRequest>,
+  body: Json<ResetPasswordRequest>,
 ) -> impl Responder {
   if body.password != body.password_confirmation {
     return HttpResponse::BadRequest().json(ErrorResponse::from("password_confirmation_mismatch"));
@@ -218,7 +284,30 @@ pub async fn reset_password(
     }
   };
 
-  let jwt = match Claims::new_encoded(pool.as_ref(), user.id).await {
+  let now_in_seconds = chrono::Utc::now().timestamp() as usize;
+  let expires_in_seconds =
+    get_application_config(pool.as_ref(), body.application_id, "jwt.expires_in_seconds")
+      .await
+      .as_u64()
+      .unwrap_or(3600) as usize;
+  let iss = get_application_config(pool.as_ref(), body.application_id, "uri")
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+  let secret = get_application_config(pool.as_ref(), body.application_id, "jwt.secret")
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+  let jwt = match Claims::new_encoded(
+    body.application_id,
+    user.id,
+    now_in_seconds,
+    expires_in_seconds,
+    &iss,
+    &secret,
+  ) {
     Ok(jwt) => jwt,
     Err(e) => {
       log::error!("{}", e);
@@ -236,44 +325,4 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
       .service(request_reset_password)
       .service(reset_password);
   }
-}
-
-fn create_confirmation_mail(
-  confirmation_token: &Uuid,
-  username: &str,
-  email: &str,
-) -> Result<Message> {
-  let msg = Message::builder()
-    .from("Support <support@aicacia.com>".parse()?)
-    .to(format!("{} <{}>", username, email).parse()?)
-    .subject("Confirmation Token")
-    .header(ContentType::TEXT_HTML)
-    .body(mail_html(format!(
-      r#"
-            <h1>Welcome!</h1>
-            <p>Your confirmation token is: <code>{}</code></p>
-        "#,
-      confirmation_token.to_string()
-    )))?;
-  Ok(msg)
-}
-
-fn create_reset_password_mail(
-  user: &User,
-  reset_password_token: &Uuid,
-  email: &str,
-) -> Result<Message> {
-  let msg = Message::builder()
-    .from("Support <support@aicacia.com>".parse()?)
-    .to(format!("{} <{}>", user.username, email).parse()?)
-    .subject("Reset Password Request")
-    .header(ContentType::TEXT_HTML)
-    .body(mail_html(format!(
-      r#"
-            <h1>A Request to reset your password was made.</h1>
-            <p>Your password reset token is: <code>{}</code></p>
-        "#,
-      reset_password_token
-    )))?;
-  Ok(msg)
 }

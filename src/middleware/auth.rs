@@ -3,7 +3,7 @@ use std::{
   sync::Arc,
 };
 
-use crate::service::user::get_user_by_id;
+use crate::service::{application::get_application_config, user::get_user_by_id};
 use actix_web::{
   body::EitherBody,
   dev::{Service, ServiceRequest, ServiceResponse, Transform},
@@ -84,6 +84,19 @@ where
             }
           };
 
+          let unvalidated_claims = match Claims::from_encoded_no_validation(jwt) {
+            Ok(c) => c,
+            Err(err) => {
+              log::error!("Failed to parse JWT: {}", err);
+              let res = req
+                .into_response(
+                  HttpResponse::Unauthorized().json(ErrorResponse::from("invalid_authorization")),
+                )
+                .map_into_right_body();
+              return Ok(res);
+            }
+          };
+
           let pool = match req.app_data::<Data<Pool<Postgres>>>() {
             Some(pool) => pool,
             None => {
@@ -97,7 +110,13 @@ where
             }
           };
 
-          let claims = match Claims::<i32>::from_encoded(pool.as_ref(), jwt).await {
+          let secret = get_application_config(pool.as_ref(), unvalidated_claims.app, "jwt.secret")
+            .await
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+
+          let claims = match Claims::from_encoded(jwt, &secret) {
             Ok(c) => c,
             Err(err) => {
               log::error!("Error: {}", err);

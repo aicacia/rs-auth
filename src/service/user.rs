@@ -8,7 +8,7 @@ pub async fn get_user_by_id(pool: &Pool<Postgres>, user_id: i32) -> Result<User>
   let user = sqlx::query_as!(
     User,
     r#"SELECT
-      u.id, u.role_id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at
+      u.id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at
     FROM users u LEFT JOIN emails e ON e.id = u.email_id
     WHERE u.id = $1
     LIMIT 1;"#,
@@ -40,7 +40,7 @@ pub async fn get_user_by_username_or_email(
   let user = sqlx::query_as!(
     User,
     r#"SELECT
-      u.id, u.role_id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at
+      u.id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at
     FROM users u
     LEFT JOIN emails e ON e.id=u.email_id
     WHERE e.email = $1 OR u.username = $1
@@ -53,7 +53,6 @@ pub async fn get_user_by_username_or_email(
 }
 
 pub struct CreateUser {
-  pub role_id: i32,
   pub username: String,
   pub email: Option<String>,
   pub encrypted_password: String,
@@ -68,8 +67,7 @@ pub async fn create_user(
   let (user, email) = conn.transaction::<_, _, sqlx::Error>(|tx| Box::pin(async move {
         let mut user: User = sqlx::query_as!(
             User,
-            "INSERT INTO users (role_id, username, encrypted_password) VALUES ($1, $2, $3) RETURNING *;",
-            create_user.role_id,
+            "INSERT INTO users (username, encrypted_password) VALUES ($1, $2) RETURNING *;",
             &create_user.username,
             &create_user.encrypted_password
         )
@@ -129,7 +127,7 @@ pub async fn get_user_by_reset_token(
   let user = sqlx::query_as!(
         User,
         r#"SELECT
-          u.id, u.role_id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at
+          u.id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at
         FROM users u
         WHERE u.reset_password_token=$1
         LIMIT 1;"#,
@@ -144,8 +142,8 @@ pub async fn reset_user_password(
   pool: &Pool<Postgres>,
   user_id: i32,
   encrypted_password: &str,
-) -> Result<()> {
-  sqlx::query_as!(
+) -> Result<bool> {
+  let result = sqlx::query_as!(
     User,
     "UPDATE users SET encrypted_password = $1, reset_password_token = null WHERE id = $2",
     &encrypted_password,
@@ -153,31 +151,35 @@ pub async fn reset_user_password(
   )
   .execute(pool)
   .await?;
-  Ok(())
+  Ok(result.rows_affected() > 0)
 }
 
-pub async fn get_user_permission(
+pub async fn confirm_user_email(
   pool: &Pool<Postgres>,
-  application_id: i32,
   user_id: i32,
-  permission: &str,
-) -> serde_json::Value {
-  sqlx::query!(
-    r#"SELECT CASE WHEN rp."value" IS NULL THEN p."default" ELSE rp."value" END as "value"
-        FROM "users" u
-        JOIN "roles" r ON r."id" = u.role_id
-        LEFT JOIN "role_permissions" rp on rp."role_id" = r."id"
-        LEFT JOIN "permissions" p ON p."id" = rp."permission_id"
-        WHERE p."application_id" = $1 AND u."id" = $2 AND p."uri" = $3
-        LIMIT 1;"#,
-    application_id,
-    user_id,
-    permission,
+  confirmation_token: &Uuid,
+) -> Result<bool> {
+  let result = sqlx::query!(
+      "UPDATE emails SET confirmed=true, confirmation_token=NULL WHERE user_id = $1 AND confirmation_token = $2;",
+      user_id,
+      confirmation_token
   )
-  .fetch_optional(pool)
-  .await
-  .map_or(Some(serde_json::Value::Null), |v| {
-    v.map_or(Some(serde_json::Value::Null), |r| r.value)
-  })
-  .unwrap_or(serde_json::Value::Null)
+  .execute(pool)
+  .await?;
+  Ok(result.rows_affected() > 0)
+}
+
+pub async fn set_user_primary_email(
+  pool: &Pool<Postgres>,
+  user_id: i32,
+  email_id: i32,
+) -> Result<bool> {
+  let result = sqlx::query!(
+    "UPDATE users u SET email_id=$2 FROM emails e WHERE u.id=$1 AND e.id=$2 AND u.id = e.user_id;",
+    user_id,
+    email_id
+  )
+  .execute(pool)
+  .await?;
+  Ok(result.rows_affected() > 0)
 }
