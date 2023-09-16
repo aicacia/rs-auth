@@ -2,7 +2,7 @@ use actix_web::test;
 
 use auth::{
   app::create_app,
-  model::util::{HealthResponse, VersionResponse},
+  model::util::{Health, Version},
 };
 use sqlx::{Pool, Postgres};
 
@@ -11,9 +11,9 @@ async fn test_health(pool: Pool<Postgres>) -> sqlx::Result<()> {
   let app = test::init_service(create_app(&pool)).await;
 
   let req = test::TestRequest::get().uri("/health").to_request();
-  let res: HealthResponse = test::call_and_read_body_json(&app, req).await;
+  let res: Health = test::call_and_read_body_json(&app, req).await;
 
-  assert_eq!(res.ok, true);
+  assert_eq!(res.is_healthy(), true);
 
   Ok(())
 }
@@ -23,7 +23,7 @@ async fn test_version(pool: Pool<Postgres>) -> sqlx::Result<()> {
   let app = test::init_service(create_app(&pool)).await;
 
   let req = test::TestRequest::get().uri("/version").to_request();
-  let res: VersionResponse = test::call_and_read_body_json(&app, req).await;
+  let res: Version = test::call_and_read_body_json(&app, req).await;
 
   assert_eq!(res.version, env!("CARGO_PKG_VERSION"));
 

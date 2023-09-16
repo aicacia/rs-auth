@@ -1,4 +1,4 @@
-use crate::model::error::ErrorResponse;
+use crate::model::error::Error;
 use crate::{
   core::openapi::SecurityAddon, model::auth as auth_model, model::error as error_model,
   model::user as user_model, model::util as util_model,
@@ -7,7 +7,7 @@ use actix_cors::Cors;
 use actix_web::{
   body::MessageBody,
   dev::{ServiceFactory, ServiceRequest, ServiceResponse},
-  error::Error,
+  error,
   middleware::Logger,
   web, App,
 };
@@ -30,21 +30,23 @@ use crate::controller::{auth, user, util};
     auth::reset_password,
     user::current,
     user::confirm_email,
-    user::set_primary_email
+    user::set_primary_email,
+    user::reset_password
   ),
   components(
     schemas(
-      util_model::VersionResponse,
-      util_model::HealthResponse,
-      error_model::ErrorResponse,
-      error_model::MessagesResponse,
-      error_model::MessageResponse,
+      util_model::Version,
+      util_model::Health,
+      error_model::Error,
+      error_model::Messages,
+      error_model::Message,
       auth_model::SignInWithPasswordRequest,
       auth_model::SignUpWithPasswordRequest,
       auth_model::ResetPasswordRequest,
       auth_model::RequestResetPasswordRequest,
-      user_model::EmailResponse,
-      user_model::UserResponse,
+      user_model::Email,
+      user_model::User,
+      user_model::ResetUserPasswordRequest,
     )
   ),
   tags(
@@ -64,13 +66,13 @@ pub fn create_app(
     Response = ServiceResponse<impl MessageBody>,
     Config = (),
     InitError = (),
-    Error = Error,
+    Error = error::Error,
   >,
 > {
   let openapi = ApiDoc::openapi();
 
-  let json_config = JsonConfig::default()
-    .error_handler(|err, _req| ErrorResponse::from_validation_error(err).into());
+  let json_config =
+    JsonConfig::default().error_handler(|err, _req| Error::from_validation_error(err).into());
 
   App::new()
     .app_data(json_config)

@@ -3,7 +3,10 @@ use std::{
   sync::Arc,
 };
 
-use crate::service::{application::get_application_config, user::get_user_by_id};
+use crate::service::{
+  application::{get_application_by_id, get_application_jwt_secret},
+  user::get_user_by_id,
+};
 use actix_web::{
   body::EitherBody,
   dev::{Service, ServiceRequest, ServiceResponse, Transform},
@@ -13,7 +16,7 @@ use actix_web::{
 use futures::future::LocalBoxFuture;
 use sqlx::{Pool, Postgres};
 
-use crate::{core::jwt::Claims, model::error::ErrorResponse};
+use crate::{core::jwt::Claims, model::error::Error};
 
 pub struct Authorization;
 
@@ -64,9 +67,7 @@ where
       match req.headers().get("authorization") {
         None => {
           let res = req
-            .into_response(
-              HttpResponse::Unauthorized().json(ErrorResponse::from("missing_authorization")),
-            )
+            .into_response(HttpResponse::Unauthorized().json(Error::from("missing_authorization")))
             .map_into_right_body();
           return Ok(res);
         }
@@ -77,7 +78,7 @@ where
               log::error!("Error: {}", err);
               let res = req
                 .into_response(
-                  HttpResponse::Unauthorized().json(ErrorResponse::from("invalid_authorization")),
+                  HttpResponse::Unauthorized().json(Error::from("invalid_authorization")),
                 )
                 .map_into_right_body();
               return Ok(res);
@@ -90,7 +91,7 @@ where
               log::error!("Failed to parse JWT: {}", err);
               let res = req
                 .into_response(
-                  HttpResponse::Unauthorized().json(ErrorResponse::from("invalid_authorization")),
+                  HttpResponse::Unauthorized().json(Error::from("invalid_authorization")),
                 )
                 .map_into_right_body();
               return Ok(res);
@@ -102,46 +103,48 @@ where
             None => {
               log::error!("Error: missing db pool");
               let res = req
-                .into_response(
-                  HttpResponse::InternalServerError().json(ErrorResponse::internal_error()),
-                )
+                .into_response(HttpResponse::InternalServerError().json(Error::internal_error()))
                 .map_into_right_body();
               return Ok(res);
             }
           };
 
-          let secret = get_application_config(pool.as_ref(), unvalidated_claims.app, "jwt.secret")
-            .await
-            .as_str()
-            .unwrap_or_default()
-            .to_owned();
-
+          let secret = get_application_jwt_secret(pool.as_ref(), unvalidated_claims.app).await;
           let claims = match Claims::from_encoded(jwt, &secret) {
             Ok(c) => c,
             Err(err) => {
               log::error!("Error: {}", err);
               let res = req
                 .into_response(
-                  HttpResponse::Unauthorized().json(ErrorResponse::from("invalid_authorization")),
+                  HttpResponse::Unauthorized().json(Error::from("invalid_authorization")),
                 )
                 .map_into_right_body();
               return Ok(res);
             }
           };
 
-          let user = match get_user_by_id(pool, claims.sub).await {
-            Ok(user) => user,
+          let application = match get_application_by_id(pool, claims.app).await {
+            Ok(a) => a,
             Err(e) => {
               log::error!("Error: {}", e);
               let res = req
-                .into_response(
-                  HttpResponse::InternalServerError().json(ErrorResponse::internal_error()),
-                )
+                .into_response(HttpResponse::InternalServerError().json(Error::internal_error()))
+                .map_into_right_body();
+              return Ok(res);
+            }
+          };
+          let user = match get_user_by_id(pool, claims.sub).await {
+            Ok(u) => u,
+            Err(e) => {
+              log::error!("Error: {}", e);
+              let res = req
+                .into_response(HttpResponse::InternalServerError().json(Error::internal_error()))
                 .map_into_right_body();
               return Ok(res);
             }
           };
           let mut extensions = req.extensions_mut();
+          extensions.insert(application);
           extensions.insert(user);
         }
       }

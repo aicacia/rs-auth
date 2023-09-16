@@ -55,7 +55,8 @@ INSERT INTO "application_configs" ("application_id", "name", "value") VALUES
   (1, 'disable_public_signup', 'true'),
   (1, 'default_role', '2'),
   (1, 'uri', '"http://localhost:8080"'),
-  (1, 'mail.support', 'admin@localhost.com');
+  (1, 'mail.support.email', '"support@localhost.com"'),
+  (1, 'mail.support.name', '"Support"');
 
 
 CREATE TABLE "users"(
@@ -88,7 +89,19 @@ CREATE UNIQUE INDEX "emails_email_unique_idx" ON "emails" ("email");
 CREATE UNIQUE INDEX "emails_confirmation_token_unique_idx" ON "emails" ("confirmation_token");
 CREATE TRIGGER "emails_set_timestamp" BEFORE UPDATE ON "emails" FOR EACH ROW EXECUTE PROCEDURE "trigger_set_timestamp"();
 
-
 ALTER TABLE "users" ADD COLUMN "email_id" INT4;
 ALTER TABLE "users" ADD CONSTRAINT "users_email_id_fk" FOREIGN KEY("email_id") REFERENCES "emails"("id") ON DELETE CASCADE;
 CREATE UNIQUE INDEX "users_email_id_unique_idx" ON "users" ("email_id");
+
+
+CREATE TABLE "application_users"(
+	"application_id" INT4 NOT NULL,
+	"user_id" INT4 NOT NULL,
+	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "application_users_application_id_fk" FOREIGN KEY("application_id") REFERENCES "applications"("id") ON DELETE CASCADE,
+  CONSTRAINT "application_users_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+);
+
+INSERT INTO "application_users" ("application_id", "user_id")
+  VALUES (1, 1);
+

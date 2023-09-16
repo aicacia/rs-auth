@@ -13,12 +13,12 @@ const GLOBAL_KEY: &str = "global";
 const INTERNAL_ERROR: &str = "internal_error";
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-pub struct MessageResponse {
+pub struct Message {
   key: String,
   args: HashMap<String, Value>,
 }
 
-impl<'a> From<&'a ValidationError> for MessageResponse {
+impl<'a> From<&'a ValidationError> for Message {
   fn from(error: &'a ValidationError) -> Self {
     Self {
       key: error.code.to_string(),
@@ -31,7 +31,7 @@ impl<'a> From<&'a ValidationError> for MessageResponse {
   }
 }
 
-impl<'a> From<&'a str> for MessageResponse {
+impl<'a> From<&'a str> for Message {
   fn from(key: &'a str) -> Self {
     Self {
       key: key.to_owned(),
@@ -40,7 +40,7 @@ impl<'a> From<&'a str> for MessageResponse {
   }
 }
 
-impl From<String> for MessageResponse {
+impl From<String> for Message {
   fn from(key: String) -> Self {
     Self {
       key: key,
@@ -50,26 +50,26 @@ impl From<String> for MessageResponse {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, ToSchema)]
-pub struct MessagesResponse {
-  errors: Vec<MessageResponse>,
-  warnings: Vec<MessageResponse>,
+pub struct Messages {
+  errors: Vec<Message>,
+  warnings: Vec<Message>,
 }
 
-impl MessagesResponse {
-  pub fn error(&mut self, msg: impl Into<MessageResponse>) -> &mut Self {
+impl Messages {
+  pub fn error(&mut self, msg: impl Into<Message>) -> &mut Self {
     self.errors.push(msg.into());
     self
   }
-  pub fn warning(&mut self, msg: impl Into<MessageResponse>) -> &mut Self {
+  pub fn warning(&mut self, msg: impl Into<Message>) -> &mut Self {
     self.warnings.push(msg.into());
     self
   }
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, ToSchema)]
-pub struct ErrorResponse(HashMap<String, MessagesResponse>);
+pub struct Error(HashMap<String, Messages>);
 
-impl fmt::Display for ErrorResponse {
+impl fmt::Display for Error {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
     match serde_json::to_string(self) {
       Ok(json) => write!(f, "{}", json),
@@ -81,9 +81,9 @@ impl fmt::Display for ErrorResponse {
   }
 }
 
-impl<T> From<T> for ErrorResponse
+impl<T> From<T> for Error
 where
-  T: Into<MessageResponse>,
+  T: Into<Message>,
 {
   fn from(msg: T) -> Self {
     let mut new = Self::default();
@@ -92,13 +92,13 @@ where
   }
 }
 
-impl ResponseError for ErrorResponse {
+impl ResponseError for Error {
   fn status_code(&self) -> actix_web::http::StatusCode {
     actix_web::http::StatusCode::BAD_REQUEST
   }
 }
 
-impl ErrorResponse {
+impl Error {
   pub fn new() -> Self {
     Self::default()
   }
@@ -145,7 +145,7 @@ impl ErrorResponse {
     new
   }
 
-  pub fn error(&mut self, name: impl Into<String>, msg: impl Into<MessageResponse>) -> &mut Self {
+  pub fn error(&mut self, name: impl Into<String>, msg: impl Into<Message>) -> &mut Self {
     self
       .0
       .entry(name.into())
@@ -153,7 +153,7 @@ impl ErrorResponse {
       .error(msg);
     self
   }
-  pub fn warning(&mut self, name: impl Into<String>, msg: impl Into<MessageResponse>) -> &mut Self {
+  pub fn warning(&mut self, name: impl Into<String>, msg: impl Into<Message>) -> &mut Self {
     self
       .0
       .entry(name.into())
@@ -162,10 +162,10 @@ impl ErrorResponse {
     self
   }
 
-  pub fn global_error(&mut self, msg: impl Into<MessageResponse>) -> &mut Self {
+  pub fn global_error(&mut self, msg: impl Into<Message>) -> &mut Self {
     self.error(GLOBAL_KEY, msg)
   }
-  pub fn global_warning(&mut self, msg: impl Into<MessageResponse>) -> &mut Self {
+  pub fn global_warning(&mut self, msg: impl Into<Message>) -> &mut Self {
     self.warning(GLOBAL_KEY, msg)
   }
 }

@@ -4,9 +4,12 @@ use futures::future::{err, ok};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
+use validator::Validate;
+
+use super::error::Error;
 
 #[derive(sqlx::FromRow, Debug, Clone)]
-pub struct User {
+pub struct UserRow {
   pub id: i32,
   pub username: String,
   pub email_id: Option<i32>,
@@ -16,20 +19,24 @@ pub struct User {
   pub updated_at: DateTime<Utc>,
 }
 
-impl FromRequest for User {
+impl FromRequest for UserRow {
   type Error = actix_web::Error;
   type Future = futures::future::Ready<Result<Self, Self::Error>>;
 
   fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-    match req.extensions().get::<User>() {
+    match req.extensions().get::<UserRow>() {
       Some(user) => ok(user.clone()),
-      None => err(actix_web::error::ErrorUnauthorized("invalid_user")),
+      None => {
+        let mut error = Error::new();
+        error.error("user", "invalid");
+        err(actix_web::error::ErrorUnauthorized(error))
+      }
     }
   }
 }
 
 #[derive(sqlx::FromRow, Debug, Clone)]
-pub struct Email {
+pub struct EmailRow {
   pub id: i32,
   pub user_id: i32,
   pub email: String,
@@ -40,7 +47,7 @@ pub struct Email {
 }
 
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
-pub struct EmailResponse {
+pub struct Email {
   pub id: i32,
   pub email: String,
   pub confirmed: bool,
@@ -48,8 +55,8 @@ pub struct EmailResponse {
   pub updated_at: DateTime<Utc>,
 }
 
-impl From<Email> for EmailResponse {
-  fn from(email: Email) -> Self {
+impl From<EmailRow> for Email {
+  fn from(email: EmailRow) -> Self {
     Self {
       id: email.id,
       email: email.email,
@@ -61,18 +68,18 @@ impl From<Email> for EmailResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
-pub struct UserResponse {
+pub struct User {
   pub id: i32,
   pub username: String,
-  pub email: Option<EmailResponse>,
-  pub emails: Vec<EmailResponse>,
+  pub email: Option<Email>,
+  pub emails: Vec<Email>,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
 }
 
-impl From<(User, Vec<Email>)> for UserResponse {
-  fn from((user, emails): (User, Vec<Email>)) -> Self {
-    let mut email: Option<Email> = None;
+impl From<(UserRow, Vec<EmailRow>)> for User {
+  fn from((user, emails): (UserRow, Vec<EmailRow>)) -> Self {
+    let mut email: Option<EmailRow> = None;
     let mut emails = emails.clone();
 
     if let Some(index) = emails.iter().position(|e| user.email_id == Some(e.id)) {
@@ -82,10 +89,18 @@ impl From<(User, Vec<Email>)> for UserResponse {
     Self {
       id: user.id,
       username: user.username,
-      email: email.map(EmailResponse::from),
-      emails: emails.into_iter().map(EmailResponse::from).collect(),
+      email: email.map(Email::from),
+      emails: emails.into_iter().map(Email::from).collect(),
       created_at: user.created_at,
       updated_at: user.updated_at,
     }
   }
+}
+
+#[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
+pub struct ResetUserPasswordRequest {
+  #[validate(length(min = 1, max = 256))]
+  pub password: String,
+  #[validate(length(min = 1, max = 256))]
+  pub password_confirmation: String,
 }

@@ -45,3 +45,12 @@ fn json_value_to_config_value(value: serde_json::Value) -> config::Value {
     ),
   }
 }
+
+pub async fn get_config(pool: &Pool<Postgres>, key: &str) -> serde_json::Value {
+  sqlx::query!("SELECT value FROM config WHERE name = $1 LIMIT 1;", key)
+    .fetch_optional(pool)
+    .await
+    .map_or(serde_json::Value::Null, |v| {
+      v.map_or(serde_json::Value::Null, |r| r.value)
+    })
+}

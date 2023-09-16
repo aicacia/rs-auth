@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS "application_users" cascade;
+
 DROP TABLE IF EXISTS "users" cascade;
 DROP TABLE IF EXISTS "emails" cascade;
 

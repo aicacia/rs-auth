@@ -3,37 +3,41 @@ use actix_web::{
   web::{scope, Data, Path, ServiceConfig},
   HttpResponse, Responder,
 };
+use actix_web_validator::Json;
 use sqlx::{Pool, Postgres};
 
 use crate::{
+  core::encryption::encrypt_password,
   middleware::auth::Authorization,
   model::{
-    error::ErrorResponse,
-    user::{User, UserResponse},
+    error::Error,
+    user::{ResetUserPasswordRequest, User, UserRow},
   },
-  service::user::{confirm_user_email, get_user_emails, set_user_primary_email},
+  service::user::{
+    confirm_user_email, get_user_emails, reset_user_password, set_user_primary_email,
+  },
 };
 
 #[utoipa::path(
   context_path = "/users",
   responses(
-      (status = 200, description = "Get current user", body = UserResponse),
-      (status = 500, body = ErrorResponse),
+      (status = 200, description = "Get current user", body = User),
+      (status = 500, body = Error),
   ),
   security(
       ("Authorization" = [])
   )
 )]
 #[get("/current")]
-pub async fn current(pool: Data<Pool<Postgres>>, user: User) -> impl Responder {
+pub async fn current(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responder {
   let emails = match get_user_emails(pool.as_ref(), user.id).await {
     Ok(e) => e,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(ErrorResponse::internal_error());
+      return HttpResponse::BadRequest().json(Error::internal_error());
     }
   };
-  let user_response: UserResponse = (user, emails).into();
+  let user_response: User = (user, emails).into();
   HttpResponse::Ok().json(user_response)
 }
 
@@ -41,7 +45,7 @@ pub async fn current(pool: Data<Pool<Postgres>>, user: User) -> impl Responder {
   context_path = "/users",
   responses(
       (status = 204, description = "Confirms email with confirmation token"),
-      (status = 400, body = ErrorResponse),
+      (status = 400, body = Error),
   ),
   security(
       ("Authorization" = [])
@@ -49,7 +53,7 @@ pub async fn current(pool: Data<Pool<Postgres>>, user: User) -> impl Responder {
 )]
 #[put("/confirm-email/{confirmation_token}")]
 pub async fn confirm_email(
-  user: User,
+  user: UserRow,
   path: Path<uuid::Uuid>,
   pool: Data<Pool<Postgres>>,
 ) -> impl Responder {
@@ -57,12 +61,11 @@ pub async fn confirm_email(
   match confirm_user_email(pool.as_ref(), user.id, &confirmation_token).await {
     Ok(true) => (),
     Ok(false) => {
-      return HttpResponse::BadRequest()
-        .json(ErrorResponse::new().error("confirmation_token", "invalid_confirmation_token"));
+      return HttpResponse::BadRequest().json(Error::new().error("confirmation_token", "invalid"));
     }
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(ErrorResponse::internal_error());
+      return HttpResponse::BadRequest().json(Error::internal_error());
     }
   };
   HttpResponse::NoContent().finish()
@@ -72,7 +75,7 @@ pub async fn confirm_email(
   context_path = "/users",
   responses(
       (status = 204, description = "Sets email as primary"),
-      (status = 400, body = ErrorResponse),
+      (status = 400, body = Error),
   ),
   security(
       ("Authorization" = [])
@@ -80,7 +83,7 @@ pub async fn confirm_email(
 )]
 #[put("/set-primary-email/{email_id}")]
 pub async fn set_primary_email(
-  user: User,
+  user: UserRow,
   path: Path<i32>,
   pool: Data<Pool<Postgres>>,
 ) -> impl Responder {
@@ -88,12 +91,49 @@ pub async fn set_primary_email(
   match set_user_primary_email(pool.as_ref(), user.id, email_id).await {
     Ok(true) => (),
     Ok(false) => {
-      return HttpResponse::BadRequest()
-        .json(ErrorResponse::new().error("email_id", "invalid_email"));
+      return HttpResponse::BadRequest().json(Error::new().error("email_id", "invalid_email"));
     }
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(ErrorResponse::internal_error());
+      return HttpResponse::BadRequest().json(Error::internal_error());
+    }
+  };
+  HttpResponse::NoContent().finish()
+}
+
+#[utoipa::path(
+  context_path = "/users",
+  request_body = ResetUserPasswordRequest,
+  responses(
+      (status = 200, description = "Resets User's password", content_type = "text/plain", body = String),
+      (status = 400, body = Error),
+      (status = 500, body = Error),
+  ),
+  security(
+      ("Authorization" = [])
+  )
+)]
+#[put("/reset-password")]
+pub async fn reset_password(
+  pool: Data<Pool<Postgres>>,
+  user: UserRow,
+  body: Json<ResetUserPasswordRequest>,
+) -> impl Responder {
+  if body.password != body.password_confirmation {
+    return HttpResponse::BadRequest().json(Error::from("password_confirmation_mismatch"));
+  }
+  let encrypted_password_result = match encrypt_password(&body.password) {
+    Ok(r) => r,
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::InternalServerError().json(Error::internal_error());
+    }
+  };
+  match reset_user_password(pool.as_ref(), user.id, &encrypted_password_result).await {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::InternalServerError().json(Error::internal_error());
     }
   };
   HttpResponse::NoContent().finish()
@@ -106,7 +146,8 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
         .wrap(Authorization)
         .service(current)
         .service(confirm_email)
-        .service(set_primary_email),
+        .service(set_primary_email)
+        .service(reset_password),
     );
   }
 }

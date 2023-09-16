@@ -1,11 +1,83 @@
 use anyhow::Result;
 use chrono::Datelike;
-use lettre::{transport::smtp::authentication::Credentials, SmtpTransport, Transport};
+use lettre::{
+  message::header::ContentType, transport::smtp::authentication::Credentials, Message,
+  SmtpTransport, Transport,
+};
 use sqlx::{Pool, Postgres};
 
-use crate::service::application::get_application_config;
+use crate::service::application::{get_application_config, get_application_uri};
 
-pub async fn create_mailer(pool: &Pool<Postgres>, application_id: i32) -> Result<SmtpTransport> {
+pub fn send_support_mail(
+  pool: Pool<Postgres>,
+  application_id: i32,
+  username: String,
+  email: String,
+  subject: String,
+  body: String,
+) {
+  _ = tokio::spawn(async move {
+    match send_mail(
+      pool,
+      application_id,
+      "mail.support.email".to_owned(),
+      "mail.support.name".to_owned(),
+      email,
+      username,
+      subject,
+      body,
+    )
+    .await
+    {
+      Ok(_) => {}
+      Err(e) => {
+        log::error!("Failed to send support mail: {}", e);
+      }
+    }
+  })
+}
+
+async fn send_mail(
+  pool: Pool<Postgres>,
+  application_id: i32,
+  from_email_key: String,
+  from_name_key: String,
+  to_email: String,
+  to_name: String,
+  subject: String,
+  body: String,
+) -> Result<()> {
+  let from_email = get_application_config(&pool, application_id, &from_email_key)
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+  let from_name = get_application_config(&pool, application_id, &from_name_key)
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+  let uri = get_application_uri(&pool, application_id).await;
+  let support_email = get_application_config(&pool, application_id, "mail.support.email")
+    .await
+    .as_str()
+    .unwrap_or_default()
+    .to_owned();
+
+  let msg = Message::builder()
+    .from(format!("{} <{}>", from_name, from_email).parse()?)
+    .to(format!("{} <{}>", to_name, to_email).parse()?)
+    .subject(subject)
+    .header(ContentType::TEXT_HTML)
+    .body(mail_html(&body, &support_email, &uri))?;
+
+  let mailer = create_mailer(&pool, application_id).await?;
+  mailer.send(&msg)?;
+
+  Ok(())
+}
+
+async fn create_mailer(pool: &Pool<Postgres>, application_id: i32) -> Result<SmtpTransport> {
   let relay = get_application_config(pool, application_id, "mail.relay")
     .await
     .as_str()
@@ -30,34 +102,7 @@ pub async fn create_mailer(pool: &Pool<Postgres>, application_id: i32) -> Result
   }
 }
 
-pub fn send_mail<F>(pool: Pool<Postgres>, application_id: i32, msg_builder: F)
-where
-  F: Fn() -> Result<lettre::Message>,
-{
-  let msg = match msg_builder() {
-    Ok(msg) => msg,
-    Err(e) => {
-      log::error!("Failed to send email: {}", e);
-      return;
-    }
-  };
-
-  let _ = tokio::spawn(async move {
-    match create_mailer(&pool, application_id).await {
-      Ok(mailer) => match mailer.send(&msg) {
-        Ok(_) => (),
-        Err(e) => {
-          log::error!("Failed to send email: {}", e);
-        }
-      },
-      Err(e) => {
-        log::error!("Failed to build email: {}", e);
-      }
-    }
-  });
-}
-
-pub fn mail_html(html: String) -> String {
+fn mail_html(html: &str, support_email: &str, uri: &str) -> String {
   format!(
     r#"
 <!DOCTYPE html>
@@ -100,15 +145,17 @@ pub fn mail_html(html: String) -> String {
 </head>
 <body>
   <div class="container">
-    <div class="content">{}</div>
+    <div class="content">{0}</div>
     <div class="footer">
-      <p>If you have any questions, contact us at support@aicacia.com.</p>
-      <p>&copy; {}. All rights reserved.</p>
+      <p>If you have any questions, contact us at <a href="mailto:{1}">{1}</a>.</p>
+      <p>&copy; {3} <a target="_blank" href="{2}">{2}</a>. All rights reserved.</p>
     </div>
   </div>
 </body>
 </html>"#,
     html,
+    support_email,
+    uri,
     chrono::Utc::now().year()
   )
 }
