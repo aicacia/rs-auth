@@ -6,7 +6,7 @@ use utoipa::ToSchema;
 use uuid::Uuid;
 use validator::Validate;
 
-use super::error::Error;
+use super::error::Errors;
 
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct UserRow {
@@ -27,9 +27,9 @@ impl FromRequest for UserRow {
     match req.extensions().get::<UserRow>() {
       Some(user) => ok(user.clone()),
       None => {
-        let mut error = Error::new();
-        error.error("user", "invalid");
-        err(actix_web::error::ErrorUnauthorized(error))
+        let mut errors = Errors::new();
+        errors.error("user", "invalid");
+        err(actix_web::error::ErrorUnauthorized(errors))
       }
     }
   }

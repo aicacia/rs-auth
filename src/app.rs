@@ -1,4 +1,4 @@
-use crate::model::error::Error;
+use crate::model::error::Errors;
 use crate::{
   core::openapi::SecurityAddon, model::auth as auth_model, model::error as error_model,
   model::user as user_model, model::util as util_model,
@@ -27,17 +27,18 @@ use crate::controller::{auth, user, util};
     auth::sign_in_with_password,
     auth::sign_up_with_password,
     auth::request_reset_password,
-    auth::reset_password,
+    auth::reset_password_with_token,
     user::current,
     user::confirm_email,
     user::set_primary_email,
-    user::reset_password
+    user::reset_password,
+    user::refresh_token,
   ),
   components(
     schemas(
       util_model::Version,
       util_model::Health,
-      error_model::Error,
+      error_model::Errors,
       error_model::Messages,
       error_model::Message,
       auth_model::SignInWithPasswordRequest,
@@ -72,7 +73,7 @@ pub fn create_app(
   let openapi = ApiDoc::openapi();
 
   let json_config =
-    JsonConfig::default().error_handler(|err, _req| Error::from_validation_error(err).into());
+    JsonConfig::default().error_handler(|err, _req| Errors::from_validation_error(err).into());
 
   App::new()
     .app_data(json_config)

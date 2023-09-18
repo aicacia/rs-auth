@@ -8,7 +8,7 @@ use crate::{
       RequestResetPasswordRequest, ResetPasswordRequest, SignInWithPasswordRequest,
       SignUpWithPasswordRequest,
     },
-    error::Error,
+    error::Errors,
   },
   service::{
     application::{can_sign_up_for_application, get_application_uri},
@@ -32,12 +32,14 @@ use actix_web::{
 use actix_web_validator::Json;
 use sqlx::{Pool, Postgres};
 
+use super::user::refresh_token;
+
 #[utoipa::path(
     request_body = SignInWithPasswordRequest,
     responses(
         (status = 200, description = "Sign's user in and returns JWT", content_type = "text/plain", body = String),
-        (status = 400, body = Error),
-        (status = 500, body = Error),
+        (status = 400, body = Errors),
+        (status = 500, body = Errors),
     )
 )]
 #[post("/auth/sign-in/password")]
@@ -49,27 +51,27 @@ pub async fn sign_in_with_password(
     Ok(u) => u,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Error::from("invalid_credentials"));
+      return HttpResponse::BadRequest().json(Errors::from("invalid_credentials"));
     }
   };
 
   match verify_password(&body.password, &user.encrypted_password) {
     Ok(true) => (),
-    Ok(false) => return HttpResponse::Unauthorized().json(Error::from("invalid_credentials")),
+    Ok(false) => return HttpResponse::Unauthorized().json(Errors::from("invalid_credentials")),
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Error::internal_error());
+      return HttpResponse::BadRequest().json(Errors::internal_error());
     }
   }
 
   match user_has_application(pool.as_ref(), user.id, body.application_id).await {
     Ok(true) => (),
     Ok(false) => {
-      return HttpResponse::Unauthorized().json(Error::from("user_not_authorized_for_application"))
+      return HttpResponse::Unauthorized().json(Errors::from("user_not_authorized_for_application"))
     }
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Error::internal_error());
+      return HttpResponse::BadRequest().json(Errors::internal_error());
     }
   }
 
@@ -78,18 +80,19 @@ pub async fn sign_in_with_password(
     get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id).await;
   let iss = get_application_uri(pool.as_ref(), body.application_id).await;
   let secret = get_application_jwt_secret(pool.as_ref(), body.application_id).await;
-  let jwt = match Claims::new_encoded(
+  let jwt = match Claims::new(
     body.application_id,
     user.id,
     now_in_seconds,
     expires_in_seconds,
     &iss,
-    &secret,
-  ) {
+  )
+  .encode(&secret)
+  {
     Ok(jwt) => jwt,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   HttpResponse::Ok().content_type("text/plain").body(jwt)
@@ -99,9 +102,9 @@ pub async fn sign_in_with_password(
     request_body = SignUpWithPasswordRequest,
     responses(
         (status = 201, description = "Create a new User and returns JWT", content_type = "text/plain", body = String),
-        (status = 400, body = Error),
-        (status = 403, body = Error),
-        (status = 500, body = Error),
+        (status = 400, body = Errors),
+        (status = 403, body = Errors),
+        (status = 500, body = Errors),
     )
 )]
 #[post("/auth/sign-up/password")]
@@ -113,36 +116,36 @@ pub async fn sign_up_with_password(
     Ok(r) => r,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   if can_sign_up_for_application(pool.as_ref(), body.application_id).await {
-    return HttpResponse::BadRequest().json(Error::from("sign_up_disabled"));
+    return HttpResponse::BadRequest().json(Errors::from("sign_up_disabled"));
   }
   if body.password != body.password_confirmation {
     return HttpResponse::BadRequest()
-      .json(Error::new().error("password_confirmation", "password_confirmation_mismatch"));
+      .json(Errors::new().error("password_confirmation", "password_confirmation_mismatch"));
   }
   if let Some(email) = body.email.as_ref() {
     match user_email_taken(pool.as_ref(), email).await {
       Ok(false) => (),
       Ok(true) => {
-        return HttpResponse::InternalServerError().json(Error::new().error("email", "taken"));
+        return HttpResponse::InternalServerError().json(Errors::new().error("email", "taken"));
       }
       Err(e) => {
         log::error!("{}", e);
-        return HttpResponse::InternalServerError().json(Error::internal_error());
+        return HttpResponse::InternalServerError().json(Errors::internal_error());
       }
     };
   }
   match user_username_taken(pool.as_ref(), &body.username).await {
     Ok(false) => (),
     Ok(true) => {
-      return HttpResponse::InternalServerError().json(Error::new().error("username", "taken"));
+      return HttpResponse::InternalServerError().json(Errors::new().error("username", "taken"));
     }
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
 
@@ -161,7 +164,7 @@ pub async fn sign_up_with_password(
     Ok(r) => r,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
 
@@ -170,18 +173,19 @@ pub async fn sign_up_with_password(
     get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id).await;
   let iss = get_application_uri(pool.as_ref(), body.application_id).await;
   let secret = get_application_jwt_secret(pool.as_ref(), body.application_id).await;
-  let jwt = match Claims::new_encoded(
+  let jwt = match Claims::new(
     body.application_id,
     user.id,
     now_in_seconds,
     expires_in_seconds,
     &iss,
-    &secret,
-  ) {
+  )
+  .encode(&secret)
+  {
     Ok(jwt) => jwt,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   HttpResponse::Created().content_type("text/plain").body(jwt)
@@ -191,8 +195,8 @@ pub async fn sign_up_with_password(
     request_body = RequestResetPasswordRequest,
     responses(
         (status = 204, description = "Reset password token created"),
-        (status = 400, body = Error),
-        (status = 500, body = Error),
+        (status = 400, body = Errors),
+        (status = 500, body = Errors),
     )
 )]
 #[post("/auth/request-reset-password")]
@@ -205,7 +209,7 @@ pub async fn request_reset_password(
       Ok(r) => r,
       Err(e) => {
         log::error!("{}", e);
-        return HttpResponse::InternalServerError().json(Error::internal_error());
+        return HttpResponse::InternalServerError().json(Errors::internal_error());
       }
     };
   HttpResponse::NoContent().finish()
@@ -215,38 +219,38 @@ pub async fn request_reset_password(
     request_body = ResetPasswordRequest,
     responses(
         (status = 200, description = "Resets User's password", content_type = "text/plain", body = String),
-        (status = 400, body = Error),
-        (status = 500, body = Error),
+        (status = 400, body = Errors),
+        (status = 500, body = Errors),
     )
 )]
 #[post("/auth/reset-password")]
-pub async fn reset_password(
+pub async fn reset_password_with_token(
   pool: Data<Pool<Postgres>>,
   body: Json<ResetPasswordRequest>,
 ) -> impl Responder {
   if body.password != body.password_confirmation {
-    return HttpResponse::BadRequest().json(Error::from("password_confirmation_mismatch"));
+    return HttpResponse::BadRequest().json(Errors::from("password_confirmation_mismatch"));
   }
   let user = match get_user_by_reset_token(pool.as_ref(), &body.reset_password_token).await {
     Ok(a) => a,
     Err(e) => {
       log::error!("{}", e);
       return HttpResponse::BadRequest()
-        .json(Error::new().error("reset_password_token", "invalid"));
+        .json(Errors::new().error("reset_password_token", "invalid"));
     }
   };
   let encrypted_password_result = match encrypt_password(&body.password) {
     Ok(r) => r,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   match reset_user_password(pool.as_ref(), user.id, &encrypted_password_result).await {
     Ok(_) => {}
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
 
@@ -255,18 +259,19 @@ pub async fn reset_password(
     get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id).await;
   let iss = get_application_uri(pool.as_ref(), body.application_id).await;
   let secret = get_application_jwt_secret(pool.as_ref(), body.application_id).await;
-  let jwt = match Claims::new_encoded(
+  let jwt = match Claims::new(
     body.application_id,
     user.id,
     now_in_seconds,
     expires_in_seconds,
     &iss,
-    &secret,
-  ) {
+  )
+  .encode(&secret)
+  {
     Ok(jwt) => jwt,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   HttpResponse::Ok().content_type("text/plain").body(jwt)
@@ -278,6 +283,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
       .service(sign_in_with_password)
       .service(sign_up_with_password)
       .service(request_reset_password)
-      .service(reset_password);
+      .service(reset_password_with_token)
+      .service(refresh_token);
   }
 }

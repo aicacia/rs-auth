@@ -1,10 +1,10 @@
 use anyhow::Result;
 use base64::engine::{general_purpose::STANDARD, Engine};
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
   pub exp: usize,
   pub iat: usize,
@@ -36,33 +36,16 @@ impl Claims {
     }
   }
 
-  pub fn new_encoded(
-    app: i32,
-    sub: i32,
-    now_in_seconds: usize,
-    expires_in_seconds: usize,
-    iss: &str,
-    secret: &str,
-  ) -> Result<String> {
-    let claims = Self::new(app, sub, now_in_seconds, expires_in_seconds, iss);
-    let jwt = encode(
-      &Header::default(),
-      &claims,
-      &EncodingKey::from_secret(secret.as_bytes()),
-    )?;
-    Ok(jwt)
-  }
-
-  pub fn from_encoded(jwt: &str, secret: &str) -> Result<Self> {
+  pub fn parse(jwt: &str, secret: &str) -> Result<TokenData<Self>> {
     let token_data = decode::<Self>(
       jwt,
       &DecodingKey::from_secret(secret.as_bytes()),
       &Validation::default(),
     )?;
-    Ok(token_data.claims)
+    Ok(token_data)
   }
 
-  pub fn from_encoded_no_validation(jwt: &str) -> Result<Self> {
+  pub fn parse_no_validation(jwt: &str) -> Result<Self> {
     let mut parts = jwt.rsplitn(3, '.');
     match (parts.next(), parts.next(), parts.next()) {
       (Some(_header), Some(payload), Some(_signature)) => {
@@ -74,5 +57,14 @@ impl Claims {
         Err(jsonwebtoken::errors::Error::from(jsonwebtoken::errors::ErrorKind::InvalidToken).into())
       }
     }
+  }
+
+  pub fn encode(&self, secret: &str) -> Result<String> {
+    let jwt = encode(
+      &Header::default(),
+      self,
+      &EncodingKey::from_secret(secret.as_bytes()),
+    )?;
+    Ok(jwt)
   }
 }

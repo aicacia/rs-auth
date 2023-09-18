@@ -2,7 +2,7 @@ use actix_web::{dev::Payload, FromRequest, HttpMessage, HttpRequest};
 use chrono::{DateTime, Utc};
 use futures::future::{err, ok};
 
-use super::error::Error;
+use super::error::Errors;
 
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct ApplicationRow {
@@ -21,7 +21,7 @@ impl FromRequest for ApplicationRow {
     match req.extensions().get::<ApplicationRow>() {
       Some(user) => ok(user.clone()),
       None => {
-        let mut error = Error::new();
+        let mut error = Errors::new();
         error.error("application", "invalid");
         err(actix_web::error::ErrorUnauthorized(error))
       }

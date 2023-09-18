@@ -7,14 +7,18 @@ use actix_web_validator::Json;
 use sqlx::{Pool, Postgres};
 
 use crate::{
-  core::encryption::encrypt_password,
+  core::{encryption::encrypt_password, jwt::Claims},
   middleware::auth::Authorization,
   model::{
-    error::Error,
+    application::ApplicationRow,
+    error::Errors,
     user::{ResetUserPasswordRequest, User, UserRow},
   },
-  service::user::{
-    confirm_user_email, get_user_emails, reset_user_password, set_user_primary_email,
+  service::{
+    application::{
+      get_application_jwt_expires_in_seconds, get_application_jwt_secret, get_application_uri,
+    },
+    user::{confirm_user_email, get_user_emails, reset_user_password, set_user_primary_email},
   },
 };
 
@@ -22,7 +26,7 @@ use crate::{
   context_path = "/users",
   responses(
       (status = 200, description = "Get current user", body = User),
-      (status = 500, body = Error),
+      (status = 500, body = Errors),
   ),
   security(
       ("Authorization" = [])
@@ -34,7 +38,7 @@ pub async fn current(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responde
     Ok(e) => e,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Error::internal_error());
+      return HttpResponse::BadRequest().json(Errors::internal_error());
     }
   };
   let user_response: User = (user, emails).into();
@@ -45,7 +49,7 @@ pub async fn current(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responde
   context_path = "/users",
   responses(
       (status = 204, description = "Confirms email with confirmation token"),
-      (status = 400, body = Error),
+      (status = 400, body = Errors),
   ),
   security(
       ("Authorization" = [])
@@ -61,11 +65,11 @@ pub async fn confirm_email(
   match confirm_user_email(pool.as_ref(), user.id, &confirmation_token).await {
     Ok(true) => (),
     Ok(false) => {
-      return HttpResponse::BadRequest().json(Error::new().error("confirmation_token", "invalid"));
+      return HttpResponse::BadRequest().json(Errors::new().error("confirmation_token", "invalid"));
     }
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Error::internal_error());
+      return HttpResponse::BadRequest().json(Errors::internal_error());
     }
   };
   HttpResponse::NoContent().finish()
@@ -75,7 +79,7 @@ pub async fn confirm_email(
   context_path = "/users",
   responses(
       (status = 204, description = "Sets email as primary"),
-      (status = 400, body = Error),
+      (status = 400, body = Errors),
   ),
   security(
       ("Authorization" = [])
@@ -91,11 +95,11 @@ pub async fn set_primary_email(
   match set_user_primary_email(pool.as_ref(), user.id, email_id).await {
     Ok(true) => (),
     Ok(false) => {
-      return HttpResponse::BadRequest().json(Error::new().error("email_id", "invalid_email"));
+      return HttpResponse::BadRequest().json(Errors::new().error("email_id", "invalid_email"));
     }
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Error::internal_error());
+      return HttpResponse::BadRequest().json(Errors::internal_error());
     }
   };
   HttpResponse::NoContent().finish()
@@ -106,8 +110,8 @@ pub async fn set_primary_email(
   request_body = ResetUserPasswordRequest,
   responses(
       (status = 200, description = "Resets User's password", content_type = "text/plain", body = String),
-      (status = 400, body = Error),
-      (status = 500, body = Error),
+      (status = 400, body = Errors),
+      (status = 500, body = Errors),
   ),
   security(
       ("Authorization" = [])
@@ -120,23 +124,63 @@ pub async fn reset_password(
   body: Json<ResetUserPasswordRequest>,
 ) -> impl Responder {
   if body.password != body.password_confirmation {
-    return HttpResponse::BadRequest().json(Error::from("password_confirmation_mismatch"));
+    return HttpResponse::BadRequest().json(Errors::from("password_confirmation_mismatch"));
   }
   let encrypted_password_result = match encrypt_password(&body.password) {
     Ok(r) => r,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   match reset_user_password(pool.as_ref(), user.id, &encrypted_password_result).await {
     Ok(_) => {}
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::InternalServerError().json(Error::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   HttpResponse::NoContent().finish()
+}
+
+#[utoipa::path(
+  context_path = "/users",
+  responses(
+      (status = 201, description = "Refreshes User's JWT", content_type = "text/plain", body = String),
+      (status = 400, body = Errors),
+      (status = 500, body = Errors),
+  ),
+  security(
+      ("Authorization" = [])
+  )
+)]
+#[get("/refresh-token")]
+pub async fn refresh_token(
+  pool: Data<Pool<Postgres>>,
+  application: ApplicationRow,
+  user: UserRow,
+) -> impl Responder {
+  let now_in_seconds = chrono::Utc::now().timestamp() as usize;
+  let expires_in_seconds =
+    get_application_jwt_expires_in_seconds(pool.as_ref(), application.id).await;
+  let secret = get_application_jwt_secret(pool.as_ref(), application.id).await;
+  let iss = get_application_uri(pool.as_ref(), application.id).await;
+  let jwt = match Claims::new(
+    application.id,
+    user.id,
+    now_in_seconds,
+    expires_in_seconds,
+    &iss,
+  )
+  .encode(&secret)
+  {
+    Ok(jwt) => jwt,
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
+    }
+  };
+  HttpResponse::Created().content_type("text/plain").body(jwt)
 }
 
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {

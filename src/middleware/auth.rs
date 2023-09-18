@@ -16,7 +16,7 @@ use actix_web::{
 use futures::future::LocalBoxFuture;
 use sqlx::{Pool, Postgres};
 
-use crate::{core::jwt::Claims, model::error::Error};
+use crate::{core::jwt::Claims, model::error::Errors};
 
 pub struct Authorization;
 
@@ -67,7 +67,7 @@ where
       match req.headers().get("authorization") {
         None => {
           let res = req
-            .into_response(HttpResponse::Unauthorized().json(Error::from("missing_authorization")))
+            .into_response(HttpResponse::Unauthorized().json(Errors::from("missing_authorization")))
             .map_into_right_body();
           return Ok(res);
         }
@@ -78,20 +78,20 @@ where
               log::error!("Error: {}", err);
               let res = req
                 .into_response(
-                  HttpResponse::Unauthorized().json(Error::from("invalid_authorization")),
+                  HttpResponse::Unauthorized().json(Errors::from("invalid_authorization")),
                 )
                 .map_into_right_body();
               return Ok(res);
             }
           };
 
-          let unvalidated_claims = match Claims::from_encoded_no_validation(jwt) {
+          let unvalidated_claims = match Claims::parse_no_validation(jwt) {
             Ok(c) => c,
             Err(err) => {
               log::error!("Failed to parse JWT: {}", err);
               let res = req
                 .into_response(
-                  HttpResponse::Unauthorized().json(Error::from("invalid_authorization")),
+                  HttpResponse::Unauthorized().json(Errors::from("invalid_authorization")),
                 )
                 .map_into_right_body();
               return Ok(res);
@@ -103,42 +103,42 @@ where
             None => {
               log::error!("Error: missing db pool");
               let res = req
-                .into_response(HttpResponse::InternalServerError().json(Error::internal_error()))
+                .into_response(HttpResponse::InternalServerError().json(Errors::internal_error()))
                 .map_into_right_body();
               return Ok(res);
             }
           };
 
           let secret = get_application_jwt_secret(pool.as_ref(), unvalidated_claims.app).await;
-          let claims = match Claims::from_encoded(jwt, &secret) {
+          let token_data = match Claims::parse(jwt, &secret) {
             Ok(c) => c,
             Err(err) => {
               log::error!("Error: {}", err);
               let res = req
                 .into_response(
-                  HttpResponse::Unauthorized().json(Error::from("invalid_authorization")),
+                  HttpResponse::Unauthorized().json(Errors::from("invalid_authorization")),
                 )
                 .map_into_right_body();
               return Ok(res);
             }
           };
 
-          let application = match get_application_by_id(pool, claims.app).await {
+          let application = match get_application_by_id(pool, token_data.claims.app).await {
             Ok(a) => a,
             Err(e) => {
               log::error!("Error: {}", e);
               let res = req
-                .into_response(HttpResponse::InternalServerError().json(Error::internal_error()))
+                .into_response(HttpResponse::InternalServerError().json(Errors::internal_error()))
                 .map_into_right_body();
               return Ok(res);
             }
           };
-          let user = match get_user_by_id(pool, claims.sub).await {
+          let user = match get_user_by_id(pool, token_data.claims.sub).await {
             Ok(u) => u,
             Err(e) => {
               log::error!("Error: {}", e);
               let res = req
-                .into_response(HttpResponse::InternalServerError().json(Error::internal_error()))
+                .into_response(HttpResponse::InternalServerError().json(Errors::internal_error()))
                 .map_into_right_body();
               return Ok(res);
             }

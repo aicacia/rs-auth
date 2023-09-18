@@ -67,9 +67,11 @@ impl Messages {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, ToSchema)]
-pub struct Error(HashMap<String, Messages>);
+pub struct Errors {
+  messages: HashMap<String, Messages>,
+}
 
-impl fmt::Display for Error {
+impl fmt::Display for Errors {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
     match serde_json::to_string(self) {
       Ok(json) => write!(f, "{}", json),
@@ -81,7 +83,7 @@ impl fmt::Display for Error {
   }
 }
 
-impl<T> From<T> for Error
+impl<T> From<T> for Errors
 where
   T: Into<Message>,
 {
@@ -92,13 +94,13 @@ where
   }
 }
 
-impl ResponseError for Error {
+impl ResponseError for Errors {
   fn status_code(&self) -> actix_web::http::StatusCode {
     actix_web::http::StatusCode::BAD_REQUEST
   }
 }
 
-impl Error {
+impl Errors {
   pub fn new() -> Self {
     Self::default()
   }
@@ -147,7 +149,7 @@ impl Error {
 
   pub fn error(&mut self, name: impl Into<String>, msg: impl Into<Message>) -> &mut Self {
     self
-      .0
+      .messages
       .entry(name.into())
       .or_insert_with(Default::default)
       .error(msg);
@@ -155,7 +157,7 @@ impl Error {
   }
   pub fn warning(&mut self, name: impl Into<String>, msg: impl Into<Message>) -> &mut Self {
     self
-      .0
+      .messages
       .entry(name.into())
       .or_insert_with(Default::default)
       .warning(msg);

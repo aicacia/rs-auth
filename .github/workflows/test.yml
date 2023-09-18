@@ -30,6 +30,7 @@ jobs:
           sudo apt-get install libpq-dev -y
           cargo install sqlx-cli --no-default-features --features postgres
           sqlx database create --database-url postgres://postgres:postgres@localhost:5432/postgres
+          sqlx migrate run --database-url postgres://postgres:postgres@localhost:5432/postgres
       - uses: actions-rs/cargo@v1
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres

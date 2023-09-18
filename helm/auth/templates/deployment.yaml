@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aicacia-auth_api.fullname" . }}
+  labels:
+    {{- include "aicacia-auth_api.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "aicacia-auth_api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config-environment: {{ include (print $.Template.BasePath "/config-environment.yaml") . | sha256sum }}
+        image/hash: {{ .Values.image.hash }}
+      labels:
+        {{- include "aicacia-auth_api.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        - name: docker-registry
+      volumes:
+        - name: {{ include "aicacia-auth_api.fullname" . }}-config-volume
+          configMap:
+            name: {{ include "aicacia-auth_api.fullname" . }}-config
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "aicacia-auth_api.fullname" . }}-environment
+          ports:
+            - name: http
+              containerPort: {{ .Values.app.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          volumeMounts:
+            - name: {{ include "aicacia-auth_api.fullname" . }}-config-volume
+              mountPath: /app/config/default.toml
+              subPath: default.toml
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

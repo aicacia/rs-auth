@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aicacia-auth_api.fullname" . }}-config
+  labels:
+    {{- include "aicacia-auth_api.labels" . | nindent 4 }}
+data:
+    default.toml: |-
+        [app]
+        host = "0.0.0.0"
+        log_level = "{{ .Values.app.log_level }}"
+        port = {{ .Values.app.port }}
+        url = "{{ .Values.app.url }}"
+
+        [jwt]
+        secret = "{{ .Values.app.jwt.secret }}"
+
+        [database]
+        url = "{{ .Values.app.database.url }}"
+
+        {{- if .Values.app.mail.relay -}}
+        [mail]
+        relay = "{{ .Values.app.mail.relay }}"
+        {{- end -}}
+        {{- if .Values.app.mail.username -}}
+        username = "{{ .Values.app.mail.username }}"
+        {{- end -}}
+        {{- if .Values.app.mail.password -}}
+        password = "{{ .Values.app.mail.password }}"
+        {{- end -}}
