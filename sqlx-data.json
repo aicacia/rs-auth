@@ -253,19 +253,6 @@
     },
     "query": "INSERT INTO emails (\"user_id\", \"email\", \"confirmation_token\") VALUES ($1, $2, $3)\n                RETURNING \"id\", \"user_id\", \"email\", \"confirmed\", \"confirmation_token\", \"created_at\", \"updated_at\";"
   },
-  "48e4729717aeb0452de535bcddf589a6d30672a4b0bcd5ca40c6b976979b4544": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "UPDATE emails SET confirmed=true, confirmation_token=NULL WHERE user_id = $1 AND confirmation_token = $2;"
-  },
   "4abd181880121faa82c9b2b1ef2a4f2f028680e270436be2b740ad4e404874fc": {
     "describe": {
       "columns": [
@@ -289,6 +276,18 @@
       }
     },
     "query": "SELECT name, value FROM config;"
+  },
+  "5b61c32d346e5a731e2d9ae8d64a7b06d55f65ac0f85f92615c88e537edef83c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "UPDATE emails SET confirmed=true, confirmation_token=NULL WHERE confirmation_token = $1;"
   },
   "6044e4d6d5bc6d4625f74f4f1b8307796819b0763322c5c81c42a3a7e82d61ab": {
     "describe": {

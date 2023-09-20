@@ -86,10 +86,3 @@ pub async fn get_application_uri(pool: &Pool<Postgres>, application_id: i32) -> 
     .unwrap_or_default()
     .to_owned()
 }
-
-pub async fn can_sign_up_for_application(pool: &Pool<Postgres>, application_id: i32) -> bool {
-  get_application_config(pool, application_id, "disable_public_signup")
-    .await
-    .as_bool()
-    .unwrap_or(false)
-}

@@ -11,9 +11,11 @@ use crate::{
     error::Errors,
   },
   service::{
-    application::{can_sign_up_for_application, get_application_uri},
+    application::get_application_uri,
+    config::get_config,
     user::{
-      request_user_password_reset, user_email_taken, user_has_application, user_username_taken,
+      confirm_user_email, request_user_password_reset, user_email_taken, user_has_application,
+      user_username_taken,
     },
   },
   service::{
@@ -25,14 +27,12 @@ use crate::{
   },
 };
 use actix_web::{
-  post,
-  web::{Data, ServiceConfig},
+  post, put,
+  web::{Data, Path, ServiceConfig},
   HttpResponse, Responder,
 };
 use actix_web_validator::Json;
 use sqlx::{Pool, Postgres};
-
-use super::user::refresh_token;
 
 #[utoipa::path(
     request_body = SignInWithPasswordRequest,
@@ -119,7 +119,7 @@ pub async fn sign_up_with_password(
       return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
-  if can_sign_up_for_application(pool.as_ref(), body.application_id).await {
+  if get_config(pool.as_ref(), "allow_public_signup").await != serde_json::Value::Bool(true) {
     return HttpResponse::BadRequest().json(Errors::from("sign_up_disabled"));
   }
   if body.password != body.password_confirmation {
@@ -277,6 +277,28 @@ pub async fn reset_password_with_token(
   HttpResponse::Ok().content_type("text/plain").body(jwt)
 }
 
+#[utoipa::path(
+  responses(
+      (status = 204, description = "Confirms email with confirmation token"),
+      (status = 400, body = Errors),
+  )
+)]
+#[put("/auth/confirm-email/{confirmation_token}")]
+pub async fn confirm_email(path: Path<uuid::Uuid>, pool: Data<Pool<Postgres>>) -> impl Responder {
+  let confirmation_token = path.into_inner();
+  match confirm_user_email(pool.as_ref(), &confirmation_token).await {
+    Ok(true) => (),
+    Ok(false) => {
+      return HttpResponse::BadRequest().json(Errors::new().error("confirmation_token", "invalid"));
+    }
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::BadRequest().json(Errors::internal_error());
+    }
+  };
+  HttpResponse::NoContent().finish()
+}
+
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   |config: &mut ServiceConfig| {
     config
@@ -284,6 +306,6 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
       .service(sign_up_with_password)
       .service(request_reset_password)
       .service(reset_password_with_token)
-      .service(refresh_token);
+      .service(confirm_email);
   }
 }

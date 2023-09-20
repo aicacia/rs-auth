@@ -22,7 +22,8 @@ INSERT INTO "config" ("name", "value") VALUES
   ('server.address', '"0.0.0.0"'),
   ('server.port', '8080'),
   ('server.uri', '"http://localhost:8080"'),
-  ('log_level', '"debug"');
+  ('log_level', '"debug"'),
+  ('allow_public_signup', 'false');
 
 
 CREATE TABLE "applications" (
@@ -52,7 +53,6 @@ CREATE TRIGGER "application_configs_set_timestamp" BEFORE UPDATE ON "application
 INSERT INTO "application_configs" ("application_id", "name", "value") VALUES
   (1, 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(256), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
   (1, 'jwt.expires_in_seconds', '86400'),
-  (1, 'disable_public_signup', 'true'),
   (1, 'default_role', '2'),
   (1, 'uri', '"http://localhost:8080"'),
   (1, 'mail.support.email', '"support@localhost.com"'),

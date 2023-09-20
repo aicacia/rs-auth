@@ -4,6 +4,8 @@ use std::{
 };
 
 use actix_web::ResponseError;
+use actix_web_validator::error::DeserializeErrors;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use utoipa::ToSchema;
@@ -11,6 +13,10 @@ use validator::{ValidationError, ValidationErrorsKind};
 
 const GLOBAL_KEY: &str = "global";
 const INTERNAL_ERROR: &str = "internal_error";
+
+lazy_static! {
+  static ref RE_BETWEEN_TICKS: Regex = Regex::new(r"`(.*)`").expect("Failed to compile regex");
+}
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct Message {
@@ -132,16 +138,51 @@ impl Errors {
         }
       }
       actix_web_validator::Error::Deserialize(err) => {
-        new.global_error(format!("{}", err));
+        log::error!("{}", err);
+        match err {
+          DeserializeErrors::DeserializeQuery(err) => {
+            if let Some(captures) = RE_BETWEEN_TICKS.captures(&err.to_string()) {
+              if let Some(value) = captures.get(1) {
+                new.error(value.as_str(), "invalid");
+              }
+            }
+          }
+          DeserializeErrors::DeserializeJson(err) => {
+            if let Some(captures) = RE_BETWEEN_TICKS.captures(&err.to_string()) {
+              if let Some(value) = captures.get(1) {
+                new.error(value.as_str(), "invalid");
+              }
+            }
+          }
+          DeserializeErrors::DeserializePath(err) => {
+            if let Some(captures) = RE_BETWEEN_TICKS.captures(&err.to_string()) {
+              if let Some(value) = captures.get(1) {
+                new.error(value.as_str(), "invalid");
+              }
+            }
+          }
+        }
       }
       actix_web_validator::Error::JsonPayloadError(err) => {
-        new.global_error(format!("{}", err));
+        if let Some(captures) = RE_BETWEEN_TICKS.captures(&err.to_string()) {
+          if let Some(value) = captures.get(1) {
+            new.error(value.as_str(), "invalid");
+          }
+        }
       }
       actix_web_validator::Error::UrlEncodedError(err) => {
-        new.global_error(format!("{}", err));
+        if let Some(captures) = RE_BETWEEN_TICKS.captures(&err.to_string()) {
+          if let Some(value) = captures.get(1) {
+            new.error(value.as_str(), "invalid");
+          }
+        }
       }
       actix_web_validator::Error::QsError(err) => {
-        new.global_error(format!("{}", err));
+        if let Some(captures) = RE_BETWEEN_TICKS.captures(&err.to_string()) {
+          if let Some(value) = captures.get(1) {
+            new.error(value.as_str(), "invalid");
+          }
+        }
       }
     }
     new

@@ -233,15 +233,10 @@ pub async fn reset_user_password(
   Ok(result.rows_affected() > 0)
 }
 
-pub async fn confirm_user_email(
-  pool: &Pool<Postgres>,
-  user_id: i32,
-  confirmation_token: &Uuid,
-) -> Result<bool> {
+pub async fn confirm_user_email(pool: &Pool<Postgres>, confirmation_token: &Uuid) -> Result<bool> {
   let result = sqlx::query!(
-      "UPDATE emails SET confirmed=true, confirmation_token=NULL WHERE user_id = $1 AND confirmation_token = $2;",
-      user_id,
-      confirmation_token
+    "UPDATE emails SET confirmed=true, confirmation_token=NULL WHERE confirmation_token = $1;",
+    confirmation_token
   )
   .execute(pool)
   .await?;

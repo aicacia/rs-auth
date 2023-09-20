@@ -18,7 +18,7 @@ use crate::{
     application::{
       get_application_jwt_expires_in_seconds, get_application_jwt_secret, get_application_uri,
     },
-    user::{confirm_user_email, get_user_emails, reset_user_password, set_user_primary_email},
+    user::{get_user_emails, reset_user_password, set_user_primary_email},
   },
 };
 
@@ -43,36 +43,6 @@ pub async fn current(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responde
   };
   let user_response: User = (user, emails).into();
   HttpResponse::Ok().json(user_response)
-}
-
-#[utoipa::path(
-  context_path = "/users",
-  responses(
-      (status = 204, description = "Confirms email with confirmation token"),
-      (status = 400, body = Errors),
-  ),
-  security(
-      ("Authorization" = [])
-  )
-)]
-#[put("/confirm-email/{confirmation_token}")]
-pub async fn confirm_email(
-  user: UserRow,
-  path: Path<uuid::Uuid>,
-  pool: Data<Pool<Postgres>>,
-) -> impl Responder {
-  let confirmation_token = path.into_inner();
-  match confirm_user_email(pool.as_ref(), user.id, &confirmation_token).await {
-    Ok(true) => (),
-    Ok(false) => {
-      return HttpResponse::BadRequest().json(Errors::new().error("confirmation_token", "invalid"));
-    }
-    Err(e) => {
-      log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
-    }
-  };
-  HttpResponse::NoContent().finish()
 }
 
 #[utoipa::path(
@@ -189,8 +159,8 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
       scope("/users")
         .wrap(Authorization)
         .service(current)
-        .service(confirm_email)
         .service(set_primary_email)
+        .service(refresh_token)
         .service(reset_password),
     );
   }

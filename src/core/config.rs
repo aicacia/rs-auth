@@ -4,7 +4,7 @@ use serde::Deserialize;
 use sqlx::{Pool, Postgres};
 use std::net::IpAddr;
 
-use crate::service::config::get_config_map;
+use crate::service::config::get_configs_map;
 
 static CONFIG: OnceCell<Config> = OnceCell::new();
 
@@ -37,7 +37,7 @@ pub struct Config {
 impl Config {
   pub async fn new(pool: &Pool<Postgres>) -> Result<Self> {
     let config_builder = config::Config::builder()
-      .add_source(RawSource::new(get_config_map(pool).await?))
+      .add_source(RawSource::new(get_configs_map(pool).await?))
       // App
       .set_default("log_level", "info")?
       // build
