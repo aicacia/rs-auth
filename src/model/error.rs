@@ -9,7 +9,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use utoipa::ToSchema;
-use validator::{ValidationError, ValidationErrorsKind};
+use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
 const GLOBAL_KEY: &str = "global";
 const INTERNAL_ERROR: &str = "internal_error";
@@ -56,26 +56,17 @@ impl From<String> for Message {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, ToSchema)]
-pub struct Messages {
-  errors: Vec<Message>,
-  warnings: Vec<Message>,
-}
+pub struct Messages(Vec<Message>);
 
 impl Messages {
   pub fn error(&mut self, msg: impl Into<Message>) -> &mut Self {
-    self.errors.push(msg.into());
-    self
-  }
-  pub fn warning(&mut self, msg: impl Into<Message>) -> &mut Self {
-    self.warnings.push(msg.into());
+    self.0.push(msg.into());
     self
   }
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, ToSchema)]
-pub struct Errors {
-  messages: HashMap<String, Messages>,
-}
+pub struct Errors(HashMap<String, Messages>);
 
 impl fmt::Display for Errors {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
@@ -119,23 +110,7 @@ impl Errors {
     let mut new = Self::default();
     match err {
       actix_web_validator::Error::Validate(validation_errors) => {
-        for (name, error) in validation_errors.errors() {
-          match error {
-            ValidationErrorsKind::Struct(errors) => {
-              // TODO: handle struct errors
-              log::info!("Struct name: {}, errors: {:?}", name, errors);
-            }
-            ValidationErrorsKind::List(errors) => {
-              // TODO: handle list errors
-              log::info!("List name: {}, errors: {:?}", name, errors);
-            }
-            ValidationErrorsKind::Field(errors) => {
-              for error in errors {
-                new.error(*name, error);
-              }
-            }
-          }
-        }
+        handle_validation_errors(&mut new, &mut String::new(), &validation_errors);
       }
       actix_web_validator::Error::Deserialize(err) => {
         log::error!("{}", err);
@@ -190,25 +165,54 @@ impl Errors {
 
   pub fn error(&mut self, name: impl Into<String>, msg: impl Into<Message>) -> &mut Self {
     self
-      .messages
+      .0
       .entry(name.into())
       .or_insert_with(Default::default)
       .error(msg);
-    self
-  }
-  pub fn warning(&mut self, name: impl Into<String>, msg: impl Into<Message>) -> &mut Self {
-    self
-      .messages
-      .entry(name.into())
-      .or_insert_with(Default::default)
-      .warning(msg);
     self
   }
 
   pub fn global_error(&mut self, msg: impl Into<Message>) -> &mut Self {
     self.error(GLOBAL_KEY, msg)
   }
-  pub fn global_warning(&mut self, msg: impl Into<Message>) -> &mut Self {
-    self.warning(GLOBAL_KEY, msg)
+}
+
+fn handle_validation_errors(
+  errors: &mut Errors,
+  current_name: &str,
+  validation_errors: &ValidationErrors,
+) {
+  for (name, error) in validation_errors.errors() {
+    let mut new_name = current_name.to_owned();
+    if new_name.is_empty() {
+      new_name.push_str(name);
+    } else {
+      new_name.push_str(&format!(".{}", name));
+    }
+    handle_validation_errors_kind(errors, &new_name, error);
+  }
+}
+
+fn handle_validation_errors_kind(
+  errors: &mut Errors,
+  current_name: &str,
+  error_kind: &ValidationErrorsKind,
+) {
+  match error_kind {
+    ValidationErrorsKind::Struct(validation_errors) => {
+      handle_validation_errors(errors, current_name, validation_errors);
+    }
+    ValidationErrorsKind::List(validation_errors) => {
+      for (index, e) in validation_errors {
+        let mut name = current_name.to_owned();
+        name.push_str(&format!("[{}]", index));
+        handle_validation_errors(errors, &mut name, e);
+      }
+    }
+    ValidationErrorsKind::Field(validation_errors) => {
+      for e in validation_errors {
+        errors.error(current_name, e);
+      }
+    }
   }
 }
