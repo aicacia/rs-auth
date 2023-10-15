@@ -26,10 +26,32 @@ INSERT INTO "config" ("name", "value") VALUES
   ('allow_public_signup', 'false');
 
 
+CREATE FUNCTION config_notify() RETURNS trigger AS $$
+DECLARE
+  "name" TEXT;
+  "value" JSONB;
+BEGIN
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+  "name" = NEW."name";
+  ELSE
+  "name" = OLD."name";
+  END IF;
+  IF TG_OP != 'UPDATE' OR NEW."value" != OLD."value" THEN
+  PERFORM pg_notify('config_channel', json_build_object('table', TG_TABLE_NAME, 'name', "name", 'value', NEW."value", 'action_type', TG_OP)::text);
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "config_notify_update" AFTER UPDATE ON "config" FOR EACH ROW EXECUTE PROCEDURE config_notify();
+CREATE TRIGGER "config_notify_insert" AFTER INSERT ON "config" FOR EACH ROW EXECUTE PROCEDURE config_notify();
+CREATE TRIGGER "config_notify_delete" AFTER DELETE ON "config" FOR EACH ROW EXECUTE PROCEDURE config_notify();
+
+
 CREATE TABLE "applications" (
 	"id" SERIAL PRIMARY KEY,
-  "name" VARCHAR(256) NOT NULL,
-  "uri" VARCHAR(256) NOT NULL,
+  "name" VARCHAR(255) NOT NULL,
+  "uri" VARCHAR(255) NOT NULL,
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -51,7 +73,7 @@ CREATE TABLE "application_configs" (
 CREATE TRIGGER "application_configs_set_timestamp" BEFORE UPDATE ON "application_configs" FOR EACH ROW EXECUTE PROCEDURE "trigger_set_timestamp"();
 
 INSERT INTO "application_configs" ("application_id", "name", "value") VALUES
-  (1, 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(256), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
+  (1, 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(255), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
   (1, 'jwt.expires_in_seconds', '86400'),
   (1, 'default_role', '2'),
   (1, 'uri', '"http://localhost:8080"'),
@@ -61,8 +83,8 @@ INSERT INTO "application_configs" ("application_id", "name", "value") VALUES
 
 CREATE TABLE "users"(
 	"id" SERIAL PRIMARY KEY,
-	"username" VARCHAR(256) NOT NULL,
-	"encrypted_password" VARCHAR(256) NOT NULL,
+	"username" VARCHAR(255) NOT NULL,
+	"encrypted_password" VARCHAR(255) NOT NULL,
   "reset_password_token" UUID,
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP

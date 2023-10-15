@@ -99,8 +99,8 @@ impl From<(UserRow, Vec<EmailRow>)> for User {
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct ResetUserPasswordRequest {
-  #[validate(length(min = 1, max = 256))]
+  #[validate(length(min = 1, max = 255))]
   pub password: String,
-  #[validate(length(min = 1, max = 256))]
+  #[validate(length(min = 1, max = 255))]
   pub password_confirmation: String,
 }

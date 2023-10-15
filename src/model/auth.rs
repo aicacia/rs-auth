@@ -16,9 +16,9 @@ pub struct SignUpWithPasswordRequest {
   pub username: String,
   #[validate(email)]
   pub email: Option<String>,
-  #[validate(length(min = 1, max = 256))]
+  #[validate(length(min = 1, max = 255))]
   pub password: String,
-  #[validate(length(min = 1, max = 256))]
+  #[validate(length(min = 1, max = 255), must_match(other = "password"))]
   pub password_confirmation: String,
 }
 
@@ -26,9 +26,9 @@ pub struct SignUpWithPasswordRequest {
 pub struct ResetPasswordRequest {
   pub application_id: i32,
   pub reset_password_token: Uuid,
-  #[validate(length(min = 1, max = 256))]
+  #[validate(length(min = 1, max = 255))]
   pub password: String,
-  #[validate(length(min = 1, max = 256))]
+  #[validate(length(min = 1, max = 255), must_match(other = "password"))]
   pub password_confirmation: String,
 }
 
