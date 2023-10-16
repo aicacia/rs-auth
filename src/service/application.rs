@@ -21,6 +21,19 @@ pub async fn get_application_by_id(
   Ok(application)
 }
 
+pub async fn get_applications(pool: &Pool<Postgres>) -> Result<Vec<ApplicationRow>> {
+  let applications = sqlx::query_as!(
+    ApplicationRow,
+    r#"SELECT
+      a.id, a.name, a.uri, a.created_at, a.updated_at
+    FROM applications a
+    LIMIT 1;"#
+  )
+  .fetch_all(pool)
+  .await?;
+  Ok(applications)
+}
+
 pub async fn get_application_config(
   pool: &Pool<Postgres>,
   application_id: i32,

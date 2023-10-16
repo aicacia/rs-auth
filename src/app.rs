@@ -1,7 +1,7 @@
 use crate::model::error::Errors;
 use crate::{
-  core::openapi::SecurityAddon, model::auth as auth_model, model::error as error_model,
-  model::user as user_model, model::util as util_model,
+  core::openapi::SecurityAddon, model::application as application_model, model::auth as auth_model,
+  model::error as error_model, model::user as user_model, model::util as util_model,
 };
 use actix_cors::Cors;
 use actix_web::{
@@ -17,7 +17,7 @@ use sqlx::{Pool, Postgres};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::controller::{auth, user, util};
+use crate::controller::{application, auth, user, util};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -33,6 +33,7 @@ use crate::controller::{auth, user, util};
     user::set_primary_email,
     user::reset_password,
     user::refresh_token,
+    application::index,
   ),
   components(
     schemas(
@@ -48,12 +49,14 @@ use crate::controller::{auth, user, util};
       user_model::Email,
       user_model::User,
       user_model::ResetUserPasswordRequest,
+      application_model::Application,
     )
   ),
   tags(
     (name = "util", description = "Utility endpoints"),
     (name = "auth", description = "Authentication endpoints"),
     (name = "user", description = "Users endpoints"),
+    (name = "application", description = "Applications endpoints"),
   ),
   modifiers(&SecurityAddon)
 )]
@@ -90,6 +93,7 @@ pub fn create_app(
     .configure(util::configure())
     .configure(auth::configure())
     .configure(user::configure())
+    .configure(application::configure())
     .service(
       SwaggerUi::new("/api-docs/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
     )

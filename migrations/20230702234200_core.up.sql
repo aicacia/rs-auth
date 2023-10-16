@@ -100,7 +100,7 @@ INSERT INTO "users" ("username", "encrypted_password")
 CREATE TABLE "emails"(
 	"id" SERIAL PRIMARY KEY,
 	"user_id" INT4 NOT NULL,
-	"email" VARCHAR(320) NOT NULL,
+	"email" VARCHAR(255) NOT NULL,
   "confirmed" boolean NOT NULL DEFAULT false,
   "confirmation_token" UUID,
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

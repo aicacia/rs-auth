@@ -16,11 +16,11 @@ pub async fn start_listening<T, F, FR>(
 ) -> Result<()>
 where
   T: DeserializeOwned + 'static,
-  F: Fn(T) -> FR,
+  F: Fn(T, Pool<Postgres>) -> FR,
   FR: Future<Output = Result<()>>,
 {
   log::info!("Listening for notifications on channels: {:?}", channels);
-  let mut listener = PgListener::connect_with(&pool).await.unwrap();
+  let mut listener = PgListener::connect_with(&pool).await?;
   listener.listen_all(channels).await?;
   tokio::pin!(listener);
   loop {
@@ -29,7 +29,7 @@ where
         Ok(Some(notification)) => {
           log::debug!("Received notification: {:?}", notification);
           match serde_json::from_str::<T>(notification.payload()) {
-            Ok(payload) => match call_back(payload).await {
+            Ok(payload) => match call_back(payload, pool.clone()).await {
               Ok(_) => {},
               Err(e) => {
                 log::error!("Error calling callback {}", e);

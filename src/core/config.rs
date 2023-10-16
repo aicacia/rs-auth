@@ -1,22 +1,23 @@
 use anyhow::Result;
-use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use sqlx::{Pool, Postgres};
-use std::net::IpAddr;
+use std::{net::IpAddr, sync::Arc};
 
 use crate::service::config::get_configs_map;
 
-static CONFIG: OnceCell<Config> = OnceCell::new();
+use super::{atomic_value::AtomicValue, db::start_listening};
+
+lazy_static! {
+  static ref CONFIG: AtomicValue<Config> = AtomicValue::new(Config::default());
+}
 
 pub async fn init_config(pool: &Pool<Postgres>) -> Result<()> {
-  CONFIG
-    .set(Config::new(pool).await?)
-    .expect("Config is already initialized");
+  CONFIG.set(Config::new(pool).await?);
   Ok(())
 }
 
-pub fn get_config() -> &'static Config {
-  CONFIG.get().expect("Config is not initialized")
+pub fn get_config() -> Arc<Config> {
+  CONFIG.get()
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -67,4 +68,33 @@ impl config::Source for RawSource {
   fn collect(&self) -> Result<config::Map<String, config::Value>, config::ConfigError> {
     Ok(self.map.clone())
   }
+}
+
+pub async fn config_listener(pool: Pool<Postgres>) -> Result<()> {
+  start_listening(
+    pool.clone(),
+    vec!["config_channel"],
+    move |payload: Payload, pool| async move {
+      log::info!("Config update: {:?}", payload);
+      CONFIG.set(Config::new(&pool).await?);
+      Ok(())
+    },
+  )
+  .await?;
+  Ok(())
+}
+
+#[derive(Deserialize, Debug)]
+pub enum ActionType {
+  INSERT,
+  UPDATE,
+  DELETE,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Payload {
+  pub table: String,
+  pub action_type: ActionType,
+  pub name: String,
+  pub value: serde_json::Value,
 }

@@ -23,4 +23,6 @@ COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/auth /usr/loca
 
 ENV RUN_MODE=production
 
+RUN echo DATABASE_URL=postgres://postgres:postgres@localhost:5432/auth >> .env
+
 CMD ["auth"]
