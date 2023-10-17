@@ -14,11 +14,11 @@ use crate::{
 #[utoipa::path(
   context_path = "/applications",
   responses(
-      (status = 200, description = "Get all application", body = Application),
-      (status = 500, body = Errors),
+    (status = 200, description = "Get all application", body = Application),
+    (status = 500, body = Errors),
   ),
   security(
-      ("Authorization" = [])
+    ("Authorization" = [])
   )
 )]
 #[get("")]

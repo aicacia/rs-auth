@@ -11,7 +11,7 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE TABLE "config" (
-	"name" TEXT NOT NULL PRIMARY KEY,
+	"name" VARCHAR(255) NOT NULL PRIMARY KEY,
 	"value" JSONB NOT NULL DEFAULT 'null',
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -22,13 +22,12 @@ INSERT INTO "config" ("name", "value") VALUES
   ('server.address', '"0.0.0.0"'),
   ('server.port', '8080'),
   ('server.uri', '"http://localhost:8080"'),
-  ('log_level', '"debug"'),
-  ('allow_public_signup', 'false');
+  ('log_level', '"debug"');
 
 
 CREATE FUNCTION config_notify() RETURNS trigger AS $$
 DECLARE
-  "name" TEXT;
+  "name" VARCHAR(255);
   "value" JSONB;
 BEGIN
   IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
@@ -63,7 +62,7 @@ INSERT INTO "applications" ("name", "uri") VALUES
 
 CREATE TABLE "application_configs" (
   "application_id" INT4 NOT NULL,
-	"name" TEXT NOT NULL,
+	"name" VARCHAR(255) NOT NULL,
 	"value" JSONB NOT NULL DEFAULT 'null',
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -78,7 +77,9 @@ INSERT INTO "application_configs" ("application_id", "name", "value") VALUES
   (1, 'default_role', '2'),
   (1, 'uri', '"http://localhost:8080"'),
   (1, 'mail.support.email', '"support@localhost.com"'),
-  (1, 'mail.support.name', '"Support"');
+  (1, 'mail.support.name', '"Support"'),
+  (1, 'signup.enabled', 'false'),
+  (1, 'signup.password', 'false');
 
 
 CREATE TABLE "users"(
@@ -126,4 +127,33 @@ CREATE TABLE "application_users"(
 
 INSERT INTO "application_users" ("application_id", "user_id")
   VALUES (1, 1);
+
+
+CREATE TABLE "application_permissions"(
+	"id" SERIAL PRIMARY KEY,
+	"application_id" INT4 NOT NULL,
+	"name" VARCHAR(255) NOT NULL,
+	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "application_permissions_application_id_fk" FOREIGN KEY("application_id") REFERENCES "applications"("id") ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX "application_permissions_name_unique_idx" ON "application_permissions" ("name");
+
+INSERT INTO "application_permissions" ("application_id", "name")
+  VALUES
+    (1, 'read'),
+    (1, 'write');
+
+
+CREATE TABLE "user_application_permissions"(
+	"user_id" INT4 NOT NULL,
+	"application_permission_id" INT4 NOT NULL,
+	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "user_application_permissions_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE,
+  CONSTRAINT "user_application_permissions_application_permission_id_fk" FOREIGN KEY("application_permission_id") REFERENCES "application_permissions"("id") ON DELETE CASCADE
+);
+
+INSERT INTO "user_application_permissions" ("user_id", "application_permission_id")
+  VALUES
+    (1, 1),
+    (1, 2);
 

@@ -5,14 +5,13 @@ use crate::{
   },
   model::{
     auth::{
-      RequestResetPasswordRequest, ResetPasswordRequest, SignInWithPasswordRequest,
+      RequestResetPasswordRequest, ResetPasswordRequest, SignInWithPasswordRequest, SignUpMethods,
       SignUpWithPasswordRequest,
     },
     error::Errors,
   },
   service::{
-    application::get_application_uri,
-    config::get_config,
+    application::{get_application_config, get_application_uri},
     user::{
       confirm_user_email, request_user_password_reset, user_email_taken, user_has_application,
       user_username_taken,
@@ -27,7 +26,7 @@ use crate::{
   },
 };
 use actix_web::{
-  post, put,
+  get, post, put,
   web::{Data, Path, ServiceConfig},
   HttpResponse, Responder,
 };
@@ -119,8 +118,15 @@ pub async fn sign_up_with_password(
       return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
-  if get_config(pool.as_ref(), "allow_public_signup").await != serde_json::Value::Bool(true) {
+  if get_application_config(pool.as_ref(), body.application_id, "signup.enabled").await
+    != serde_json::Value::Bool(true)
+  {
     return HttpResponse::BadRequest().json(Errors::from("sign_up_disabled"));
+  }
+  if get_application_config(pool.as_ref(), body.application_id, "signup.password").await
+    != serde_json::Value::Bool(true)
+  {
+    return HttpResponse::BadRequest().json(Errors::from("password_sign_up_disabled"));
   }
   if body.password != body.password_confirmation {
     return HttpResponse::BadRequest()
@@ -299,6 +305,30 @@ pub async fn confirm_email(path: Path<uuid::Uuid>, pool: Data<Pool<Postgres>>) -
   HttpResponse::NoContent().finish()
 }
 
+#[utoipa::path(
+  responses(
+      (status = 200, description = "Returns sign up methods for an application", body = SignUpMethods),
+      (status = 400, body = Errors),
+  ),
+  security(
+      ("Authorization" = [])
+  )
+)]
+#[get("/auth/sign-up-methods/{application_id}")]
+pub async fn sign_up_methods(path: Path<i32>, pool: Data<Pool<Postgres>>) -> impl Responder {
+  let application_id = path.into_inner();
+  let mut sign_up_methods_response = SignUpMethods::default();
+
+  sign_up_methods_response.enabled =
+    get_application_config(pool.as_ref(), application_id, "signup.enabled").await
+      == serde_json::Value::Bool(true);
+  sign_up_methods_response.password =
+    get_application_config(pool.as_ref(), application_id, "signup.password").await
+      == serde_json::Value::Bool(true);
+
+  HttpResponse::Ok().json(sign_up_methods_response.validate())
+}
+
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   |config: &mut ServiceConfig| {
     config
@@ -306,6 +336,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
       .service(sign_up_with_password)
       .service(request_reset_password)
       .service(reset_password_with_token)
-      .service(confirm_email);
+      .service(confirm_email)
+      .service(sign_up_methods);
   }
 }

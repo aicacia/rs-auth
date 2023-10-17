@@ -38,3 +38,25 @@ pub struct RequestResetPasswordRequest {
   #[validate(email)]
   pub email: String,
 }
+
+#[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
+pub struct SignUpMethods {
+  pub enabled: bool,
+  pub password: bool,
+}
+
+impl Default for SignUpMethods {
+  fn default() -> Self {
+    Self {
+      enabled: false,
+      password: false,
+    }
+  }
+}
+
+impl SignUpMethods {
+  pub fn validate(mut self) -> Self {
+    self.enabled = self.password;
+    self
+  }
+}

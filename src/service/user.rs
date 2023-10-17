@@ -4,7 +4,10 @@ use uuid::Uuid;
 
 use crate::{
   core::mail::send_support_mail,
-  model::user::{EmailRow, UserRow},
+  model::{
+    application::ApplicationRow,
+    user::{EmailRow, UserRow},
+  },
 };
 
 pub async fn get_user_by_id(pool: &Pool<Postgres>, user_id: i32) -> Result<UserRow> {
@@ -111,11 +114,6 @@ pub async fn create_user(
         .fetch_one(&mut **tx)
         .await?;
 
-        sqlx::query!(
-          "INSERT INTO application_users (application_id, user_id) VALUES ($1, $2);",
-          application_id, user.id
-        ).execute(&mut **tx).await?;
-
         let email = if let Some(email_str) = create_user.email.as_ref() {
             let confirmation_token = Uuid::new_v4();
             let email = sqlx::query_as!(
@@ -165,6 +163,40 @@ pub async fn create_user(
   }
 
   Ok((user, email))
+}
+
+pub async fn add_user_application(
+  pool: &Pool<Postgres>,
+  user_id: i32,
+  application_id: i32,
+) -> Result<()> {
+  sqlx::query!(
+    "INSERT INTO application_users (application_id, user_id) VALUES ($1, $2);",
+    application_id,
+    user_id
+  )
+  .execute(pool)
+  .await?;
+  Ok(())
+}
+
+pub async fn get_user_applications(
+  pool: &Pool<Postgres>,
+  user_id: i32,
+) -> Result<Vec<ApplicationRow>> {
+  Ok(
+    sqlx::query_as!(
+      ApplicationRow,
+      r#"SELECT
+        a.id, a.name, a.uri, a.created_at, a.updated_at
+      FROM application_users au
+        JOIN applications a ON a.id=au.application_id
+      WHERE au.user_id=$1;"#,
+      user_id
+    )
+    .fetch_all(pool)
+    .await?,
+  )
 }
 
 pub async fn request_user_password_reset(

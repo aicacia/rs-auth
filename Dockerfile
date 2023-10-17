@@ -20,9 +20,7 @@ FROM alpine:3.18
 WORKDIR /app
 
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/auth /usr/local/bin
-
 ENV RUN_MODE=production
-
-RUN echo DATABASE_URL=postgres://postgres:postgres@localhost:5432/auth >> .env
+RUN touch .env
 
 CMD ["auth"]

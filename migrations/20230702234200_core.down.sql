@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS "user_application_permissions" cascade;
+DROP TABLE IF EXISTS "application_permissions" cascade;
 DROP TABLE IF EXISTS "application_users" cascade;
 
 DROP TABLE IF EXISTS "users" cascade;

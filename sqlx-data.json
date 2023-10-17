@@ -1,5 +1,49 @@
 {
   "db": "PostgreSQL",
+  "00fbfa9771a6075bc80384f1332ffb8e64529e70571dc1ef35166e4a1c85a3dd": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "uri",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT\n        a.id, a.name, a.uri, a.created_at, a.updated_at\n      FROM application_users au\n        JOIN applications a ON a.id=au.application_id\n      WHERE au.user_id=$1;"
+  },
   "025bc92f5f4ce51af9abb41014bb60968145bbe3641549f3725d283229640dfe": {
     "describe": {
       "columns": [],
@@ -188,7 +232,7 @@
       "parameters": {
         "Left": [
           "Int4",
-          "Text",
+          "Varchar",
           "Jsonb"
         ]
       }
@@ -259,7 +303,7 @@
         {
           "name": "name",
           "ordinal": 0,
-          "type_info": "Text"
+          "type_info": "Varchar"
         },
         {
           "name": "value",
@@ -386,6 +430,48 @@
       }
     },
     "query": "INSERT INTO users (username, encrypted_password) VALUES ($1, $2)\n            RETURNING id, email_id, username, encrypted_password, reset_password_token, created_at, updated_at;"
+  },
+  "6fd76f99af871c7286ffc7ea03a37a95f382a5621500707fd52af74dc1dbfb83": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "uri",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 3,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 4,
+          "type_info": "Timestamptz"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT\n      a.id, a.name, a.uri, a.created_at, a.updated_at\n    FROM applications a\n    LIMIT 1;"
   },
   "7048788b47e871b6355ed390983cbf1869f3dfb168b87a7e4729f4b54a8ed94c": {
     "describe": {

@@ -10,7 +10,7 @@ use crate::{
   core::{encryption::encrypt_password, jwt::Claims},
   middleware::auth::Authorization,
   model::{
-    application::ApplicationRow,
+    application::{Application, ApplicationRow},
     error::Errors,
     user::{ResetUserPasswordRequest, User, UserRow},
   },
@@ -18,7 +18,7 @@ use crate::{
     application::{
       get_application_jwt_expires_in_seconds, get_application_jwt_secret, get_application_uri,
     },
-    user::{get_user_emails, reset_user_password, set_user_primary_email},
+    user::{get_user_applications, get_user_emails, reset_user_password, set_user_primary_email},
   },
 };
 
@@ -43,6 +43,29 @@ pub async fn current(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responde
   };
   let user_response: User = (user, emails).into();
   HttpResponse::Ok().json(user_response)
+}
+
+#[utoipa::path(
+  context_path = "/users",
+  responses(
+      (status = 200, description = "Get current user's application", body = Application),
+      (status = 500, body = Errors),
+  ),
+  security(
+      ("Authorization" = [])
+  )
+)]
+#[get("/applications")]
+pub async fn applications(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responder {
+  let applications = match get_user_applications(pool.as_ref(), user.id).await {
+    Ok(e) => e,
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::BadRequest().json(Errors::internal_error());
+    }
+  };
+  let applications_response: Vec<Application> = applications.into_iter().map(Into::into).collect();
+  HttpResponse::Ok().json(applications_response)
 }
 
 #[utoipa::path(
@@ -161,7 +184,8 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
         .service(current)
         .service(set_primary_email)
         .service(refresh_token)
-        .service(reset_password),
+        .service(reset_password)
+        .service(applications),
     );
   }
 }
