@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE users SET encrypted_password = $1, reset_password_token = null WHERE id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b888f65b9b62725e3a184a56995fe5d57a87337cb6ccae05f10ba1149d2fc0b0"
+}

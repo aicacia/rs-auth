@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE users u SET email_id=$2 FROM emails e WHERE u.id=$1 AND e.id=$2 AND u.id = e.user_id;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "025bc92f5f4ce51af9abb41014bb60968145bbe3641549f3725d283229640dfe"
+}

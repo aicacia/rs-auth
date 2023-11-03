@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE users SET \"email_id\" = $2 WHERE id = $1;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "12e034e5299edfb76a7b5cc1d4c1d9cb7d0663fe1e5b7bbb84193df79b821768"
+}

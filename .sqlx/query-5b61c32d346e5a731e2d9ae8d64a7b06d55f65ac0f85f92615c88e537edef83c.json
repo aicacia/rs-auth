@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE emails SET confirmed=true, confirmation_token=NULL WHERE confirmation_token = $1;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5b61c32d346e5a731e2d9ae8d64a7b06d55f65ac0f85f92615c88e537edef83c"
+}

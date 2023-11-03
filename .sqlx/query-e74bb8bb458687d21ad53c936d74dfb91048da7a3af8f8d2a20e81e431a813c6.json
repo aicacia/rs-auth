@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT u.id\n      FROM users u\n      JOIN emails e ON e.user_id = u.id\n      WHERE e.email = $1\n      LIMIT 1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e74bb8bb458687d21ad53c936d74dfb91048da7a3af8f8d2a20e81e431a813c6"
+}
