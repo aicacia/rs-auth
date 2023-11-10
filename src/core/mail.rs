@@ -1,5 +1,6 @@
 use anyhow::Result;
 use chrono::Datelike;
+use futures::join;
 use lettre::{
   message::header::ContentType, transport::smtp::authentication::Credentials, Message,
   SmtpTransport, Transport,
@@ -47,22 +48,30 @@ async fn send_mail(
   subject: String,
   body: String,
 ) -> Result<()> {
-  let from_email = get_application_config(&pool, application_id, &from_email_key)
-    .await
-    .as_str()
-    .unwrap_or_default()
-    .to_owned();
-  let from_name = get_application_config(&pool, application_id, &from_name_key)
-    .await
-    .as_str()
-    .unwrap_or_default()
-    .to_owned();
-  let uri = get_application_uri(&pool, application_id).await;
-  let support_email = get_application_config(&pool, application_id, "mail.support.email")
-    .await
-    .as_str()
-    .unwrap_or_default()
-    .to_owned();
+  let (from_email, from_name, uri, support_email) = join!(
+    async {
+      get_application_config(&pool, application_id, &from_email_key)
+        .await
+        .as_str()
+        .unwrap_or_default()
+        .to_owned()
+    },
+    async {
+      get_application_config(&pool, application_id, &from_name_key)
+        .await
+        .as_str()
+        .unwrap_or_default()
+        .to_owned()
+    },
+    get_application_uri(&pool, application_id),
+    async {
+      get_application_config(&pool, application_id, "mail.support.email")
+        .await
+        .as_str()
+        .unwrap_or_default()
+        .to_owned()
+    }
+  );
 
   let msg = Message::builder()
     .from(format!("{} <{}>", from_name, from_email).parse()?)
@@ -86,16 +95,22 @@ async fn create_mailer(pool: &Pool<Postgres>, application_id: i32) -> Result<Smt
   if relay.is_empty() {
     Ok(SmtpTransport::unencrypted_localhost())
   } else {
-    let username = get_application_config(pool, application_id, "mail.username")
-      .await
-      .as_str()
-      .unwrap_or_default()
-      .to_owned();
-    let password = get_application_config(pool, application_id, "mail.password")
-      .await
-      .as_str()
-      .unwrap_or_default()
-      .to_owned();
+    let (username, password) = join!(
+      async {
+        get_application_config(pool, application_id, "mail.username")
+          .await
+          .as_str()
+          .unwrap_or_default()
+          .to_owned()
+      },
+      async {
+        get_application_config(pool, application_id, "mail.password")
+          .await
+          .as_str()
+          .unwrap_or_default()
+          .to_owned()
+      }
+    );
     let creds = Credentials::new(username, password);
     let mailer = SmtpTransport::relay(&relay)?.credentials(creds).build();
     Ok(mailer)

@@ -4,6 +4,7 @@ use actix_web::{
   HttpResponse, Responder,
 };
 use actix_web_validator::Json;
+use futures::join;
 use sqlx::{Pool, Postgres};
 
 use crate::{
@@ -154,10 +155,11 @@ pub async fn refresh_token(
   user: UserRow,
 ) -> impl Responder {
   let now_in_seconds = chrono::Utc::now().timestamp() as usize;
-  let expires_in_seconds =
-    get_application_jwt_expires_in_seconds(pool.as_ref(), application.id).await;
-  let secret = get_application_jwt_secret(pool.as_ref(), application.id).await;
-  let iss = get_application_uri(pool.as_ref(), application.id).await;
+  let (expires_in_seconds, iss, secret) = join!(
+    get_application_jwt_expires_in_seconds(pool.as_ref(), application.id),
+    get_application_uri(pool.as_ref(), application.id),
+    get_application_jwt_secret(pool.as_ref(), application.id)
+  );
   let jwt = match Claims::new(
     application.id,
     user.id,

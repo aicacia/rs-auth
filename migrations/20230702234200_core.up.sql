@@ -75,7 +75,7 @@ INSERT INTO "application_configs" ("application_id", "name", "value") VALUES
   (1, 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(255), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
   (1, 'jwt.expires_in_seconds', '86400'),
   (1, 'default_role', '2'),
-  (1, 'uri', '"http://localhost:8080"'),
+  (1, 'uri', '"http://localhost:5173"'),
   (1, 'mail.support.email', '"support@localhost.com"'),
   (1, 'mail.support.name', '"Support"'),
   (1, 'signup.enabled', 'false'),

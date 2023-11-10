@@ -11,7 +11,7 @@ use serde_json::Value;
 use utoipa::ToSchema;
 use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
-const GLOBAL_KEY: &str = "global";
+const APPLICATION_KEY: &str = "application";
 const INTERNAL_ERROR: &str = "internal_error";
 
 lazy_static! {
@@ -86,7 +86,7 @@ where
 {
   fn from(msg: T) -> Self {
     let mut new = Self::default();
-    new.error(GLOBAL_KEY, msg);
+    new.error(APPLICATION_KEY, msg);
     new
   }
 }
@@ -172,8 +172,8 @@ impl Errors {
     self
   }
 
-  pub fn global_error(&mut self, msg: impl Into<Message>) -> &mut Self {
-    self.error(GLOBAL_KEY, msg)
+  pub fn application_error(&mut self, msg: impl Into<Message>) -> &mut Self {
+    self.error(APPLICATION_KEY, msg)
   }
 }
 

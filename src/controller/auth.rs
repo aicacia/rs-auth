@@ -31,6 +31,7 @@ use actix_web::{
   HttpResponse, Responder,
 };
 use actix_web_validator::Json;
+use futures::join;
 use sqlx::{Pool, Postgres};
 
 #[utoipa::path(
@@ -75,10 +76,11 @@ pub async fn sign_in_with_password(
   }
 
   let now_in_seconds = chrono::Utc::now().timestamp() as usize;
-  let expires_in_seconds =
-    get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id).await;
-  let iss = get_application_uri(pool.as_ref(), body.application_id).await;
-  let secret = get_application_jwt_secret(pool.as_ref(), body.application_id).await;
+  let (expires_in_seconds, iss, secret) = join!(
+    get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id),
+    get_application_uri(pool.as_ref(), body.application_id),
+    get_application_jwt_secret(pool.as_ref(), body.application_id)
+  );
   let jwt = match Claims::new(
     body.application_id,
     user.id,
@@ -175,10 +177,11 @@ pub async fn sign_up_with_password(
   };
 
   let now_in_seconds = chrono::Utc::now().timestamp() as usize;
-  let expires_in_seconds =
-    get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id).await;
-  let iss = get_application_uri(pool.as_ref(), body.application_id).await;
-  let secret = get_application_jwt_secret(pool.as_ref(), body.application_id).await;
+  let (expires_in_seconds, iss, secret) = join!(
+    get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id),
+    get_application_uri(pool.as_ref(), body.application_id),
+    get_application_jwt_secret(pool.as_ref(), body.application_id)
+  );
   let jwt = match Claims::new(
     body.application_id,
     user.id,
@@ -261,10 +264,11 @@ pub async fn reset_password_with_token(
   };
 
   let now_in_seconds = chrono::Utc::now().timestamp() as usize;
-  let expires_in_seconds =
-    get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id).await;
-  let iss = get_application_uri(pool.as_ref(), body.application_id).await;
-  let secret = get_application_jwt_secret(pool.as_ref(), body.application_id).await;
+  let (expires_in_seconds, iss, secret) = join!(
+    get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id),
+    get_application_uri(pool.as_ref(), body.application_id),
+    get_application_jwt_secret(pool.as_ref(), body.application_id)
+  );
   let jwt = match Claims::new(
     body.application_id,
     user.id,
@@ -319,12 +323,25 @@ pub async fn sign_up_methods(path: Path<i32>, pool: Data<Pool<Postgres>>) -> imp
   let application_id = path.into_inner();
   let mut sign_up_methods_response = SignUpMethods::default();
 
-  sign_up_methods_response.enabled =
-    get_application_config(pool.as_ref(), application_id, "signup.enabled").await
-      == serde_json::Value::Bool(true);
-  sign_up_methods_response.password =
-    get_application_config(pool.as_ref(), application_id, "signup.password").await
-      == serde_json::Value::Bool(true);
+  let (signup_enabled, signup_password) = join!(
+    async {
+      get_application_config(pool.as_ref(), application_id, "signup.enabled")
+        .await
+        .as_bool()
+        .unwrap_or(false)
+    },
+    async {
+      get_application_config(pool.as_ref(), application_id, "signup.password")
+        .await
+        .as_bool()
+        .unwrap_or(false)
+    },
+  );
+
+  if signup_enabled {
+    sign_up_methods_response.enabled = signup_enabled;
+    sign_up_methods_response.password = signup_password;
+  }
 
   HttpResponse::Ok().json(sign_up_methods_response.validate())
 }
