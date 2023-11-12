@@ -13,13 +13,16 @@ use crate::{
   model::{
     application::{Application, ApplicationRow},
     error::Errors,
-    user::{ResetUserPasswordRequest, User, UserRow},
+    user::{ChangeUsernameRequest, ResetUserPasswordRequest, User, UserRow},
   },
   service::{
     application::{
       get_application_jwt_expires_in_seconds, get_application_jwt_secret, get_application_uri,
     },
-    user::{get_user_applications, get_user_emails, reset_user_password, set_user_primary_email},
+    user::{
+      change_user_username, get_user_applications, get_user_emails, reset_user_password,
+      set_user_primary_email,
+    },
   },
 };
 
@@ -44,29 +47,6 @@ pub async fn current(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responde
   };
   let user_response: User = (user, emails).into();
   HttpResponse::Ok().json(user_response)
-}
-
-#[utoipa::path(
-  context_path = "/users",
-  responses(
-      (status = 200, description = "Get current user's application", body = Application),
-      (status = 500, body = Errors),
-  ),
-  security(
-      ("Authorization" = [])
-  )
-)]
-#[get("/applications")]
-pub async fn applications(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responder {
-  let applications = match get_user_applications(pool.as_ref(), user.id).await {
-    Ok(e) => e,
-    Err(e) => {
-      log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
-    }
-  };
-  let applications_response: Vec<Application> = applications.into_iter().map(Into::into).collect();
-  HttpResponse::Ok().json(applications_response)
 }
 
 #[utoipa::path(
@@ -178,6 +158,65 @@ pub async fn refresh_token(
   HttpResponse::Created().content_type("text/plain").body(jwt)
 }
 
+#[utoipa::path(
+  context_path = "/users",
+  request_body = ChangeUsernameRequest,
+  responses(
+      (status = 200, description = "Changed User's username"),
+      (status = 400, body = Errors),
+      (status = 500, body = Errors),
+  ),
+  security(
+      ("Authorization" = [])
+  )
+)]
+#[put("/change-username")]
+pub async fn change_username(
+  pool: Data<Pool<Postgres>>,
+  user: UserRow,
+  body: Json<ChangeUsernameRequest>,
+) -> impl Responder {
+  match change_user_username(pool.as_ref(), user.id, &body.username).await {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("{}", e);
+      match &e {
+        sqlx::Error::Database(e) => {
+          if let Some(_) = e.constraint() {
+            return HttpResponse::BadRequest().json(Errors::from("taken"));
+          }
+        }
+        _ => (),
+      }
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
+    }
+  };
+  HttpResponse::NoContent().finish()
+}
+
+#[utoipa::path(
+  context_path = "/users",
+  responses(
+      (status = 200, description = "Get current user's application", body = Application),
+      (status = 500, body = Errors),
+  ),
+  security(
+      ("Authorization" = [])
+  )
+)]
+#[get("/applications")]
+pub async fn applications(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responder {
+  let applications = match get_user_applications(pool.as_ref(), user.id).await {
+    Ok(e) => e,
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::BadRequest().json(Errors::internal_error());
+    }
+  };
+  let applications_response: Vec<Application> = applications.into_iter().map(Into::into).collect();
+  HttpResponse::Ok().json(applications_response)
+}
+
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   |config: &mut ServiceConfig| {
     config.service(
@@ -187,6 +226,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
         .service(set_primary_email)
         .service(refresh_token)
         .service(reset_password)
+        .service(change_username)
         .service(applications),
     );
   }

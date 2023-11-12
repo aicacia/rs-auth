@@ -304,3 +304,18 @@ pub async fn user_has_application(
   .await?;
   Ok(application_user.is_some())
 }
+
+pub async fn change_user_username(
+  pool: &Pool<Postgres>,
+  user_id: i32,
+  username: &str,
+) -> sqlx::Result<UserRow> {
+  sqlx::query_as!(
+      UserRow,
+      r#"UPDATE users SET username=$1 WHERE id=$2 RETURNING id, email_id, username, encrypted_password, reset_password_token, created_at, updated_at;"#,
+      username,
+      user_id
+    )
+    .fetch_one(pool)
+    .await
+}

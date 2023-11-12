@@ -1,3 +1,4 @@
+use super::auth::validate_username;
 use actix_web::{dev::Payload, FromRequest, HttpMessage, HttpRequest};
 use chrono::{DateTime, Utc};
 use futures::future::{err, ok};
@@ -103,4 +104,10 @@ pub struct ResetUserPasswordRequest {
   pub password: String,
   #[validate(length(min = 1, max = 255))]
   pub password_confirmation: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
+pub struct ChangeUsernameRequest {
+  #[validate(length(min = 1), custom = "validate_username")]
+  pub username: String,
 }

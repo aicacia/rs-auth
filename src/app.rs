@@ -34,6 +34,7 @@ use crate::controller::{application, auth, user, util};
     user::set_primary_email,
     user::reset_password,
     user::refresh_token,
+    user::change_username,
     user::applications,
     application::index,
   ),
@@ -52,6 +53,7 @@ use crate::controller::{application, auth, user, util};
       user_model::Email,
       user_model::User,
       user_model::ResetUserPasswordRequest,
+      user_model::ChangeUsernameRequest,
       application_model::Application,
     )
   ),

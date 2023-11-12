@@ -10,6 +10,19 @@ spec:
     name: {{ include "aicacia-auth_api.fullname" . }}
   minReplicas: {{ .Values.replicas.min }}
   maxReplicas: {{ .Values.replicas.max }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.replicas.scaleDown.stabilizationWindowSeconds }}
+      {{- with .Values.replicas.scaleDown.policies }}
+      policies:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.replicas.scaleUp.stabilizationWindowSeconds }}
+      {{- with .Values.replicas.scaleUp.policies }}
+      policies:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   metrics:
     - type: Resource
       resource:
@@ -17,3 +30,9 @@ spec:
         target:
           type: Utilization
           averageUtilization: {{ .Values.replicas.resource.cpu.utilization }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.replicas.resource.memory.utilization }}

@@ -30,3 +30,15 @@ aicacia auth api
 
 - drop the database `sqlx database drop`
 - revert migrations `sqlx migrate revert`
+
+## Docker/Helm
+
+### Deploy
+
+- `docker build -t ghcr.io/aicacia/auth-api:latest .`
+- `docker push ghcr.io/aicacia/auth-api:latest`
+- `helm upgrade auth helm/auth-api -n api --install -f values.yaml --set image.hash="$(docker inspect --format='{{index .Id}}' ghcr.io/aicacia/auth-api:latest)"`
+
+### Undeploy
+
+- `helm delete -n api auth`

@@ -18,11 +18,7 @@ spec:
         {{- include "aicacia-auth_api.selectorLabels" . | nindent 8 }}
     spec:
       imagePullSecrets:
-        - name: docker-registry
-      volumes:
-        - name: {{ include "aicacia-auth_api.fullname" . }}-config-volume
-          configMap:
-            name: {{ include "aicacia-auth_api.fullname" . }}-config
+        - name: registry
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
@@ -42,11 +38,6 @@ spec:
             httpGet:
               path: /health
               port: http
-          volumeMounts:
-            - name: {{ include "aicacia-auth_api.fullname" . }}-config-volume
-              mountPath: /app/config/default.toml
-              subPath: default.toml
-              readOnly: true
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

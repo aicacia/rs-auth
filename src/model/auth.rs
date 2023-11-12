@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
-use validator::Validate;
+use validator::{Validate, ValidationError};
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct SignInWithPasswordRequest {
   pub application_id: i32,
+  #[validate(length(min = 1), custom = "validate_username")]
   pub username_or_email: String,
   pub password: String,
 }
@@ -13,6 +14,7 @@ pub struct SignInWithPasswordRequest {
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct SignUpWithPasswordRequest {
   pub application_id: i32,
+  #[validate(length(min = 1), custom = "validate_username")]
   pub username: String,
   #[validate(email)]
   pub email: Option<String>,
@@ -59,4 +61,11 @@ impl SignUpMethods {
     self.enabled = self.password;
     self
   }
+}
+
+pub fn validate_username(username: &str) -> Result<(), ValidationError> {
+  if username.trim().len() != username.len() {
+    return Err(ValidationError::new("username_whitespace"));
+  }
+  Ok(())
 }

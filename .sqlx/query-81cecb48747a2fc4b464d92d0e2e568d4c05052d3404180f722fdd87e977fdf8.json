@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE users SET username=$1 WHERE id=$2 RETURNING id, email_id, username, encrypted_password, reset_password_token, created_at, updated_at;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "email_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "encrypted_password",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "reset_password_token",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "81cecb48747a2fc4b464d92d0e2e568d4c05052d3404180f722fdd87e977fdf8"
+}

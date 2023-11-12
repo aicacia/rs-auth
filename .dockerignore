@@ -1,7 +1,9 @@
-.vscode
-target
-.cargo/config.toml
-config/*.toml
-!config/default.toml
-.env
-!.env.example
+/.cargo
+/.github
+/.vscode
+/helm
+/target
+/tests
+/.env*
+/postgres-docker-compose.yaml
+/values.yaml
