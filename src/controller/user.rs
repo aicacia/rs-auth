@@ -6,9 +6,10 @@ use actix_web::{
 use actix_web_validator::Json;
 use futures::join;
 use sqlx::{Pool, Postgres};
+use uuid::Uuid;
 
 use crate::{
-  core::{encryption::encrypt_password, jwt::Claims},
+  core::{encryption::encrypt_password, jwt::Claims, mail::send_support_mail},
   middleware::auth::Authorization,
   model::{
     application::{Application, ApplicationRow},
@@ -21,7 +22,7 @@ use crate::{
     },
     user::{
       change_user_username, get_user_applications, get_user_emails, reset_user_password,
-      set_user_primary_email,
+      set_user_email_confirmation_token, set_user_primary_email,
     },
   },
 };
@@ -76,6 +77,53 @@ pub async fn set_primary_email(
       return HttpResponse::BadRequest().json(Errors::internal_error());
     }
   };
+  HttpResponse::NoContent().finish()
+}
+
+#[utoipa::path(
+  context_path = "/users",
+  responses(
+      (status = 204, description = "Sends confirmation email"),
+      (status = 400, body = Errors),
+  ),
+  security(
+      ("Authorization" = [])
+  )
+)]
+#[put("/send-confirmation/{email_id}")]
+pub async fn send_confirmation_email(
+  application: ApplicationRow,
+  user: UserRow,
+  path: Path<i32>,
+  pool: Data<Pool<Postgres>>,
+) -> impl Responder {
+  let email_id = path.into_inner();
+  let confirmation_token = Uuid::new_v4();
+  let email =
+    match set_user_email_confirmation_token(pool.as_ref(), user.id, email_id, &confirmation_token)
+      .await
+    {
+      Ok(Some(e)) => e,
+      Ok(None) => {
+        return HttpResponse::BadRequest().json(Errors::new().error("email_id", "invalid_email"));
+      }
+      Err(e) => {
+        log::error!("{}", e);
+        return HttpResponse::BadRequest().json(Errors::internal_error());
+      }
+    };
+  send_support_mail(
+    pool.as_ref().clone(),
+    application.id,
+    user.username.to_owned(),
+    email.email.to_owned(),
+    "Confirmation Token".to_owned(),
+    format!(
+      r#"<h1>Welcome!</h1>
+    <p>Your confirmation token is: <code>{}</code></p>"#,
+      confirmation_token
+    ),
+  );
   HttpResponse::NoContent().finish()
 }
 
@@ -224,6 +272,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
         .wrap(Authorization)
         .service(current)
         .service(set_primary_email)
+        .service(send_confirmation_email)
         .service(refresh_token)
         .service(reset_password)
         .service(change_username)

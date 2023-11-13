@@ -1,9 +1,15 @@
 replicas:
   min: 1
-  max: 16
+  max: 8
   resource:
     cpu:
+      utilization: 60
+    memory:
       utilization: 90
+  scaleDown:
+    stabilizationWindowSeconds: 30
+  scaleUp:
+    stabilizationWindowSeconds: 0
 
 image:
   repository: ghcr.io/aicacia/auth

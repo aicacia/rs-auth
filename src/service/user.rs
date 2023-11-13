@@ -265,6 +265,23 @@ pub async fn reset_user_password(
   Ok(result.rows_affected() > 0)
 }
 
+pub async fn set_user_email_confirmation_token(
+  pool: &Pool<Postgres>,
+  user_id: i32,
+  email_id: i32,
+  confirmation_token: &Uuid,
+) -> Result<Option<EmailRow>> {
+  Ok(sqlx::query_as!(
+    EmailRow,
+    "UPDATE emails SET confirmation_token=$1 WHERE user_id=$2 AND id=$3 RETURNING id, user_id, email, confirmed, confirmation_token, created_at, updated_at;",
+    confirmation_token,
+    user_id,
+    email_id,
+  )
+  .fetch_optional(pool)
+  .await?)
+}
+
 pub async fn confirm_user_email(pool: &Pool<Postgres>, confirmation_token: &Uuid) -> Result<bool> {
   let result = sqlx::query!(
     "UPDATE emails SET confirmed=true, confirmation_token=NULL WHERE confirmation_token = $1;",
