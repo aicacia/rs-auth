@@ -354,6 +354,7 @@ dependencies = [
  "dotenv",
  "env_logger",
  "futures",
+ "hashbrown 0.12.3",
  "hex",
  "jsonwebtoken",
  "lazy_static",

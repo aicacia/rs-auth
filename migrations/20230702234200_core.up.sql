@@ -140,8 +140,7 @@ CREATE UNIQUE INDEX "application_permissions_name_unique_idx" ON "application_pe
 
 INSERT INTO "application_permissions" ("application_id", "name")
   VALUES
-    (1, 'read'),
-    (1, 'write');
+    (1, 'admin');
 
 
 CREATE TABLE "user_application_permissions"(
@@ -154,6 +153,5 @@ CREATE TABLE "user_application_permissions"(
 
 INSERT INTO "user_application_permissions" ("user_id", "application_permission_id")
   VALUES
-    (1, 1),
-    (1, 2);
+    (1, 1);
 

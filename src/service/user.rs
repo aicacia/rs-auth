@@ -1,4 +1,5 @@
 use anyhow::Result;
+use hashbrown::HashMap;
 use sqlx::{Connection, Pool, Postgres};
 use uuid::Uuid;
 
@@ -15,7 +16,7 @@ pub async fn get_user_by_id(pool: &Pool<Postgres>, user_id: i32) -> Result<UserR
     UserRow,
     r#"SELECT
       u.id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at
-    FROM users u LEFT JOIN emails e ON e.id = u.email_id
+    FROM users u
     WHERE u.id = $1
     LIMIT 1;"#,
     user_id
@@ -23,6 +24,45 @@ pub async fn get_user_by_id(pool: &Pool<Postgres>, user_id: i32) -> Result<UserR
   .fetch_one(pool)
   .await?;
   Ok(user)
+}
+
+pub async fn get_users(
+  pool: &Pool<Postgres>,
+  page: i64,
+  page_size: i64,
+) -> Result<Vec<(UserRow, Vec<EmailRow>)>> {
+  let users = sqlx::query_as!(
+    UserRow,
+    r#"SELECT u.id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at FROM users u LIMIT $1 OFFSET $2;"#,
+    page_size,
+    page * page_size
+  )
+  .fetch_all(pool)
+  .await?;
+  let user_ids = users.iter().map(|u| u.id).collect::<Vec<i32>>();
+  let emails = sqlx::query_as!(
+      EmailRow,
+      r#"SELECT e.id, e.user_id, e.email, e.confirmed, e.confirmation_token, e.created_at, e.updated_at FROM emails e WHERE e.user_id = ANY($1);"#,
+      &user_ids.as_slice()
+    )
+    .fetch_all(pool)
+    .await?;
+  let mut emails_by_user_id: HashMap<i32, Vec<EmailRow>> = HashMap::new();
+  for email in emails {
+    emails_by_user_id
+      .entry(email.user_id)
+      .or_insert(Vec::new())
+      .push(email);
+  }
+  Ok(
+    users
+      .into_iter()
+      .map(|u| {
+        let user_id = u.id;
+        (u, emails_by_user_id.remove(&user_id).unwrap_or_default())
+      })
+      .collect::<Vec<_>>(),
+  )
 }
 
 pub async fn get_user_emails(pool: &Pool<Postgres>, user_id: i32) -> Result<Vec<EmailRow>> {
@@ -178,6 +218,23 @@ pub async fn add_user_application(
   .execute(pool)
   .await?;
   Ok(())
+}
+
+pub async fn create_user_email(
+  pool: &Pool<Postgres>,
+  user_id: i32,
+  email: &str,
+) -> Result<EmailRow> {
+  Ok(
+    sqlx::query_as!(
+      EmailRow,
+      "INSERT INTO emails (user_id, email) VALUES ($1, $2) RETURNING id, user_id, email, confirmed, confirmation_token, created_at, updated_at;",
+      user_id,
+      email,
+    )
+    .fetch_one(pool)
+    .await?,
+  )
 }
 
 pub async fn get_user_applications(

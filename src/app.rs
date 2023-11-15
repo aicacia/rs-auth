@@ -31,12 +31,14 @@ use crate::controller::{application, auth, user, util};
     auth::confirm_email,
     auth::sign_up_methods,
     user::current,
+    user::create_email,
     user::set_primary_email,
     user::send_confirmation_email,
     user::reset_password,
     user::refresh_token,
     user::change_username,
     user::applications,
+    user::users,
     application::index,
   ),
   components(
@@ -55,6 +57,8 @@ use crate::controller::{application, auth, user, util};
       user_model::User,
       user_model::ResetUserPasswordRequest,
       user_model::ChangeUsernameRequest,
+      user_model::CreateUserEmailRequest,
+      user_model::PaginationUser,
       application_model::Application,
     )
   ),

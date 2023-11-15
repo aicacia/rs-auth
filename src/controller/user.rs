@@ -1,6 +1,6 @@
 use actix_web::{
-  get, put,
-  web::{scope, Data, Path, ServiceConfig},
+  get, post, put,
+  web::{scope, Data, Path, Query, ServiceConfig},
   HttpResponse, Responder,
 };
 use actix_web_validator::Json;
@@ -14,15 +14,18 @@ use crate::{
   model::{
     application::{Application, ApplicationRow},
     error::Errors,
-    user::{ChangeUsernameRequest, ResetUserPasswordRequest, User, UserRow},
+    user::{
+      ChangeUsernameRequest, CreateUserEmailRequest, Email, PaginationQuery, PaginationUser,
+      ResetUserPasswordRequest, User, UserRow,
+    },
   },
   service::{
     application::{
       get_application_jwt_expires_in_seconds, get_application_jwt_secret, get_application_uri,
     },
     user::{
-      change_user_username, get_user_applications, get_user_emails, reset_user_password,
-      set_user_email_confirmation_token, set_user_primary_email,
+      change_user_username, create_user_email, get_user_applications, get_user_emails, get_users,
+      reset_user_password, set_user_email_confirmation_token, set_user_primary_email,
     },
   },
 };
@@ -48,6 +51,34 @@ pub async fn current(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responde
   };
   let user_response: User = (user, emails).into();
   HttpResponse::Ok().json(user_response)
+}
+
+#[utoipa::path(
+  context_path = "/users",
+  request_body = CreateUserEmailRequest,
+  responses(
+      (status = 201, description = "Creates email", body = Email),
+      (status = 400, body = Errors),
+  ),
+  security(
+      ("Authorization" = [])
+  )
+)]
+#[post("/email")]
+pub async fn create_email(
+  user: UserRow,
+  body: Json<CreateUserEmailRequest>,
+  pool: Data<Pool<Postgres>>,
+) -> impl Responder {
+  let email = match create_user_email(pool.as_ref(), user.id, &body.email).await {
+    Ok(e) => e,
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::BadRequest().json(Errors::internal_error());
+    }
+  };
+  let email_response: Email = email.into();
+  HttpResponse::Created().json(email_response)
 }
 
 #[utoipa::path(
@@ -245,7 +276,7 @@ pub async fn change_username(
 #[utoipa::path(
   context_path = "/users",
   responses(
-      (status = 200, description = "Get current user's application", body = Application),
+      (status = 200, description = "Get current user's application", body = Vec<Application>),
       (status = 500, body = Errors),
   ),
   security(
@@ -265,18 +296,53 @@ pub async fn applications(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Res
   HttpResponse::Ok().json(applications_response)
 }
 
+#[utoipa::path(
+  context_path = "/users",
+  responses(
+      (status = 200, description = "Get all users", body = PaginationUser),
+      (status = 500, body = Errors),
+  ),
+  security(
+      ("Authorization" = [])
+  )
+)]
+#[get("")]
+pub async fn users(
+  pool: Data<Pool<Postgres>>,
+  user: UserRow,
+  application: ApplicationRow,
+  query: Query<PaginationQuery>,
+) -> impl Responder {
+  // TODO check user admin permissions
+  let page_size = query.page_size.unwrap_or(20);
+  let users = match get_users(pool.as_ref(), query.page.unwrap_or(0), page_size).await {
+    Ok(u) => u,
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::BadRequest().json(Errors::internal_error());
+    }
+  };
+  let users_response: Vec<User> = users.into_iter().map(Into::into).collect::<Vec<_>>();
+  HttpResponse::Ok().json(PaginationUser {
+    has_more: users_response.len() == page_size as usize,
+    data: users_response,
+  })
+}
+
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   |config: &mut ServiceConfig| {
     config.service(
       scope("/users")
         .wrap(Authorization)
         .service(current)
+        .service(create_email)
         .service(set_primary_email)
         .service(send_confirmation_email)
         .service(refresh_token)
         .service(reset_password)
         .service(change_username)
-        .service(applications),
+        .service(applications)
+        .service(users),
     );
   }
 }

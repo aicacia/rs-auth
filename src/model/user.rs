@@ -98,6 +98,18 @@ impl From<(UserRow, Vec<EmailRow>)> for User {
   }
 }
 
+#[derive(Deserialize)]
+pub struct PaginationQuery {
+  pub page: Option<i64>,
+  pub page_size: Option<i64>,
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct PaginationUser {
+  pub has_more: bool,
+  pub data: Vec<User>,
+}
+
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct ResetUserPasswordRequest {
   #[validate(length(min = 1, max = 255))]
@@ -110,4 +122,10 @@ pub struct ResetUserPasswordRequest {
 pub struct ChangeUsernameRequest {
   #[validate(length(min = 1), custom = "validate_username")]
   pub username: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
+pub struct CreateUserEmailRequest {
+  #[validate(email)]
+  pub email: String,
 }
