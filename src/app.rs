@@ -61,6 +61,7 @@ use crate::controller::{application, auth, user, util};
       user_model::CreateUserEmailRequest,
       user_model::PaginationUser,
       application_model::Application,
+      application_model::PaginationApplication,
     )
   ),
   tags(

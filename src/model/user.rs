@@ -100,8 +100,8 @@ impl From<(UserRow, Vec<EmailRow>, Vec<String>)> for User {
   }
 }
 
-#[derive(Deserialize)]
-pub struct PaginationQuery {
+#[derive(Deserialize, Validate)]
+pub struct PaginationUserQuery {
   pub page: Option<i64>,
   pub page_size: Option<i64>,
 }

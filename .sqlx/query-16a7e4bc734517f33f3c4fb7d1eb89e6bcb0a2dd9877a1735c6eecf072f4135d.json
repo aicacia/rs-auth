@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n      a.id, a.name, a.uri, a.created_at, a.updated_at\n    FROM applications a\n    LIMIT 1;",
+  "query": "SELECT\n      a.id, a.name, a.uri, a.created_at, a.updated_at\n    FROM applications a\n    LIMIT $1 OFFSET $2;",
   "describe": {
     "columns": [
       {
@@ -30,7 +30,10 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
     },
     "nullable": [
       false,
@@ -40,5 +43,5 @@
       false
     ]
   },
-  "hash": "6fd76f99af871c7286ffc7ea03a37a95f382a5621500707fd52af74dc1dbfb83"
+  "hash": "16a7e4bc734517f33f3c4fb7d1eb89e6bcb0a2dd9877a1735c6eecf072f4135d"
 }

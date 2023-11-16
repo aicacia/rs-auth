@@ -21,13 +21,19 @@ pub async fn get_application_by_id(
   Ok(application)
 }
 
-pub async fn get_applications(pool: &Pool<Postgres>) -> Result<Vec<ApplicationRow>> {
+pub async fn get_applications(
+  pool: &Pool<Postgres>,
+  page: i64,
+  page_size: i64,
+) -> Result<Vec<ApplicationRow>> {
   let applications = sqlx::query_as!(
     ApplicationRow,
     r#"SELECT
       a.id, a.name, a.uri, a.created_at, a.updated_at
     FROM applications a
-    LIMIT 1;"#
+    LIMIT $1 OFFSET $2;"#,
+    page_size,
+    page * page_size
   )
   .fetch_all(pool)
   .await?;

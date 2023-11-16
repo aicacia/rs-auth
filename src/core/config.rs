@@ -33,6 +33,7 @@ pub struct ServerConfig {
 pub struct Config {
   pub server: ServerConfig,
   pub log_level: String,
+  pub admin_application_id: i32,
 }
 
 impl Config {
@@ -41,6 +42,7 @@ impl Config {
       .add_source(RawSource::new(get_configs_map(pool).await?))
       // App
       .set_default("log_level", "info")?
+      .set_default("admin_application_id", "1")?
       // build
       .build()?;
 

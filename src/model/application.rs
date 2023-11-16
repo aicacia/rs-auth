@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use futures::future::{err, ok};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use validator::Validate;
 
 use super::error::Errors;
 
@@ -50,4 +51,16 @@ impl From<ApplicationRow> for Application {
       updated_at: application.updated_at,
     }
   }
+}
+
+#[derive(Deserialize, Validate)]
+pub struct PaginationApplicationQuery {
+  pub page: Option<i64>,
+  pub page_size: Option<i64>,
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct PaginationApplication {
+  pub has_more: bool,
+  pub data: Vec<Application>,
 }

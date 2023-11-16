@@ -3,18 +3,23 @@ use actix_web::{
   web::{scope, Data, ServiceConfig},
   HttpResponse, Responder,
 };
+use actix_web_validator::Query;
 use sqlx::{Pool, Postgres};
 
 use crate::{
-  middleware::auth::Authorization,
-  model::{application::Application, error::Errors},
-  service::application::get_applications,
+  middleware::{admin::AdminAuthorization, auth::Authorization},
+  model::{
+    application::{Application, ApplicationRow, PaginationApplication, PaginationApplicationQuery},
+    error::Errors,
+    user::UserRow,
+  },
+  service::{application::get_applications, user::user_has_permissions},
 };
 
 #[utoipa::path(
   context_path = "/applications",
   responses(
-    (status = 200, description = "Get all application", body = Application),
+    (status = 200, description = "Get all application", body = PaginationApplication),
     (status = 500, body = Errors),
   ),
   security(
@@ -22,20 +27,44 @@ use crate::{
   )
 )]
 #[get("")]
-pub async fn index(pool: Data<Pool<Postgres>>) -> impl Responder {
-  let applications = match get_applications(pool.as_ref()).await {
-    Ok(e) => e,
+pub async fn index(
+  pool: Data<Pool<Postgres>>,
+  user: UserRow,
+  application: ApplicationRow,
+  query: Query<PaginationApplicationQuery>,
+) -> impl Responder {
+  match user_has_permissions(pool.as_ref(), user.id, application.id, "admin").await {
+    Ok(true) => {}
+    Ok(false) => return HttpResponse::Forbidden().finish(),
     Err(e) => {
       log::error!("{}", e);
       return HttpResponse::BadRequest().json(Errors::internal_error());
     }
   };
-  let applications_response: Vec<Application> = applications.into_iter().map(Into::into).collect();
-  HttpResponse::Ok().json(applications_response)
+  let page_size = query.page_size.unwrap_or(20);
+  let applications = match get_applications(pool.as_ref(), query.page.unwrap_or(0), page_size).await
+  {
+    Ok(u) => u,
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::BadRequest().json(Errors::internal_error());
+    }
+  };
+  let applications_response: Vec<Application> =
+    applications.into_iter().map(Into::into).collect::<Vec<_>>();
+  HttpResponse::Ok().json(PaginationApplication {
+    has_more: applications_response.len() == page_size as usize,
+    data: applications_response,
+  })
 }
 
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   |config: &mut ServiceConfig| {
-    config.service(scope("/applications").wrap(Authorization).service(index));
+    config.service(
+      scope("/applications")
+        .wrap(AdminAuthorization)
+        .wrap(Authorization)
+        .service(index),
+    );
   }
 }

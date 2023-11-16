@@ -22,7 +22,8 @@ INSERT INTO "config" ("name", "value") VALUES
   ('server.address', '"0.0.0.0"'),
   ('server.port', '8080'),
   ('server.uri', '"http://localhost:8080"'),
-  ('log_level', '"debug"');
+  ('log_level', '"debug"'),
+  ('admin_application_id', '1');
 
 
 CREATE FUNCTION config_notify() RETURNS trigger AS $$

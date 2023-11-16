@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT ap.name\n    FROM application_permissions ap\n    JOIN user_application_permissions uap ON uap.user_id = $1 and uap.application_permission_id=ap.id\n    WHERE ap.application_id=$2 AND ap.name=$3;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "26890c3ae89844556429472bb72be448c4ca8e602a4ebabf651f6086bc25865c"
+}

@@ -9,14 +9,13 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-  app,
-  core::{encryption::encrypt_password, jwt::Claims, mail::send_support_mail},
-  middleware::auth::Authorization,
+  core::{config::get_config, encryption::encrypt_password, jwt::Claims, mail::send_support_mail},
+  middleware::{admin::AdminAuthorization, auth::Authorization},
   model::{
     application::{Application, ApplicationRow},
     error::Errors,
     user::{
-      ChangeUsernameRequest, CreateUserEmailRequest, Email, PaginationQuery, PaginationUser,
+      ChangeUsernameRequest, CreateUserEmailRequest, Email, PaginationUser, PaginationUserQuery,
       ResetUserPasswordRequest, User, UserRow,
     },
   },
@@ -357,7 +356,7 @@ pub async fn users(
   pool: Data<Pool<Postgres>>,
   user: UserRow,
   application: ApplicationRow,
-  query: Query<PaginationQuery>,
+  query: Query<PaginationUserQuery>,
 ) -> impl Responder {
   match user_has_permissions(pool.as_ref(), user.id, application.id, "admin").await {
     Ok(true) => {}
@@ -391,15 +390,19 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
       scope("/users")
         .wrap(Authorization)
         .service(current)
-        .service(create_email)
-        .service(delete_email)
-        .service(set_primary_email)
-        .service(send_confirmation_email)
         .service(refresh_token)
-        .service(reset_password)
-        .service(change_username)
-        .service(applications)
-        .service(users),
+        .service(users)
+        .service(
+          scope("")
+            .wrap(AdminAuthorization)
+            .service(create_email)
+            .service(delete_email)
+            .service(set_primary_email)
+            .service(send_confirmation_email)
+            .service(reset_password)
+            .service(change_username)
+            .service(applications),
+        ),
     );
   }
 }
