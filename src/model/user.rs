@@ -71,6 +71,7 @@ impl From<EmailRow> for Email {
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
 pub struct User {
   pub id: i32,
+  pub permissions: Vec<String>,
   pub username: String,
   pub email: Option<Email>,
   pub emails: Vec<Email>,
@@ -78,8 +79,8 @@ pub struct User {
   pub updated_at: DateTime<Utc>,
 }
 
-impl From<(UserRow, Vec<EmailRow>)> for User {
-  fn from((user, emails): (UserRow, Vec<EmailRow>)) -> Self {
+impl From<(UserRow, Vec<EmailRow>, Vec<String>)> for User {
+  fn from((user, emails, permissions): (UserRow, Vec<EmailRow>, Vec<String>)) -> Self {
     let mut email: Option<EmailRow> = None;
     let mut emails = emails.clone();
 
@@ -89,6 +90,7 @@ impl From<(UserRow, Vec<EmailRow>)> for User {
 
     Self {
       id: user.id,
+      permissions,
       username: user.username,
       email: email.map(Email::from),
       emails: emails.into_iter().map(Email::from).collect(),

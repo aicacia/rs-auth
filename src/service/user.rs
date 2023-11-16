@@ -224,17 +224,26 @@ pub async fn create_user_email(
   pool: &Pool<Postgres>,
   user_id: i32,
   email: &str,
-) -> Result<EmailRow> {
-  Ok(
-    sqlx::query_as!(
+) -> sqlx::Result<EmailRow> {
+  sqlx::query_as!(
       EmailRow,
       "INSERT INTO emails (user_id, email) VALUES ($1, $2) RETURNING id, user_id, email, confirmed, confirmation_token, created_at, updated_at;",
       user_id,
       email,
     )
     .fetch_one(pool)
-    .await?,
+    .await
+}
+
+pub async fn delete_user_email(pool: &Pool<Postgres>, user_id: i32, email_id: i32) -> Result<()> {
+  sqlx::query!(
+    "DELETE FROM emails WHERE id=$1 AND user_id=$2;",
+    email_id,
+    user_id,
   )
+  .execute(pool)
+  .await?;
+  Ok(())
 }
 
 pub async fn get_user_applications(
@@ -392,4 +401,43 @@ pub async fn change_user_username(
     )
     .fetch_one(pool)
     .await
+}
+
+pub async fn get_user_permissions(
+  pool: &Pool<Postgres>,
+  user_id: i32,
+  application_id: i32,
+) -> Result<Vec<String>> {
+  let records = sqlx::query!(
+    r#"SELECT ap.name
+    FROM application_permissions ap
+    JOIN user_application_permissions uap ON uap.user_id = $1 and uap.application_permission_id=ap.id
+    WHERE ap.application_id=$2;"#,
+    user_id,
+    application_id,
+  )
+  .fetch_all(pool)
+  .await?;
+  let permissions = records.into_iter().map(|r| r.name).collect::<Vec<_>>();
+  Ok(permissions)
+}
+
+pub async fn user_has_permissions(
+  pool: &Pool<Postgres>,
+  user_id: i32,
+  application_id: i32,
+  name: &str,
+) -> Result<bool> {
+  let permission = sqlx::query!(
+    r#"SELECT ap.name
+    FROM application_permissions ap
+    JOIN user_application_permissions uap ON uap.user_id = $1 and uap.application_permission_id=ap.id
+    WHERE ap.application_id=$2 AND ap.name=$3;"#,
+    user_id,
+    application_id,
+    name,
+  )
+  .fetch_optional(pool)
+  .await?;
+  Ok(permission.is_some())
 }

@@ -1,14 +1,15 @@
 use actix_web::{
-  get, post, put,
+  delete, get, post, put,
   web::{scope, Data, Path, Query, ServiceConfig},
   HttpResponse, Responder,
 };
 use actix_web_validator::Json;
-use futures::join;
+use futures::{future::try_join, join};
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
+  app,
   core::{encryption::encrypt_password, jwt::Claims, mail::send_support_mail},
   middleware::auth::Authorization,
   model::{
@@ -24,8 +25,9 @@ use crate::{
       get_application_jwt_expires_in_seconds, get_application_jwt_secret, get_application_uri,
     },
     user::{
-      change_user_username, create_user_email, get_user_applications, get_user_emails, get_users,
-      reset_user_password, set_user_email_confirmation_token, set_user_primary_email,
+      change_user_username, create_user_email, delete_user_email, get_user_applications,
+      get_user_emails, get_user_permissions, get_users, reset_user_password,
+      set_user_email_confirmation_token, set_user_primary_email, user_has_permissions,
     },
   },
 };
@@ -41,15 +43,24 @@ use crate::{
   )
 )]
 #[get("/current")]
-pub async fn current(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responder {
-  let emails = match get_user_emails(pool.as_ref(), user.id).await {
-    Ok(e) => e,
+pub async fn current(
+  pool: Data<Pool<Postgres>>,
+  user: UserRow,
+  application: ApplicationRow,
+) -> impl Responder {
+  let (emails, permissions) = match try_join(
+    get_user_emails(pool.as_ref(), user.id),
+    get_user_permissions(pool.as_ref(), user.id, application.id),
+  )
+  .await
+  {
+    Ok(r) => r,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
-  let user_response: User = (user, emails).into();
+  let user_response: User = (user, emails, permissions).into();
   HttpResponse::Ok().json(user_response)
 }
 
@@ -64,7 +75,7 @@ pub async fn current(pool: Data<Pool<Postgres>>, user: UserRow) -> impl Responde
       ("Authorization" = [])
   )
 )]
-#[post("/email")]
+#[post("/emails")]
 pub async fn create_email(
   user: UserRow,
   body: Json<CreateUserEmailRequest>,
@@ -74,11 +85,46 @@ pub async fn create_email(
     Ok(e) => e,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
+      match &e {
+        sqlx::Error::Database(e) => {
+          if let Some(_) = e.constraint() {
+            return HttpResponse::BadRequest().json(Errors::from("taken"));
+          }
+        }
+        _ => (),
+      }
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   let email_response: Email = email.into();
   HttpResponse::Created().json(email_response)
+}
+
+#[utoipa::path(
+  context_path = "/users",
+  responses(
+    (status = 204, description = "User's email deleted"),
+    (status = 400, body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+#[delete("/emails/{email_id}")]
+pub async fn delete_email(
+  user: UserRow,
+  path: Path<i32>,
+  pool: Data<Pool<Postgres>>,
+) -> impl Responder {
+  let email_id = path.into_inner();
+  match delete_user_email(pool.as_ref(), user.id, email_id).await {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::BadRequest().json(Errors::internal_error());
+    }
+  }
+  HttpResponse::NoContent().finish()
 }
 
 #[utoipa::path(
@@ -91,7 +137,7 @@ pub async fn create_email(
       ("Authorization" = [])
   )
 )]
-#[put("/set-primary-email/{email_id}")]
+#[put("/emails/{email_id}/set-primary-email")]
 pub async fn set_primary_email(
   user: UserRow,
   path: Path<i32>,
@@ -313,7 +359,14 @@ pub async fn users(
   application: ApplicationRow,
   query: Query<PaginationQuery>,
 ) -> impl Responder {
-  // TODO check user admin permissions
+  match user_has_permissions(pool.as_ref(), user.id, application.id, "admin").await {
+    Ok(true) => {}
+    Ok(false) => return HttpResponse::Forbidden().finish(),
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::BadRequest().json(Errors::internal_error());
+    }
+  };
   let page_size = query.page_size.unwrap_or(20);
   let users = match get_users(pool.as_ref(), query.page.unwrap_or(0), page_size).await {
     Ok(u) => u,
@@ -322,7 +375,10 @@ pub async fn users(
       return HttpResponse::BadRequest().json(Errors::internal_error());
     }
   };
-  let users_response: Vec<User> = users.into_iter().map(Into::into).collect::<Vec<_>>();
+  let users_response: Vec<User> = users
+    .into_iter()
+    .map(|(u, e)| (u, e, Vec::default()).into())
+    .collect::<Vec<_>>();
   HttpResponse::Ok().json(PaginationUser {
     has_more: users_response.len() == page_size as usize,
     data: users_response,
@@ -336,6 +392,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
         .wrap(Authorization)
         .service(current)
         .service(create_email)
+        .service(delete_email)
         .service(set_primary_email)
         .service(send_confirmation_email)
         .service(refresh_token)

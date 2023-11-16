@@ -32,6 +32,7 @@ use crate::controller::{application, auth, user, util};
     auth::sign_up_methods,
     user::current,
     user::create_email,
+    user::delete_email,
     user::set_primary_email,
     user::send_confirmation_email,
     user::reset_password,
