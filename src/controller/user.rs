@@ -391,7 +391,6 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
         .wrap(Authorization)
         .service(current)
         .service(refresh_token)
-        .service(users)
         .service(
           scope("")
             .wrap(AdminAuthorization)
@@ -401,7 +400,8 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
             .service(send_confirmation_email)
             .service(reset_password)
             .service(change_username)
-            .service(applications),
+            .service(applications)
+            .service(users),
         ),
     );
   }

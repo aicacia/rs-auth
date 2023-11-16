@@ -149,7 +149,8 @@ CREATE TABLE "user_application_permissions"(
 	"application_permission_id" INT4 NOT NULL,
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "user_application_permissions_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE,
-  CONSTRAINT "user_application_permissions_application_permission_id_fk" FOREIGN KEY("application_permission_id") REFERENCES "application_permissions"("id") ON DELETE CASCADE
+  CONSTRAINT "user_application_permissions_application_permission_id_fk" FOREIGN KEY("application_permission_id") REFERENCES "application_permissions"("id") ON DELETE CASCADE,
+  PRIMARY KEY("user_id", "application_permission_id")
 );
 
 INSERT INTO "user_application_permissions" ("user_id", "application_permission_id")
