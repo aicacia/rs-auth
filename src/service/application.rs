@@ -6,7 +6,7 @@ use crate::model::application::ApplicationRow;
 pub async fn get_application_by_id(
   pool: &Pool<Postgres>,
   application_id: i32,
-) -> Result<ApplicationRow> {
+) -> Result<Option<ApplicationRow>> {
   let application = sqlx::query_as!(
     ApplicationRow,
     r#"SELECT
@@ -16,7 +16,7 @@ pub async fn get_application_by_id(
     LIMIT 1;"#,
     application_id
   )
-  .fetch_one(pool)
+  .fetch_optional(pool)
   .await?;
   Ok(application)
 }

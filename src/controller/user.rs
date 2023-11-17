@@ -9,7 +9,7 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-  core::{config::get_config, encryption::encrypt_password, jwt::Claims, mail::send_support_mail},
+  core::{encryption::encrypt_password, jwt::Claims, mail::send_support_mail},
   middleware::{admin::AdminAuthorization, auth::Authorization},
   model::{
     application::{Application, ApplicationRow},

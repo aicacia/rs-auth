@@ -124,7 +124,13 @@ where
           };
 
           let application = match get_application_by_id(pool, token_data.claims.app).await {
-            Ok(a) => a,
+            Ok(Some(a)) => a,
+            Ok(None) => {
+              let res = req
+                .into_response(HttpResponse::BadRequest().finish())
+                .map_into_right_body();
+              return Ok(res);
+            }
             Err(e) => {
               log::error!("Error: {}", e);
               let res = req

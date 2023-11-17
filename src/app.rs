@@ -41,6 +41,7 @@ use crate::controller::{application, auth, user, util};
     user::applications,
     user::users,
     application::index,
+    application::show,
   ),
   components(
     schemas(
