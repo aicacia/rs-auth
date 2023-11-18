@@ -127,7 +127,7 @@ where
             Ok(Some(a)) => a,
             Ok(None) => {
               let res = req
-                .into_response(HttpResponse::BadRequest().finish())
+                .into_response(HttpResponse::InternalServerError().json(Errors::internal_error()))
                 .map_into_right_body();
               return Ok(res);
             }

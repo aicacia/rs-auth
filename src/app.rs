@@ -36,12 +36,14 @@ use crate::controller::{application, auth, user, util};
     user::set_primary_email,
     user::send_confirmation_email,
     user::reset_password,
-    user::refresh_token,
     user::change_username,
     user::applications,
     user::users,
     application::index,
     application::show,
+    application::update,
+    application::config,
+    application::update_config,
   ),
   components(
     schemas(
@@ -62,7 +64,11 @@ use crate::controller::{application, auth, user, util};
       user_model::CreateUserEmailRequest,
       user_model::PaginationUser,
       application_model::Application,
+      application_model::ApplicationConfig,
+      application_model::ApplicationPermission,
       application_model::PaginationApplication,
+      application_model::UpdateApplicationRequest,
+      application_model::UpdateApplicationConfigRequest,
     )
   ),
   tags(

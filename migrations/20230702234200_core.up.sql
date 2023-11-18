@@ -56,6 +56,7 @@ CREATE TABLE "applications" (
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TRIGGER "applications_set_timestamp" BEFORE UPDATE ON "applications" FOR EACH ROW EXECUTE PROCEDURE "trigger_set_timestamp"();
+CREATE UNIQUE INDEX "applications_uri_unique_idx" ON "applications" ("uri");
 
 INSERT INTO "applications" ("name", "uri") VALUES
   ('Admin', 'admin');
@@ -64,23 +65,23 @@ INSERT INTO "applications" ("name", "uri") VALUES
 CREATE TABLE "application_configs" (
   "application_id" INT4 NOT NULL,
 	"name" VARCHAR(255) NOT NULL,
+	"key" VARCHAR(255) NOT NULL,
 	"value" JSONB NOT NULL DEFAULT 'null',
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "application_configs_application_id_fk" FOREIGN KEY("application_id") REFERENCES "applications"("id") ON DELETE CASCADE,
-  PRIMARY KEY("application_id", "name")
+  PRIMARY KEY("application_id", "key")
 );
 CREATE TRIGGER "application_configs_set_timestamp" BEFORE UPDATE ON "application_configs" FOR EACH ROW EXECUTE PROCEDURE "trigger_set_timestamp"();
 
-INSERT INTO "application_configs" ("application_id", "name", "value") VALUES
-  (1, 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(255), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
-  (1, 'jwt.expires_in_seconds', '86400'),
-  (1, 'default_role', '2'),
-  (1, 'uri', '"http://localhost:5173"'),
-  (1, 'mail.support.email', '"support@localhost.com"'),
-  (1, 'mail.support.name', '"Support"'),
-  (1, 'signup.enabled', 'false'),
-  (1, 'signup.password', 'false');
+INSERT INTO "application_configs" ("application_id", "name", "key", "value") VALUES
+  (1, 'JWT Secret', 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(255), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
+  (1, 'JWT Expires in Seconds', 'jwt.expires_in_seconds', '86400'),
+  (1, 'Public URI', 'uri', '"http://localhost:5173"'),
+  (1, 'Support email', 'mail.support.email', '"support@localhost.com"'),
+  (1, 'Support name', 'mail.support.name', '"Support"'),
+  (1, 'Sign up enabled', 'signup.enabled', 'false'),
+  (1, 'Sign up with password', 'signup.password', 'false');
 
 
 CREATE TABLE "users"(
@@ -134,14 +135,16 @@ CREATE TABLE "application_permissions"(
 	"id" SERIAL PRIMARY KEY,
 	"application_id" INT4 NOT NULL,
 	"name" VARCHAR(255) NOT NULL,
+	"uri" VARCHAR(255) NOT NULL,
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "application_permissions_application_id_fk" FOREIGN KEY("application_id") REFERENCES "applications"("id") ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX "application_permissions_name_unique_idx" ON "application_permissions" ("name");
+CREATE UNIQUE INDEX "application_permissions_application_id_name_unique_idx" ON "application_permissions" ("application_id", "name");
+CREATE UNIQUE INDEX "application_permissions_application_id_uri_unique_idx" ON "application_permissions" ("application_id", "uri");
 
-INSERT INTO "application_permissions" ("application_id", "name")
+INSERT INTO "application_permissions" ("application_id", "name", "uri")
   VALUES
-    (1, 'admin');
+    (1, 'Admin', 'admin');
 
 
 CREATE TABLE "user_application_permissions"(

@@ -249,6 +249,8 @@ pub async fn delete_user_email(pool: &Pool<Postgres>, user_id: i32, email_id: i3
 pub async fn get_user_applications(
   pool: &Pool<Postgres>,
   user_id: i32,
+  page: i64,
+  page_size: i64,
 ) -> Result<Vec<ApplicationRow>> {
   Ok(
     sqlx::query_as!(
@@ -257,8 +259,11 @@ pub async fn get_user_applications(
         a.id, a.name, a.uri, a.created_at, a.updated_at
       FROM application_users au
         JOIN applications a ON a.id=au.application_id
-      WHERE au.user_id=$1;"#,
-      user_id
+      WHERE au.user_id=$1
+      LIMIT $2 OFFSET $3;"#,
+      user_id,
+      page_size,
+      page * page_size
     )
     .fetch_all(pool)
     .await?,
@@ -409,7 +414,7 @@ pub async fn get_user_permissions(
   application_id: i32,
 ) -> Result<Vec<String>> {
   let records = sqlx::query!(
-    r#"SELECT ap.name
+    r#"SELECT ap.uri
     FROM application_permissions ap
     JOIN user_application_permissions uap ON uap.user_id = $1 and uap.application_permission_id=ap.id
     WHERE ap.application_id=$2;"#,
@@ -418,7 +423,7 @@ pub async fn get_user_permissions(
   )
   .fetch_all(pool)
   .await?;
-  let permissions = records.into_iter().map(|r| r.name).collect::<Vec<_>>();
+  let permissions = records.into_iter().map(|r| r.uri).collect::<Vec<_>>();
   Ok(permissions)
 }
 
@@ -426,16 +431,16 @@ pub async fn user_has_permissions(
   pool: &Pool<Postgres>,
   user_id: i32,
   application_id: i32,
-  name: &str,
+  uri: &str,
 ) -> Result<bool> {
   let permission = sqlx::query!(
-    r#"SELECT ap.name
+    r#"SELECT ap.uri
     FROM application_permissions ap
     JOIN user_application_permissions uap ON uap.user_id = $1 and uap.application_permission_id=ap.id
-    WHERE ap.application_id=$2 AND ap.name=$3;"#,
+    WHERE ap.application_id=$2 AND ap.uri=$3;"#,
     user_id,
     application_id,
-    name,
+    uri,
   )
   .fetch_optional(pool)
   .await?;

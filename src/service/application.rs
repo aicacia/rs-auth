@@ -1,25 +1,7 @@
 use anyhow::Result;
 use sqlx::{Pool, Postgres};
 
-use crate::model::application::ApplicationRow;
-
-pub async fn get_application_by_id(
-  pool: &Pool<Postgres>,
-  application_id: i32,
-) -> Result<Option<ApplicationRow>> {
-  let application = sqlx::query_as!(
-    ApplicationRow,
-    r#"SELECT
-      a.id, a.name, a.uri, a.created_at, a.updated_at
-    FROM applications a
-    WHERE a.id = $1
-    LIMIT 1;"#,
-    application_id
-  )
-  .fetch_optional(pool)
-  .await?;
-  Ok(application)
-}
+use crate::model::application::{ApplicationConfigRow, ApplicationRow};
 
 pub async fn get_applications(
   pool: &Pool<Postgres>,
@@ -40,13 +22,67 @@ pub async fn get_applications(
   Ok(applications)
 }
 
+pub async fn get_application_by_id(
+  pool: &Pool<Postgres>,
+  application_id: i32,
+) -> Result<Option<ApplicationRow>> {
+  let application = sqlx::query_as!(
+    ApplicationRow,
+    r#"SELECT
+      a.id, a.name, a.uri, a.created_at, a.updated_at
+    FROM applications a
+    WHERE a.id = $1
+    LIMIT 1;"#,
+    application_id
+  )
+  .fetch_optional(pool)
+  .await?;
+  Ok(application)
+}
+
+pub async fn update_application(
+  pool: &Pool<Postgres>,
+  application_id: i32,
+  name: Option<&String>,
+  uri: Option<&String>,
+) -> Result<Option<ApplicationRow>> {
+  let application = sqlx::query_as!(
+    ApplicationRow,
+    r#"UPDATE applications
+    SET name = COALESCE($1, name),
+        uri = COALESCE($2, uri)
+    WHERE id = $3
+    RETURNING id, name, uri, created_at, updated_at;"#,
+    name,
+    uri,
+    application_id
+  )
+  .fetch_optional(pool)
+  .await?;
+  Ok(application)
+}
+
+pub async fn get_application_configs(
+  pool: &Pool<Postgres>,
+  application_id: i32,
+) -> Result<Vec<ApplicationConfigRow>> {
+  let application_configs = sqlx::query_as!(
+    ApplicationConfigRow,
+    "SELECT ac.application_id, ac.name, ac.key, ac.value, ac.created_at, ac.updated_at FROM application_configs ac WHERE ac.application_id = $1;",
+    application_id
+  )
+  .fetch_all(pool)
+  .await?;
+  Ok(application_configs)
+}
+
 pub async fn get_application_config(
   pool: &Pool<Postgres>,
   application_id: i32,
   key: &str,
 ) -> serde_json::Value {
   sqlx::query!(
-    "SELECT value FROM application_configs WHERE application_id = $1 AND name = $2 LIMIT 1;",
+    "SELECT value FROM application_configs WHERE application_id = $1 AND key = $2 LIMIT 1;",
     application_id,
     key
   )
@@ -61,23 +97,17 @@ pub async fn set_application_config(
   pool: &Pool<Postgres>,
   application_id: i32,
   key: &str,
-  value: serde_json::Value,
-) -> serde_json::Value {
+  value: &serde_json::Value,
+) -> Result<()> {
   sqlx::query!(
-    "INSERT INTO application_configs
-    (application_id, name, value) VALUES ($1, $2, $3)
-    ON CONFLICT (application_id, name)
-    DO UPDATE SET value = $3
-    RETURNING value;",
+    "UPDATE application_configs SET value = $3 WHERE application_id=$1 AND key=$2;",
     application_id,
     key,
     value
   )
   .fetch_optional(pool)
-  .await
-  .map_or(serde_json::Value::Null, |v| {
-    v.map_or(serde_json::Value::Null, |r| r.value)
-  })
+  .await?;
+  Ok(())
 }
 
 pub async fn get_application_jwt_expires_in_seconds(

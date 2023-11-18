@@ -1,4 +1,4 @@
-use super::auth::validate_username;
+use super::auth::validate_no_whitespace;
 use actix_web::{dev::Payload, FromRequest, HttpMessage, HttpRequest};
 use chrono::{DateTime, Utc};
 use futures::future::{err, ok};
@@ -122,7 +122,7 @@ pub struct ResetUserPasswordRequest {
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct ChangeUsernameRequest {
-  #[validate(length(min = 1), custom = "validate_username")]
+  #[validate(length(min = 1), custom = "validate_no_whitespace")]
   pub username: String,
 }
 

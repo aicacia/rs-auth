@@ -51,7 +51,7 @@ pub async fn sign_in_with_password(
     Ok(u) => u,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::from("invalid_credentials"));
+      return HttpResponse::Unauthorized().json(Errors::from("invalid_credentials"));
     }
   };
 
@@ -60,7 +60,7 @@ pub async fn sign_in_with_password(
     Ok(false) => return HttpResponse::Unauthorized().json(Errors::from("invalid_credentials")),
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   }
 
@@ -71,7 +71,7 @@ pub async fn sign_in_with_password(
     }
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   }
 
@@ -303,7 +303,7 @@ pub async fn confirm_email(path: Path<uuid::Uuid>, pool: Data<Pool<Postgres>>) -
     }
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   HttpResponse::NoContent().finish()

@@ -6,7 +6,7 @@ use validator::{Validate, ValidationError};
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct SignInWithPasswordRequest {
   pub application_id: i32,
-  #[validate(length(min = 1), custom = "validate_username")]
+  #[validate(length(min = 1), custom = "validate_no_whitespace")]
   pub username_or_email: String,
   pub password: String,
 }
@@ -14,13 +14,17 @@ pub struct SignInWithPasswordRequest {
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct SignUpWithPasswordRequest {
   pub application_id: i32,
-  #[validate(length(min = 1), custom = "validate_username")]
+  #[validate(length(min = 1), custom = "validate_no_whitespace")]
   pub username: String,
   #[validate(email)]
   pub email: Option<String>,
   #[validate(length(min = 1, max = 255))]
   pub password: String,
-  #[validate(length(min = 1, max = 255), must_match(other = "password"))]
+  #[validate(
+    length(min = 1, max = 255),
+    must_match(other = "password"),
+    custom = "validate_no_whitespace"
+  )]
   pub password_confirmation: String,
 }
 
@@ -63,9 +67,9 @@ impl SignUpMethods {
   }
 }
 
-pub fn validate_username(username: &str) -> Result<(), ValidationError> {
-  if username.trim().len() != username.len() {
-    return Err(ValidationError::new("username_whitespace"));
+pub fn validate_no_whitespace(username: &str) -> Result<(), ValidationError> {
+  if username.chars().filter(|c| !c.is_whitespace()).count() != username.len() {
+    return Err(ValidationError::new("whitespace"));
   }
   Ok(())
 }

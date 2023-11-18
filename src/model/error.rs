@@ -13,6 +13,8 @@ use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
 const APPLICATION_KEY: &str = "application";
 const INTERNAL_ERROR: &str = "internal_error";
+const UNAUTHORIZED: &str = "unauthorized";
+const NOT_FOUND: &str = "not_found";
 
 lazy_static! {
   static ref RE_BETWEEN_TICKS: Regex = Regex::new(r"`(.*)`").expect("Failed to compile regex");
@@ -104,6 +106,14 @@ impl Errors {
 
   pub fn internal_error() -> Self {
     Self::from(INTERNAL_ERROR)
+  }
+
+  pub fn unauthorized() -> Self {
+    Self::from(UNAUTHORIZED)
+  }
+
+  pub fn not_found() -> Self {
+    Self::from(NOT_FOUND)
   }
 
   pub fn from_validation_error(err: actix_web_validator::Error) -> Self {

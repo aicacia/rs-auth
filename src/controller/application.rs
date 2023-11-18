@@ -1,21 +1,23 @@
 use actix_web::{
-  get,
+  get, patch,
   web::{scope, Data, Path, ServiceConfig},
   HttpResponse, Responder,
 };
-use actix_web_validator::Query;
+use actix_web_validator::{Json, Query};
 use sqlx::{Pool, Postgres};
 
 use crate::{
   middleware::{admin::AdminAuthorization, auth::Authorization},
   model::{
-    application::{Application, ApplicationRow, PaginationApplication, PaginationApplicationQuery},
+    application::{
+      Application, ApplicationConfig, PaginationApplication, PaginationApplicationQuery,
+      UpdateApplicationConfigRequest, UpdateApplicationRequest,
+    },
     error::Errors,
-    user::UserRow,
   },
-  service::{
-    application::{get_application_by_id, get_applications},
-    user::user_has_permissions,
+  service::application::{
+    get_application_by_id, get_application_configs, get_applications, set_application_config,
+    update_application,
   },
 };
 
@@ -32,25 +34,15 @@ use crate::{
 #[get("")]
 pub async fn index(
   pool: Data<Pool<Postgres>>,
-  user: UserRow,
-  application: ApplicationRow,
   query: Query<PaginationApplicationQuery>,
 ) -> impl Responder {
-  match user_has_permissions(pool.as_ref(), user.id, application.id, "admin").await {
-    Ok(true) => {}
-    Ok(false) => return HttpResponse::Forbidden().finish(),
-    Err(e) => {
-      log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
-    }
-  };
   let page_size = query.page_size.unwrap_or(20);
   let applications = match get_applications(pool.as_ref(), query.page.unwrap_or(0), page_size).await
   {
     Ok(u) => u,
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   let applications_response: Vec<Application> =
@@ -72,41 +64,123 @@ pub async fn index(
   )
 )]
 #[get("/{application_id}")]
-pub async fn show(
-  pool: Data<Pool<Postgres>>,
-  path: Path<i32>,
-  user: UserRow,
-  application: ApplicationRow,
-) -> impl Responder {
-  match user_has_permissions(pool.as_ref(), user.id, application.id, "admin").await {
-    Ok(true) => {}
-    Ok(false) => return HttpResponse::Forbidden().finish(),
-    Err(e) => {
-      log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
-    }
-  };
+pub async fn show(pool: Data<Pool<Postgres>>, path: Path<i32>) -> impl Responder {
   let application_id = path.into_inner();
   let application = match get_application_by_id(pool.as_ref(), application_id).await {
     Ok(Some(a)) => a,
-    Ok(None) => return HttpResponse::NotFound().finish(),
+    Ok(None) => return HttpResponse::NotFound().json(Errors::not_found()),
     Err(e) => {
       log::error!("{}", e);
-      return HttpResponse::BadRequest().json(Errors::internal_error());
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
   let applications_response: Application = application.into();
   HttpResponse::Ok().json(applications_response)
 }
 
+#[utoipa::path(
+  context_path = "/applications",
+  request_body = UpdateApplicationRequest,
+  responses(
+    (status = 200, description = "Update an application", body = Application),
+    (status = 500, body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+#[patch("/{application_id}")]
+pub async fn update(
+  pool: Data<Pool<Postgres>>,
+  path: Path<i32>,
+  body: Json<UpdateApplicationRequest>,
+) -> impl Responder {
+  let application_id = path.into_inner();
+  let application = match update_application(
+    pool.as_ref(),
+    application_id,
+    body.name.as_ref(),
+    body.uri.as_ref(),
+  )
+  .await
+  {
+    Ok(Some(a)) => a,
+    Ok(None) => return HttpResponse::NotFound().json(Errors::not_found()),
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
+    }
+  };
+  let applications_response: Application = application.into();
+  HttpResponse::Ok().json(applications_response)
+}
+
+#[utoipa::path(
+  context_path = "/applications",
+  responses(
+    (status = 200, description = "Get an application config", body = Vec<ApplicationConfig>),
+    (status = 500, body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+#[get("/{application_id}/config")]
+pub async fn config(pool: Data<Pool<Postgres>>, path: Path<i32>) -> impl Responder {
+  let application_id = path.into_inner();
+  let application_configs = match get_application_configs(pool.as_ref(), application_id).await {
+    Ok(ac) => ac,
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
+    }
+  };
+  let application_configs_response: Vec<ApplicationConfig> = application_configs
+    .into_iter()
+    .map(Into::into)
+    .collect::<Vec<_>>();
+  HttpResponse::Ok().json(application_configs_response)
+}
+
+#[utoipa::path(
+  context_path = "/applications",
+  request_body = UpdateApplicationConfigRequest,
+  responses(
+    (status = 204, description = "Update an application config key"),
+    (status = 500, body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+#[patch("/{application_id}/config")]
+pub async fn update_config(
+  pool: Data<Pool<Postgres>>,
+  path: Path<i32>,
+  body: Json<UpdateApplicationConfigRequest>,
+) -> impl Responder {
+  let application_id = path.into_inner();
+  match set_application_config(pool.as_ref(), application_id, &body.key, &body.value).await {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
+    }
+  };
+  HttpResponse::NoContent().finish()
+}
+
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
-  |config: &mut ServiceConfig| {
-    config.service(
+  |service_config: &mut ServiceConfig| {
+    service_config.service(
       scope("/applications")
         .wrap(AdminAuthorization)
         .wrap(Authorization)
         .service(index)
-        .service(show),
+        .service(show)
+        .service(update)
+        .service(config)
+        .service(update_config),
     );
   }
 }

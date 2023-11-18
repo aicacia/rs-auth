@@ -5,14 +5,17 @@ use std::{
 
 use crate::{
   core::config::get_config,
-  model::{application::ApplicationRow, error::Errors},
+  model::{error::Errors, user::UserRow},
+  service::user::user_has_permissions,
 };
 use actix_web::{
   body::EitherBody,
   dev::{Service, ServiceRequest, ServiceResponse, Transform},
+  web::Data,
   HttpMessage, HttpResponse,
 };
 use futures::future::LocalBoxFuture;
+use sqlx::{Pool, Postgres};
 
 pub struct AdminAuthorization;
 
@@ -60,15 +63,41 @@ where
     let service = self.service.clone();
 
     Box::pin(async move {
-      let application_id_option = req.extensions().get::<ApplicationRow>().map(|a| a.id);
-      if let Some(application_id) = application_id_option {
-        if application_id == get_config().admin_application_id {
-          let res = service.call(req).await?.map_into_left_body();
-          return Ok(res);
+      let user_id_option = req.extensions().get::<UserRow>().map(|u| u.id);
+
+      if let Some(user_id) = user_id_option {
+        let pool = match req.app_data::<Data<Pool<Postgres>>>() {
+          Some(pool) => pool,
+          None => {
+            log::error!("Error: missing db pool");
+            let res = req
+              .into_response(HttpResponse::InternalServerError().json(Errors::internal_error()))
+              .map_into_right_body();
+            return Ok(res);
+          }
+        };
+        match user_has_permissions(pool, user_id, get_config().admin_application_id, "admin").await
+        {
+          Ok(true) => {}
+          Ok(false) => {
+            let res = req
+              .into_response(HttpResponse::Unauthorized().json(Errors::unauthorized()))
+              .map_into_right_body();
+            return Ok(res);
+          }
+          Err(e) => {
+            log::error!("Error: {}", e);
+            let res = req
+              .into_response(HttpResponse::InternalServerError().json(Errors::internal_error()))
+              .map_into_right_body();
+            return Ok(res);
+          }
         }
+        let res = service.call(req).await?.map_into_left_body();
+        return Ok(res);
       }
       let res = req
-        .into_response(HttpResponse::Unauthorized().json(Errors::from("invalid_credentials")))
+        .into_response(HttpResponse::Unauthorized().json(Errors::unauthorized()))
         .map_into_right_body();
       return Ok(res);
     })
