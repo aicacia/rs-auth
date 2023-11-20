@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE application_configs SET value = $3 WHERE application_id=$1 AND key=$2;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9bce02586ee2dfa0a202192b5fd3e08ad5cf1cade342a3556132e37267efc4ff"
+}

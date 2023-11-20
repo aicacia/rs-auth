@@ -1,5 +1,6 @@
 use actix_web::test;
 
+use anyhow::Result;
 use auth::{
   app::create_app,
   model::auth::{SignInWithPasswordRequest, SignUpWithPasswordRequest},
@@ -8,7 +9,7 @@ use auth::{
 use sqlx::{Pool, Postgres};
 
 #[sqlx::test(migrations = "./migrations")]
-async fn test_sign_in_with_password(pool: Pool<Postgres>) -> sqlx::Result<()> {
+async fn test_sign_in_with_password(pool: Pool<Postgres>) -> Result<()> {
   let app = test::init_service(create_app(&pool)).await;
 
   let body = SignInWithPasswordRequest {
@@ -28,16 +29,16 @@ async fn test_sign_in_with_password(pool: Pool<Postgres>) -> sqlx::Result<()> {
 }
 
 #[sqlx::test(migrations = "./migrations")]
-async fn test_sign_up_with_password(pool: Pool<Postgres>) -> sqlx::Result<()> {
+async fn test_sign_up_with_password(pool: Pool<Postgres>) -> Result<()> {
   let app = test::init_service(create_app(&pool)).await;
 
   set_application_config(
     &pool,
     1,
     "disable_public_signup",
-    serde_json::Value::Bool(false),
+    &serde_json::Value::Bool(false),
   )
-  .await;
+  .await?;
 
   let body = SignUpWithPasswordRequest {
     application_id: 1,

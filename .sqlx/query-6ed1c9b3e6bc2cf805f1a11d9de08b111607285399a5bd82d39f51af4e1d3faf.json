@@ -1,22 +1,22 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n      a.id, a.name, a.uri, a.created_at, a.updated_at\n    FROM applications a\n    LIMIT $1 OFFSET $2;",
+  "query": "SELECT * FROM application_configs WHERE application_id=$1 AND key=$2 LIMIT 1;",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "id",
+        "name": "application_id",
         "type_info": "Int4"
       },
       {
         "ordinal": 1,
-        "name": "name",
+        "name": "key",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "uri",
-        "type_info": "Varchar"
+        "name": "value",
+        "type_info": "Jsonb"
       },
       {
         "ordinal": 3,
@@ -31,8 +31,8 @@
     ],
     "parameters": {
       "Left": [
-        "Int8",
-        "Int8"
+        "Int4",
+        "Text"
       ]
     },
     "nullable": [
@@ -43,5 +43,5 @@
       false
     ]
   },
-  "hash": "16a7e4bc734517f33f3c4fb7d1eb89e6bcb0a2dd9877a1735c6eecf072f4135d"
+  "hash": "6ed1c9b3e6bc2cf805f1a11d9de08b111607285399a5bd82d39f51af4e1d3faf"
 }

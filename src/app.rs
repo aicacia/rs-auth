@@ -41,6 +41,7 @@ use crate::controller::{application, auth, user, util};
     user::users,
     application::index,
     application::show,
+    application::create,
     application::update,
     application::config,
     application::update_config,
@@ -67,6 +68,7 @@ use crate::controller::{application, auth, user, util};
       application_model::ApplicationConfig,
       application_model::ApplicationPermission,
       application_model::PaginationApplication,
+      application_model::CreateApplicationRequest,
       application_model::UpdateApplicationRequest,
       application_model::UpdateApplicationConfigRequest,
     )

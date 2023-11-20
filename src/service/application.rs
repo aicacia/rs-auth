@@ -1,7 +1,12 @@
 use anyhow::Result;
+use futures::try_join;
+use serde_json::json;
 use sqlx::{Pool, Postgres};
 
-use crate::model::application::{ApplicationConfigRow, ApplicationRow};
+use crate::{
+  core::jwt::gen_jwt_secret,
+  model::application::{ApplicationConfigRow, ApplicationRow},
+};
 
 pub async fn get_applications(
   pool: &Pool<Postgres>,
@@ -13,6 +18,7 @@ pub async fn get_applications(
     r#"SELECT
       a.id, a.name, a.uri, a.created_at, a.updated_at
     FROM applications a
+    ORDER BY a.updated_at DESC
     LIMIT $1 OFFSET $2;"#,
     page_size,
     page * page_size
@@ -37,6 +43,46 @@ pub async fn get_application_by_id(
   )
   .fetch_optional(pool)
   .await?;
+  Ok(application)
+}
+
+pub async fn create_application(
+  pool: &Pool<Postgres>,
+  name: &String,
+  uri: &String,
+) -> Result<ApplicationRow> {
+  let application = sqlx::query_as!(
+    ApplicationRow,
+    r#"INSERT INTO applications (name, uri)
+    VALUES ($1, $2)
+    RETURNING id, name, uri, created_at, updated_at;"#,
+    name,
+    uri
+  )
+  .fetch_one(pool)
+  .await?;
+
+  try_join!(
+    async {
+      create_application_config(
+        &pool,
+        application.id,
+        "jwt.secret",
+        &json!(gen_jwt_secret()),
+      )
+      .await
+    },
+    async {
+      create_application_config(
+        &pool,
+        application.id,
+        "jwt.expires_in_seconds",
+        &json!(86400),
+      )
+      .await
+    }
+  )?;
+
   Ok(application)
 }
 
@@ -68,7 +114,7 @@ pub async fn get_application_configs(
 ) -> Result<Vec<ApplicationConfigRow>> {
   let application_configs = sqlx::query_as!(
     ApplicationConfigRow,
-    "SELECT ac.application_id, ac.name, ac.key, ac.value, ac.created_at, ac.updated_at FROM application_configs ac WHERE ac.application_id = $1;",
+    "SELECT ac.application_id, ac.key, ac.value, ac.created_at, ac.updated_at FROM application_configs ac WHERE ac.application_id = $1;",
     application_id
   )
   .fetch_all(pool)
@@ -99,6 +145,27 @@ pub async fn set_application_config(
   key: &str,
   value: &serde_json::Value,
 ) -> Result<()> {
+  if sqlx::query!(
+    "SELECT * FROM application_configs WHERE application_id=$1 AND key=$2 LIMIT 1;",
+    application_id,
+    key
+  )
+  .fetch_optional(pool)
+  .await?
+  .is_some()
+  {
+    update_application_config(pool, application_id, key, value).await
+  } else {
+    create_application_config(pool, application_id, key, value).await
+  }
+}
+
+pub async fn update_application_config(
+  pool: &Pool<Postgres>,
+  application_id: i32,
+  key: &str,
+  value: &serde_json::Value,
+) -> Result<()> {
   sqlx::query!(
     "UPDATE application_configs SET value = $3 WHERE application_id=$1 AND key=$2;",
     application_id,
@@ -106,6 +173,24 @@ pub async fn set_application_config(
     value
   )
   .fetch_optional(pool)
+  .await?;
+  Ok(())
+}
+
+pub async fn create_application_config(
+  pool: &Pool<Postgres>,
+  application_id: i32,
+  key: &str,
+  value: &serde_json::Value,
+) -> Result<()> {
+  sqlx::query_as!(
+    ApplicationConfigRow,
+    "INSERT INTO application_configs (application_id, key, value) VALUES ($1, $2, $3);",
+    application_id,
+    key,
+    value
+  )
+  .execute(pool)
   .await?;
   Ok(())
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT value FROM application_configs WHERE application_id = $1 AND name = $2 LIMIT 1;",
+  "query": "SELECT value FROM application_configs WHERE application_id = $1 AND key = $2 LIMIT 1;",
   "describe": {
     "columns": [
       {
@@ -19,5 +19,5 @@
       false
     ]
   },
-  "hash": "60b62f78624610e3c670fba03c4f7373af915a1c1daf820207caeb82313a9217"
+  "hash": "7d8e989f387a781f0208d102c8d6cb7dd1bf2d8278c2c29d02b2dde0eb73b4e4"
 }

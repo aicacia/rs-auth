@@ -1,5 +1,5 @@
 use actix_web::{
-  get, patch,
+  get, patch, post,
   web::{scope, Data, Path, ServiceConfig},
   HttpResponse, Responder,
 };
@@ -10,14 +10,14 @@ use crate::{
   middleware::{admin::AdminAuthorization, auth::Authorization},
   model::{
     application::{
-      Application, ApplicationConfig, PaginationApplication, PaginationApplicationQuery,
-      UpdateApplicationConfigRequest, UpdateApplicationRequest,
+      Application, ApplicationConfig, CreateApplicationRequest, PaginationApplication,
+      PaginationApplicationQuery, UpdateApplicationConfigRequest, UpdateApplicationRequest,
     },
     error::Errors,
   },
   service::application::{
-    get_application_by_id, get_application_configs, get_applications, set_application_config,
-    update_application,
+    create_application, get_application_by_id, get_application_configs, get_applications,
+    set_application_config, update_application,
   },
 };
 
@@ -69,6 +69,33 @@ pub async fn show(pool: Data<Pool<Postgres>>, path: Path<i32>) -> impl Responder
   let application = match get_application_by_id(pool.as_ref(), application_id).await {
     Ok(Some(a)) => a,
     Ok(None) => return HttpResponse::NotFound().json(Errors::not_found()),
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
+    }
+  };
+  let applications_response: Application = application.into();
+  HttpResponse::Ok().json(applications_response)
+}
+
+#[utoipa::path(
+  context_path = "/applications",
+  request_body = CreateApplicationRequest,
+  responses(
+    (status = 200, description = "Update an application", body = Application),
+    (status = 500, body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+#[post("")]
+pub async fn create(
+  pool: Data<Pool<Postgres>>,
+  body: Json<CreateApplicationRequest>,
+) -> impl Responder {
+  let application = match create_application(pool.as_ref(), &body.name, &body.uri).await {
+    Ok(a) => a,
     Err(e) => {
       log::error!("{}", e);
       return HttpResponse::InternalServerError().json(Errors::internal_error());
@@ -178,6 +205,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
         .wrap(Authorization)
         .service(index)
         .service(show)
+        .service(create)
         .service(update)
         .service(config)
         .service(update_config),

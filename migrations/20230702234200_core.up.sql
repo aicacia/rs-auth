@@ -64,7 +64,6 @@ INSERT INTO "applications" ("name", "uri") VALUES
 
 CREATE TABLE "application_configs" (
   "application_id" INT4 NOT NULL,
-	"name" VARCHAR(255) NOT NULL,
 	"key" VARCHAR(255) NOT NULL,
 	"value" JSONB NOT NULL DEFAULT 'null',
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -74,14 +73,14 @@ CREATE TABLE "application_configs" (
 );
 CREATE TRIGGER "application_configs_set_timestamp" BEFORE UPDATE ON "application_configs" FOR EACH ROW EXECUTE PROCEDURE "trigger_set_timestamp"();
 
-INSERT INTO "application_configs" ("application_id", "name", "key", "value") VALUES
-  (1, 'JWT Secret', 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(255), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
-  (1, 'JWT Expires in Seconds', 'jwt.expires_in_seconds', '86400'),
-  (1, 'Public URI', 'uri', '"http://localhost:5173"'),
-  (1, 'Support email', 'mail.support.email', '"support@localhost.com"'),
-  (1, 'Support name', 'mail.support.name', '"Support"'),
-  (1, 'Sign up enabled', 'signup.enabled', 'false'),
-  (1, 'Sign up with password', 'signup.password', 'false');
+INSERT INTO "application_configs" ("application_id", "key", "value") VALUES
+  (1, 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(255), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
+  (1, 'jwt.expires_in_seconds', '86400'),
+  (1, 'uri', '"http://localhost:5173"'),
+  (1, 'mail.support.email', '"support@localhost.com"'),
+  (1, 'mail.support.name', '"Support"'),
+  (1, 'signup.enabled', 'false'),
+  (1, 'signup.password', 'false');
 
 
 CREATE TABLE "users"(

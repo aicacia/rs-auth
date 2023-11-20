@@ -4,6 +4,8 @@ use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, 
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 
+use super::encryption::generate_salt;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
   pub exp: usize,
@@ -67,4 +69,8 @@ impl Claims {
     )?;
     Ok(jwt)
   }
+}
+
+pub fn gen_jwt_secret() -> String {
+  STANDARD.encode(generate_salt(&mut [0u8; 256]))
 }

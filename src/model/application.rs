@@ -103,7 +103,6 @@ impl From<ApplicationPermissionRow> for ApplicationPermission {
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct ApplicationConfigRow {
   pub application_id: i32,
-  pub name: String,
   pub key: String,
   pub value: Value,
   pub created_at: DateTime<Utc>,
@@ -113,7 +112,6 @@ pub struct ApplicationConfigRow {
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
 pub struct ApplicationConfig {
   pub application_id: i32,
-  pub name: String,
   pub key: String,
   pub value: Value,
   pub created_at: DateTime<Utc>,
@@ -124,7 +122,6 @@ impl From<ApplicationConfigRow> for ApplicationConfig {
   fn from(application_config: ApplicationConfigRow) -> Self {
     Self {
       application_id: application_config.application_id,
-      name: application_config.name,
       key: application_config.key,
       value: application_config.value,
       created_at: application_config.created_at,
@@ -143,6 +140,13 @@ pub struct PaginationApplicationPermissionQuery {
 pub struct PaginationApplicationPermission {
   pub has_more: bool,
   pub data: Vec<ApplicationPermission>,
+}
+
+#[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
+pub struct CreateApplicationRequest {
+  pub name: String,
+  #[validate(length(min = 1), custom = "validate_no_whitespace")]
+  pub uri: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]

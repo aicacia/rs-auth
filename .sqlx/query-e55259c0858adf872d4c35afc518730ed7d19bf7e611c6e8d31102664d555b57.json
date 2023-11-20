@@ -1,22 +1,22 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n        a.id, a.name, a.uri, a.created_at, a.updated_at\n      FROM application_users au\n        JOIN applications a ON a.id=au.application_id\n      WHERE au.user_id=$1;",
+  "query": "SELECT ac.application_id, ac.key, ac.value, ac.created_at, ac.updated_at FROM application_configs ac WHERE ac.application_id = $1;",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "id",
+        "name": "application_id",
         "type_info": "Int4"
       },
       {
         "ordinal": 1,
-        "name": "name",
+        "name": "key",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "uri",
-        "type_info": "Varchar"
+        "name": "value",
+        "type_info": "Jsonb"
       },
       {
         "ordinal": 3,
@@ -42,5 +42,5 @@
       false
     ]
   },
-  "hash": "00fbfa9771a6075bc80384f1332ffb8e64529e70571dc1ef35166e4a1c85a3dd"
+  "hash": "e55259c0858adf872d4c35afc518730ed7d19bf7e611c6e8d31102664d555b57"
 }
