@@ -43,6 +43,7 @@ use crate::controller::{application, auth, user, util};
     application::show,
     application::create,
     application::update,
+    application::remove,
     application::config,
     application::update_config,
   ),

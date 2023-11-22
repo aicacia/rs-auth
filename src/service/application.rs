@@ -108,6 +108,22 @@ pub async fn update_application(
   Ok(application)
 }
 
+pub async fn delete_application(
+  pool: &Pool<Postgres>,
+  application_id: i32,
+) -> Result<Option<ApplicationRow>> {
+  let application = sqlx::query_as!(
+    ApplicationRow,
+    r#"DELETE FROM applications
+    WHERE id = $1
+    RETURNING id, name, uri, created_at, updated_at;"#,
+    application_id
+  )
+  .fetch_optional(pool)
+  .await?;
+  Ok(application)
+}
+
 pub async fn get_application_configs(
   pool: &Pool<Postgres>,
   application_id: i32,

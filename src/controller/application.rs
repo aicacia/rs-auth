@@ -1,5 +1,5 @@
 use actix_web::{
-  get, patch, post,
+  delete, get, patch, post,
   web::{scope, Data, Path, ServiceConfig},
   HttpResponse, Responder,
 };
@@ -16,8 +16,8 @@ use crate::{
     error::Errors,
   },
   service::application::{
-    create_application, get_application_by_id, get_application_configs, get_applications,
-    set_application_config, update_application,
+    create_application, delete_application, get_application_by_id, get_application_configs,
+    get_applications, set_application_config, update_application,
   },
 };
 
@@ -145,6 +145,30 @@ pub async fn update(
 #[utoipa::path(
   context_path = "/applications",
   responses(
+    (status = 204, description = "Delete an application"),
+    (status = 500, body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+#[delete("/{application_id}")]
+pub async fn remove(pool: Data<Pool<Postgres>>, path: Path<i32>) -> impl Responder {
+  let application_id = path.into_inner();
+  match delete_application(pool.as_ref(), application_id).await {
+    Ok(Some(_)) => {}
+    Ok(None) => return HttpResponse::NotFound().json(Errors::not_found()),
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
+    }
+  };
+  HttpResponse::NoContent().finish()
+}
+
+#[utoipa::path(
+  context_path = "/applications",
+  responses(
     (status = 200, description = "Get an application config", body = Vec<ApplicationConfig>),
     (status = 500, body = Errors),
   ),
@@ -208,7 +232,8 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
         .service(create)
         .service(update)
         .service(config)
-        .service(update_config),
+        .service(update_config)
+        .service(remove),
     );
   }
 }
