@@ -41,10 +41,11 @@ uuid = {version = "1", features = ["v4", "serde"]}
 validator = {version = "0", features = ["derive"]}
 
 [profile.release]
+codegen-units = 1
 lto = true
-opt-level = "s"
+opt-level = "z"
 panic = "abort"
-strip = "symbols"
+strip = true
 
 [workspace]
 members = []
