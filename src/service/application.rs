@@ -2,6 +2,7 @@ use anyhow::Result;
 use futures::try_join;
 use serde_json::json;
 use sqlx::{Pool, Postgres};
+use uuid::Uuid;
 
 use crate::{
   core::jwt::gen_jwt_secret,
@@ -16,7 +17,7 @@ pub async fn get_applications(
   let applications = sqlx::query_as!(
     ApplicationRow,
     r#"SELECT
-      a.id, a.name, a.uri, a.created_at, a.updated_at
+      a.id, a.name, a.uri, a.secret, a.created_at, a.updated_at
     FROM applications a
     ORDER BY a.updated_at DESC
     LIMIT $1 OFFSET $2;"#,
@@ -30,12 +31,12 @@ pub async fn get_applications(
 
 pub async fn get_application_by_id(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
 ) -> Result<Option<ApplicationRow>> {
   let application = sqlx::query_as!(
     ApplicationRow,
     r#"SELECT
-      a.id, a.name, a.uri, a.created_at, a.updated_at
+      a.id, a.name, a.uri, a.secret, a.created_at, a.updated_at
     FROM applications a
     WHERE a.id = $1
     LIMIT 1;"#,
@@ -55,7 +56,7 @@ pub async fn create_application(
     ApplicationRow,
     r#"INSERT INTO applications (name, uri)
     VALUES ($1, $2)
-    RETURNING id, name, uri, created_at, updated_at;"#,
+    RETURNING id, name, uri, secret, created_at, updated_at;"#,
     name,
     uri
   )
@@ -88,7 +89,7 @@ pub async fn create_application(
 
 pub async fn update_application(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
   name: Option<&String>,
   uri: Option<&String>,
 ) -> Result<Option<ApplicationRow>> {
@@ -98,7 +99,7 @@ pub async fn update_application(
     SET name = COALESCE($1, name),
         uri = COALESCE($2, uri)
     WHERE id = $3
-    RETURNING id, name, uri, created_at, updated_at;"#,
+    RETURNING id, name, uri, secret, created_at, updated_at;"#,
     name,
     uri,
     application_id
@@ -110,13 +111,13 @@ pub async fn update_application(
 
 pub async fn delete_application(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
 ) -> Result<Option<ApplicationRow>> {
   let application = sqlx::query_as!(
     ApplicationRow,
     r#"DELETE FROM applications
     WHERE id = $1
-    RETURNING id, name, uri, created_at, updated_at;"#,
+    RETURNING id, name, uri, secret, created_at, updated_at;"#,
     application_id
   )
   .fetch_optional(pool)
@@ -126,7 +127,7 @@ pub async fn delete_application(
 
 pub async fn get_application_configs(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
 ) -> Result<Vec<ApplicationConfigRow>> {
   let application_configs = sqlx::query_as!(
     ApplicationConfigRow,
@@ -140,7 +141,7 @@ pub async fn get_application_configs(
 
 pub async fn get_application_config(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
   key: &str,
 ) -> serde_json::Value {
   sqlx::query!(
@@ -157,7 +158,7 @@ pub async fn get_application_config(
 
 pub async fn set_application_config(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
   key: &str,
   value: &serde_json::Value,
 ) -> Result<()> {
@@ -178,7 +179,7 @@ pub async fn set_application_config(
 
 pub async fn update_application_config(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
   key: &str,
   value: &serde_json::Value,
 ) -> Result<()> {
@@ -195,7 +196,7 @@ pub async fn update_application_config(
 
 pub async fn create_application_config(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
   key: &str,
   value: &serde_json::Value,
 ) -> Result<()> {
@@ -213,7 +214,7 @@ pub async fn create_application_config(
 
 pub async fn get_application_jwt_expires_in_seconds(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
 ) -> usize {
   get_application_config(pool, application_id, "jwt.expires_in_seconds")
     .await
@@ -221,7 +222,7 @@ pub async fn get_application_jwt_expires_in_seconds(
     .unwrap_or(86400) as usize
 }
 
-pub async fn get_application_jwt_secret(pool: &Pool<Postgres>, application_id: i32) -> String {
+pub async fn get_application_jwt_secret(pool: &Pool<Postgres>, application_id: Uuid) -> String {
   get_application_config(pool, application_id, "jwt.secret")
     .await
     .as_str()
@@ -229,7 +230,7 @@ pub async fn get_application_jwt_secret(pool: &Pool<Postgres>, application_id: i
     .to_owned()
 }
 
-pub async fn get_application_uri(pool: &Pool<Postgres>, application_id: i32) -> String {
+pub async fn get_application_uri(pool: &Pool<Postgres>, application_id: Uuid) -> String {
   get_application_config(pool, application_id, "uri")
     .await
     .as_str()

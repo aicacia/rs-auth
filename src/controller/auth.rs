@@ -33,6 +33,7 @@ use actix_web::{
 use actix_web_validator::Json;
 use futures::join;
 use sqlx::{Pool, Postgres};
+use uuid::Uuid;
 
 #[utoipa::path(
     request_body = SignInWithPasswordRequest,
@@ -319,7 +320,7 @@ pub async fn confirm_email(path: Path<uuid::Uuid>, pool: Data<Pool<Postgres>>) -
   )
 )]
 #[get("/auth/sign-up-methods/{application_id}")]
-pub async fn sign_up_methods(path: Path<i32>, pool: Data<Pool<Postgres>>) -> impl Responder {
+pub async fn sign_up_methods(path: Path<Uuid>, pool: Data<Pool<Postgres>>) -> impl Responder {
   let application_id = path.into_inner();
   let mut sign_up_methods_response = SignUpMethods::default();
 

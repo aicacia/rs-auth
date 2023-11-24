@@ -22,8 +22,7 @@ INSERT INTO "config" ("name", "value") VALUES
   ('server.address', '"0.0.0.0"'),
   ('server.port', '8080'),
   ('server.uri', '"http://localhost:8080"'),
-  ('log_level', '"debug"'),
-  ('admin_application_id', '1');
+  ('log_level', '"debug"');
 
 
 CREATE FUNCTION config_notify() RETURNS trigger AS $$
@@ -49,9 +48,10 @@ CREATE TRIGGER "config_notify_delete" AFTER DELETE ON "config" FOR EACH ROW EXEC
 
 
 CREATE TABLE "applications" (
-	"id" SERIAL PRIMARY KEY,
+	"id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   "name" VARCHAR(255) NOT NULL,
   "uri" VARCHAR(255) NOT NULL,
+  "secret" VARCHAR(255) DEFAULT encode(gen_random_bytes(64), 'base64') NOT NULL,
 	"updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -63,7 +63,7 @@ INSERT INTO "applications" ("name", "uri") VALUES
 
 
 CREATE TABLE "application_configs" (
-  "application_id" INT4 NOT NULL,
+  "application_id" UUID NOT NULL,
 	"key" VARCHAR(255) NOT NULL,
 	"value" JSONB NOT NULL DEFAULT 'null',
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -74,13 +74,16 @@ CREATE TABLE "application_configs" (
 CREATE TRIGGER "application_configs_set_timestamp" BEFORE UPDATE ON "application_configs" FOR EACH ROW EXECUTE PROCEDURE "trigger_set_timestamp"();
 
 INSERT INTO "application_configs" ("application_id", "key", "value") VALUES
-  (1, 'jwt.secret', (CONCAT('"', translate(encode(gen_random_bytes(255), 'base64'), E'+/=\n', '-_'), '"'))::JSONB),
-  (1, 'jwt.expires_in_seconds', '86400'),
-  (1, 'uri', '"http://localhost:5173"'),
-  (1, 'mail.support.email', '"support@localhost.com"'),
-  (1, 'mail.support.name', '"Support"'),
-  (1, 'signup.enabled', 'false'),
-  (1, 'signup.password', 'false');
+  ((SELECT id FROM "applications" WHERE uri='admin' LIMIT 1), 'jwt.secret', to_jsonb(encode(public.gen_random_bytes(255), 'base64'))),
+  ((SELECT id FROM "applications" WHERE uri='admin' LIMIT 1), 'jwt.expires_in_seconds', '86400'),
+  ((SELECT id FROM "applications" WHERE uri='admin' LIMIT 1), 'uri', '"http://localhost:5173"'),
+  ((SELECT id FROM "applications" WHERE uri='admin' LIMIT 1), 'mail.support.email', '"support@localhost.com"'),
+  ((SELECT id FROM "applications" WHERE uri='admin' LIMIT 1), 'mail.support.name', '"Support"'),
+  ((SELECT id FROM "applications" WHERE uri='admin' LIMIT 1), 'signup.enabled', 'false'),
+  ((SELECT id FROM "applications" WHERE uri='admin' LIMIT 1), 'signup.password', 'false');
+
+INSERT INTO "config" ("name", "value") VALUES
+  ('admin_application_id', (SELECT to_jsonb(id) FROM "applications" WHERE uri='admin' LIMIT 1));
 
 
 CREATE TABLE "users"(
@@ -119,7 +122,7 @@ CREATE UNIQUE INDEX "users_email_id_unique_idx" ON "users" ("email_id");
 
 
 CREATE TABLE "application_users"(
-	"application_id" INT4 NOT NULL,
+	"application_id" UUID NOT NULL,
 	"user_id" INT4 NOT NULL,
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "application_users_application_id_fk" FOREIGN KEY("application_id") REFERENCES "applications"("id") ON DELETE CASCADE,
@@ -127,12 +130,12 @@ CREATE TABLE "application_users"(
 );
 
 INSERT INTO "application_users" ("application_id", "user_id")
-  VALUES (1, 1);
+  VALUES ((SELECT id FROM "applications" WHERE uri='admin' LIMIT 1), 1);
 
 
 CREATE TABLE "application_permissions"(
 	"id" SERIAL PRIMARY KEY,
-	"application_id" INT4 NOT NULL,
+	"application_id" UUID NOT NULL,
 	"name" VARCHAR(255) NOT NULL,
 	"uri" VARCHAR(255) NOT NULL,
 	"created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -143,7 +146,7 @@ CREATE UNIQUE INDEX "application_permissions_application_id_uri_unique_idx" ON "
 
 INSERT INTO "application_permissions" ("application_id", "name", "uri")
   VALUES
-    (1, 'Admin', 'admin');
+    ((SELECT id FROM "applications" WHERE uri='admin' LIMIT 1), 'Admin', 'admin');
 
 
 CREATE TABLE "user_application_permissions"(

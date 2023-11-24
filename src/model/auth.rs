@@ -5,7 +5,7 @@ use validator::{Validate, ValidationError};
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct SignInWithPasswordRequest {
-  pub application_id: i32,
+  pub application_id: Uuid,
   #[validate(length(min = 1), custom = "validate_no_whitespace")]
   pub username_or_email: String,
   pub password: String,
@@ -13,7 +13,7 @@ pub struct SignInWithPasswordRequest {
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct SignUpWithPasswordRequest {
-  pub application_id: i32,
+  pub application_id: Uuid,
   #[validate(length(min = 1), custom = "validate_no_whitespace")]
   pub username: String,
   #[validate(email)]
@@ -30,7 +30,7 @@ pub struct SignUpWithPasswordRequest {
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct ResetPasswordRequest {
-  pub application_id: i32,
+  pub application_id: Uuid,
   pub reset_password_token: Uuid,
   #[validate(length(min = 1, max = 255))]
   pub password: String,
@@ -40,7 +40,7 @@ pub struct ResetPasswordRequest {
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]
 pub struct RequestResetPasswordRequest {
-  pub application_id: i32,
+  pub application_id: Uuid,
   #[validate(email)]
   pub email: String,
 }

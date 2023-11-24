@@ -4,6 +4,7 @@ use futures::future::{err, ok};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use utoipa::ToSchema;
+use uuid::Uuid;
 use validator::Validate;
 
 use super::auth::validate_no_whitespace;
@@ -11,9 +12,10 @@ use super::error::Errors;
 
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct ApplicationRow {
-  pub id: i32,
+  pub id: Uuid,
   pub name: String,
   pub uri: String,
+  pub secret: String,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
 }
@@ -36,7 +38,7 @@ impl FromRequest for ApplicationRow {
 
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
 pub struct Application {
-  pub id: i32,
+  pub id: Uuid,
   pub name: String,
   pub uri: String,
   pub created_at: DateTime<Utc>,
@@ -55,22 +57,45 @@ impl From<ApplicationRow> for Application {
   }
 }
 
+#[derive(Serialize, Deserialize, Clone, ToSchema)]
+pub struct ApplicationWithSecret {
+  pub id: Uuid,
+  pub name: String,
+  pub uri: String,
+  pub secret: String,
+  pub created_at: DateTime<Utc>,
+  pub updated_at: DateTime<Utc>,
+}
+
+impl From<ApplicationRow> for ApplicationWithSecret {
+  fn from(application: ApplicationRow) -> Self {
+    Self {
+      id: application.id,
+      name: application.name,
+      uri: application.uri,
+      secret: application.secret,
+      created_at: application.created_at,
+      updated_at: application.updated_at,
+    }
+  }
+}
+
 #[derive(Deserialize, Validate)]
-pub struct PaginationApplicationQuery {
+pub struct PaginationApplicationWithSecretQuery {
   pub page: Option<i64>,
   pub page_size: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
-pub struct PaginationApplication {
+pub struct PaginationApplicationWithSecret {
   pub has_more: bool,
-  pub data: Vec<Application>,
+  pub data: Vec<ApplicationWithSecret>,
 }
 
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct ApplicationPermissionRow {
   pub id: i32,
-  pub application_id: i32,
+  pub application_id: Uuid,
   pub name: String,
   pub uri: String,
   pub created_at: DateTime<Utc>,
@@ -80,7 +105,7 @@ pub struct ApplicationPermissionRow {
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
 pub struct ApplicationPermission {
   pub id: i32,
-  pub application_id: i32,
+  pub application_id: Uuid,
   pub name: String,
   pub uri: String,
   pub created_at: DateTime<Utc>,
@@ -102,7 +127,7 @@ impl From<ApplicationPermissionRow> for ApplicationPermission {
 
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct ApplicationConfigRow {
-  pub application_id: i32,
+  pub application_id: Uuid,
   pub key: String,
   pub value: Value,
   pub created_at: DateTime<Utc>,
@@ -111,7 +136,7 @@ pub struct ApplicationConfigRow {
 
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
 pub struct ApplicationConfig {
-  pub application_id: i32,
+  pub application_id: Uuid,
   pub key: String,
   pub value: Value,
   pub created_at: DateTime<Utc>,
@@ -131,13 +156,13 @@ impl From<ApplicationConfigRow> for ApplicationConfig {
 }
 
 #[derive(Deserialize, Validate)]
-pub struct PaginationApplicationPermissionQuery {
+pub struct PaginationApplicationWithSecretPermissionQuery {
   pub page: Option<i64>,
   pub page_size: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
-pub struct PaginationApplicationPermission {
+pub struct PaginationApplicationWithSecretPermission {
   pub has_more: bool,
   pub data: Vec<ApplicationPermission>,
 }

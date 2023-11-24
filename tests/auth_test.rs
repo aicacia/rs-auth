@@ -3,9 +3,11 @@ use actix_web::test;
 use anyhow::Result;
 use auth::{
   app::create_app,
+  core::config::get_config,
   model::auth::{SignInWithPasswordRequest, SignUpWithPasswordRequest},
-  service::application::set_application_config,
+  service::application::update_application_config,
 };
+use futures::try_join;
 use sqlx::{Pool, Postgres};
 
 #[sqlx::test(migrations = "./migrations")]
@@ -13,7 +15,7 @@ async fn test_sign_in_with_password(pool: Pool<Postgres>) -> Result<()> {
   let app = test::init_service(create_app(&pool)).await;
 
   let body = SignInWithPasswordRequest {
-    application_id: 1,
+    application_id: get_config().admin_application_id,
     username_or_email: "admin".to_owned(),
     password: "password".to_owned(),
   };
@@ -32,16 +34,29 @@ async fn test_sign_in_with_password(pool: Pool<Postgres>) -> Result<()> {
 async fn test_sign_up_with_password(pool: Pool<Postgres>) -> Result<()> {
   let app = test::init_service(create_app(&pool)).await;
 
-  set_application_config(
-    &pool,
-    1,
-    "disable_public_signup",
-    &serde_json::Value::Bool(false),
-  )
-  .await?;
+  try_join!(
+    async {
+      update_application_config(
+        &pool,
+        get_config().admin_application_id,
+        "signup.enabled",
+        &serde_json::Value::Bool(true),
+      )
+      .await
+    },
+    async {
+      update_application_config(
+        &pool,
+        get_config().admin_application_id,
+        "signup.password",
+        &serde_json::Value::Bool(true),
+      )
+      .await
+    },
+  )?;
 
   let body = SignUpWithPasswordRequest {
-    application_id: 1,
+    application_id: get_config().admin_application_id,
     username: "test".to_owned(),
     email: None,
     password: "password".to_owned(),

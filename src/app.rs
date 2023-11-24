@@ -1,7 +1,8 @@
 use crate::model::error::Errors;
 use crate::{
   core::openapi::SecurityAddon, model::application as application_model, model::auth as auth_model,
-  model::error as error_model, model::user as user_model, model::util as util_model,
+  model::error as error_model, model::oauth2 as oauth2_model, model::user as user_model,
+  model::util as util_model,
 };
 use actix_cors::Cors;
 use actix_web::{
@@ -17,7 +18,7 @@ use sqlx::{Pool, Postgres};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::controller::{application, auth, user, util};
+use crate::controller::{application, auth, oauth2, user, util};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -66,9 +67,10 @@ use crate::controller::{application, auth, user, util};
       user_model::CreateUserEmailRequest,
       user_model::PaginationUser,
       application_model::Application,
+      application_model::ApplicationWithSecret,
       application_model::ApplicationConfig,
       application_model::ApplicationPermission,
-      application_model::PaginationApplication,
+      application_model::PaginationApplicationWithSecret,
       application_model::CreateApplicationRequest,
       application_model::UpdateApplicationRequest,
       application_model::UpdateApplicationConfigRequest,
@@ -77,6 +79,7 @@ use crate::controller::{application, auth, user, util};
   tags(
     (name = "util", description = "Utility endpoints"),
     (name = "auth", description = "Authentication endpoints"),
+    (name = "oauth2", description = "OAuth2 endpoints"),
     (name = "user", description = "Users endpoints"),
     (name = "application", description = "Applications endpoints"),
   ),
@@ -114,6 +117,7 @@ pub fn create_app(
     )
     .configure(util::configure())
     .configure(auth::configure())
+    .configure(oauth2::configure())
     .configure(user::configure())
     .configure(application::configure())
     .service(

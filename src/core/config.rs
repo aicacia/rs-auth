@@ -2,6 +2,7 @@ use anyhow::Result;
 use serde::Deserialize;
 use sqlx::{Pool, Postgres};
 use std::{net::IpAddr, sync::Arc};
+use uuid::Uuid;
 
 use crate::service::config::get_configs_map;
 
@@ -33,7 +34,7 @@ pub struct ServerConfig {
 pub struct Config {
   pub server: ServerConfig,
   pub log_level: String,
-  pub admin_application_id: i32,
+  pub admin_application_id: Uuid,
 }
 
 impl Config {

@@ -138,7 +138,7 @@ pub struct CreateUser {
 
 pub async fn create_user(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
   create_user: CreateUser,
 ) -> Result<(UserRow, Option<EmailRow>)> {
   let mut conn = pool.acquire().await?;
@@ -208,7 +208,7 @@ pub async fn create_user(
 pub async fn add_user_application(
   pool: &Pool<Postgres>,
   user_id: i32,
-  application_id: i32,
+  application_id: Uuid,
 ) -> Result<()> {
   sqlx::query!(
     "INSERT INTO application_users (application_id, user_id) VALUES ($1, $2);",
@@ -256,7 +256,7 @@ pub async fn get_user_applications(
     sqlx::query_as!(
       ApplicationRow,
       r#"SELECT
-        a.id, a.name, a.uri, a.created_at, a.updated_at
+        a.id, a.name, a.uri, a.secret, a.created_at, a.updated_at
       FROM application_users au
         JOIN applications a ON a.id=au.application_id
       WHERE au.user_id=$1
@@ -272,7 +272,7 @@ pub async fn get_user_applications(
 
 pub async fn request_user_password_reset(
   pool: &Pool<Postgres>,
-  application_id: i32,
+  application_id: Uuid,
   email: &str,
 ) -> Result<(UserRow, Uuid)> {
   let reset_password_token = Uuid::new_v4();
@@ -381,7 +381,7 @@ pub async fn set_user_primary_email(
 pub async fn user_has_application(
   pool: &Pool<Postgres>,
   user_id: i32,
-  application_id: i32,
+  application_id: Uuid,
 ) -> Result<bool> {
   let application_user = sqlx::query!(
     r#"SELECT application_id, user_id FROM application_users WHERE application_id=$1 AND user_id=$2 LIMIT 1;"#,
@@ -411,7 +411,7 @@ pub async fn change_user_username(
 pub async fn get_user_permissions(
   pool: &Pool<Postgres>,
   user_id: i32,
-  application_id: i32,
+  application_id: Uuid,
 ) -> Result<Vec<String>> {
   let records = sqlx::query!(
     r#"SELECT ap.uri
@@ -430,7 +430,7 @@ pub async fn get_user_permissions(
 pub async fn user_has_permissions(
   pool: &Pool<Postgres>,
   user_id: i32,
-  application_id: i32,
+  application_id: Uuid,
   uri: &str,
 ) -> Result<bool> {
   let permission = sqlx::query!(

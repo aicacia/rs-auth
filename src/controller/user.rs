@@ -4,7 +4,7 @@ use actix_web::{
   HttpResponse, Responder,
 };
 use actix_web_validator::Json;
-use futures::future::try_join;
+use futures::try_join;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
@@ -12,7 +12,7 @@ use crate::{
   core::{encryption::encrypt_password, mail::send_support_mail},
   middleware::{admin::AdminAuthorization, admin_app::AdminAppAuthorization, auth::Authorization},
   model::{
-    application::{Application, ApplicationRow, PaginationApplicationQuery},
+    application::{Application, ApplicationRow, PaginationApplicationWithSecretQuery},
     error::Errors,
     user::{
       ChangeUsernameRequest, CreateUserEmailRequest, Email, PaginationUser, PaginationUserQuery,
@@ -42,12 +42,10 @@ pub async fn current(
   user: UserRow,
   application: ApplicationRow,
 ) -> impl Responder {
-  let (emails, permissions) = match try_join(
+  let (emails, permissions) = match try_join!(
     get_user_emails(pool.as_ref(), user.id),
     get_user_permissions(pool.as_ref(), user.id, application.id),
-  )
-  .await
-  {
+  ) {
     Ok(r) => r,
     Err(e) => {
       log::error!("{}", e);
@@ -286,7 +284,7 @@ pub async fn change_username(
 pub async fn applications(
   pool: Data<Pool<Postgres>>,
   user: UserRow,
-  query: Query<PaginationApplicationQuery>,
+  query: Query<PaginationApplicationWithSecretQuery>,
 ) -> impl Responder {
   let applications = match get_user_applications(
     pool.as_ref(),

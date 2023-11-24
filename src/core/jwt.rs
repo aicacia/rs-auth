@@ -1,8 +1,9 @@
 use anyhow::Result;
-use base64::engine::{general_purpose::STANDARD, Engine};
+use base64::engine::{general_purpose::STANDARD_NO_PAD, Engine};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use super::encryption::generate_salt;
 
@@ -13,12 +14,12 @@ pub struct Claims {
   pub iss: String,
   pub nonce: String,
   pub sub: i32,
-  pub app: i32,
+  pub app: Uuid,
 }
 
 impl Claims {
   pub fn new(
-    app: i32,
+    app: Uuid,
     sub: i32,
     now_in_seconds: usize,
     expires_in_seconds: usize,
@@ -51,7 +52,7 @@ impl Claims {
     let mut parts = jwt.rsplitn(3, '.');
     match (parts.next(), parts.next(), parts.next()) {
       (Some(_header), Some(payload), Some(_signature)) => {
-        let json = STANDARD.decode(payload)?;
+        let json = STANDARD_NO_PAD.decode(payload)?;
         let claims = serde_json::from_slice(&json)?;
         Ok(claims)
       }
@@ -72,5 +73,5 @@ impl Claims {
 }
 
 pub fn gen_jwt_secret() -> String {
-  STANDARD.encode(generate_salt(&mut [0u8; 256]))
+  STANDARD_NO_PAD.encode(generate_salt(&mut [0u8; 256]))
 }
