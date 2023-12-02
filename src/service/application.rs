@@ -125,6 +125,24 @@ pub async fn delete_application(
   Ok(application)
 }
 
+pub async fn reset_application_secret(
+  pool: &Pool<Postgres>,
+  application_id: Uuid,
+) -> Result<Option<ApplicationRow>> {
+  Ok(
+    sqlx::query_as!(
+      ApplicationRow,
+      r#"UPDATE applications
+      SET secret=encode(gen_random_bytes(64), 'base64')
+      WHERE id=$1
+      RETURNING id, name, uri, secret, created_at, updated_at;"#,
+      application_id
+    )
+    .fetch_optional(pool)
+    .await?,
+  )
+}
+
 pub async fn get_application_configs(
   pool: &Pool<Postgres>,
   application_id: Uuid,

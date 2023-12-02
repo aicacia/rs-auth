@@ -19,7 +19,7 @@ use crate::{
   },
   service::application::{
     create_application, delete_application, get_application_by_id, get_application_configs,
-    get_applications, set_application_config, update_application,
+    get_applications, reset_application_secret, set_application_config, update_application,
   },
 };
 
@@ -147,6 +147,31 @@ pub async fn update(
 #[utoipa::path(
   context_path = "/applications",
   responses(
+    (status = 200, description = "Resets an application's secret", body = ApplicationWithSecret),
+    (status = 500, body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+#[patch("/{application_id}/reset-secret")]
+pub async fn reset_secret(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl Responder {
+  let application_id = path.into_inner();
+  let application = match reset_application_secret(pool.as_ref(), application_id).await {
+    Ok(Some(a)) => a,
+    Ok(None) => return HttpResponse::NotFound().json(Errors::not_found()),
+    Err(e) => {
+      log::error!("{}", e);
+      return HttpResponse::InternalServerError().json(Errors::internal_error());
+    }
+  };
+  let applications_response: ApplicationWithSecret = application.into();
+  HttpResponse::Ok().json(applications_response)
+}
+
+#[utoipa::path(
+  context_path = "/applications",
+  responses(
     (status = 204, description = "Delete an application"),
     (status = 500, body = Errors),
   ),
@@ -233,6 +258,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
         .service(show)
         .service(create)
         .service(update)
+        .service(reset_secret)
         .service(config)
         .service(update_config)
         .service(remove),

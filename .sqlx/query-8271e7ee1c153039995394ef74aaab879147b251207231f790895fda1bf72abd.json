@@ -12,7 +12,7 @@
     "parameters": {
       "Left": [
         "Int4",
-        "Int4",
+        "Uuid",
         "Text"
       ]
     },

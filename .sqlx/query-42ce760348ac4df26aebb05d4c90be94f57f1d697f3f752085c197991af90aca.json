@@ -1,12 +1,12 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n        a.id, a.name, a.uri, a.created_at, a.updated_at\n      FROM application_users au\n        JOIN applications a ON a.id=au.application_id\n      WHERE au.user_id=$1\n      LIMIT $2 OFFSET $3;",
+  "query": "UPDATE applications\n    SET name = COALESCE($1, name),\n        uri = COALESCE($2, uri)\n    WHERE id = $3\n    RETURNING id, name, uri, secret, created_at, updated_at;",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 1,
@@ -20,20 +20,25 @@
       },
       {
         "ordinal": 3,
+        "name": "secret",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Int4",
-        "Int8",
-        "Int8"
+        "Varchar",
+        "Varchar",
+        "Uuid"
       ]
     },
     "nullable": [
@@ -41,8 +46,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "bad5204c861c3ef105985d8d1fd247b840de492ba43ab0859a1c77f331bfc687"
+  "hash": "42ce760348ac4df26aebb05d4c90be94f57f1d697f3f752085c197991af90aca"
 }

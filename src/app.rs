@@ -44,6 +44,7 @@ use crate::controller::{application, auth, oauth2, user, util};
     application::show,
     application::create,
     application::update,
+    application::reset_secret,
     application::remove,
     application::config,
     application::update_config,

@@ -1,38 +1,43 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM application_configs WHERE application_id=$1 AND key=$2 LIMIT 1;",
+  "query": "INSERT INTO applications (name, uri)\n    VALUES ($1, $2)\n    RETURNING id, name, uri, secret, created_at, updated_at;",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "application_id",
+        "name": "id",
         "type_info": "Uuid"
       },
       {
         "ordinal": 1,
-        "name": "key",
+        "name": "name",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "value",
-        "type_info": "Jsonb"
+        "name": "uri",
+        "type_info": "Varchar"
       },
       {
         "ordinal": 3,
+        "name": "secret",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Text"
+        "Varchar",
+        "Varchar"
       ]
     },
     "nullable": [
@@ -40,8 +45,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "6ed1c9b3e6bc2cf805f1a11d9de08b111607285399a5bd82d39f51af4e1d3faf"
+  "hash": "b762dff80719b808b7830f6910891acefe5909334be3ca8d418d314d77073471"
 }

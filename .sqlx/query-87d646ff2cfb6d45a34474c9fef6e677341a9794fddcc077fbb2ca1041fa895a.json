@@ -1,12 +1,12 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n      a.id, a.name, a.uri, a.created_at, a.updated_at\n    FROM applications a\n    WHERE a.id = $1\n    LIMIT 1;",
+  "query": "DELETE FROM applications\n    WHERE id = $1\n    RETURNING id, name, uri, secret, created_at, updated_at;",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 1,
@@ -20,18 +20,23 @@
       },
       {
         "ordinal": 3,
+        "name": "secret",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Int4"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -39,8 +44,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "04c78c8c7cb8c97ed9492ea02f6fd2551fdb268ac7c3264fca3171788ee34a3f"
+  "hash": "87d646ff2cfb6d45a34474c9fef6e677341a9794fddcc077fbb2ca1041fa895a"
 }

@@ -1,12 +1,12 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO applications (name, uri)\n    VALUES ($1, $2)\n    RETURNING id, name, uri, created_at, updated_at;",
+  "query": "SELECT\n        a.id, a.name, a.uri, a.secret, a.created_at, a.updated_at\n      FROM application_users au\n        JOIN applications a ON a.id=au.application_id\n      WHERE au.user_id=$1\n      LIMIT $2 OFFSET $3;",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 1,
@@ -20,19 +20,25 @@
       },
       {
         "ordinal": 3,
+        "name": "secret",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Varchar",
-        "Varchar"
+        "Int4",
+        "Int8",
+        "Int8"
       ]
     },
     "nullable": [
@@ -40,8 +46,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "a8268c195d5b27948dcbb86151cf93f001eecb6a43d2f31574d9fdf531b9644c"
+  "hash": "35df0854dfa6a804781c34d0a9c9358a8a8e0ae4e9baf2f04ac43b794af5cc26"
 }
