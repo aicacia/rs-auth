@@ -3,7 +3,7 @@ use actix_web::{dev::Payload, FromRequest, HttpMessage, HttpRequest};
 use chrono::{DateTime, Utc};
 use futures::future::{err, ok};
 use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 use validator::Validate;
 
@@ -100,7 +100,7 @@ impl From<(UserRow, Vec<EmailRow>, Vec<String>)> for User {
   }
 }
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize, Validate, IntoParams)]
 pub struct PaginationUserQuery {
   pub page: Option<i64>,
   pub page_size: Option<i64>,

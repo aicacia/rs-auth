@@ -1,7 +1,7 @@
 use crate::{
   core::{
     encryption::{encrypt_password, verify_password},
-    jwt::Claims,
+    jwt::{encode_jwt, Claims},
   },
   model::{
     auth::{
@@ -82,15 +82,16 @@ pub async fn sign_in_with_password(
     get_application_uri(pool.as_ref(), body.application_id),
     get_application_jwt_secret(pool.as_ref(), body.application_id)
   );
-  let jwt = match Claims::new(
-    body.application_id,
-    user.id,
-    now_in_seconds,
-    expires_in_seconds,
-    &iss,
-  )
-  .encode(&secret)
-  {
+  let jwt = match encode_jwt(
+    &Claims::new(
+      body.application_id,
+      user.id,
+      now_in_seconds,
+      expires_in_seconds,
+      &iss,
+    ),
+    &secret,
+  ) {
     Ok(jwt) => jwt,
     Err(e) => {
       log::error!("{}", e);
@@ -183,15 +184,16 @@ pub async fn sign_up_with_password(
     get_application_uri(pool.as_ref(), body.application_id),
     get_application_jwt_secret(pool.as_ref(), body.application_id)
   );
-  let jwt = match Claims::new(
-    body.application_id,
-    user.id,
-    now_in_seconds,
-    expires_in_seconds,
-    &iss,
-  )
-  .encode(&secret)
-  {
+  let jwt = match encode_jwt(
+    &Claims::new(
+      body.application_id,
+      user.id,
+      now_in_seconds,
+      expires_in_seconds,
+      &iss,
+    ),
+    &secret,
+  ) {
     Ok(jwt) => jwt,
     Err(e) => {
       log::error!("{}", e);
@@ -270,15 +272,16 @@ pub async fn reset_password_with_token(
     get_application_uri(pool.as_ref(), body.application_id),
     get_application_jwt_secret(pool.as_ref(), body.application_id)
   );
-  let jwt = match Claims::new(
-    body.application_id,
-    user.id,
-    now_in_seconds,
-    expires_in_seconds,
-    &iss,
-  )
-  .encode(&secret)
-  {
+  let jwt = match encode_jwt(
+    &Claims::new(
+      body.application_id,
+      user.id,
+      now_in_seconds,
+      expires_in_seconds,
+      &iss,
+    ),
+    &secret,
+  ) {
     Ok(jwt) => jwt,
     Err(e) => {
       log::error!("{}", e);

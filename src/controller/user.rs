@@ -272,6 +272,7 @@ pub async fn change_username(
 
 #[utoipa::path(
   context_path = "/users",
+  params(PaginationApplicationWithSecretQuery),
   responses(
       (status = 200, description = "Get current user's application", body = Vec<Application>),
       (status = 500, body = Errors),
@@ -306,6 +307,7 @@ pub async fn applications(
 
 #[utoipa::path(
   context_path = "/users",
+  params(PaginationUserQuery),
   responses(
       (status = 200, description = "Get all users", body = PaginationUser),
       (status = 500, body = Errors),

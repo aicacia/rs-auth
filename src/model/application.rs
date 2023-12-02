@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use futures::future::{err, ok};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 use validator::Validate;
 
@@ -80,7 +80,7 @@ impl From<ApplicationRow> for ApplicationWithSecret {
   }
 }
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize, Validate, IntoParams)]
 pub struct PaginationApplicationWithSecretQuery {
   pub page: Option<i64>,
   pub page_size: Option<i64>,
@@ -153,18 +153,6 @@ impl From<ApplicationConfigRow> for ApplicationConfig {
       updated_at: application_config.updated_at,
     }
   }
-}
-
-#[derive(Deserialize, Validate)]
-pub struct PaginationApplicationWithSecretPermissionQuery {
-  pub page: Option<i64>,
-  pub page_size: Option<i64>,
-}
-
-#[derive(Serialize, Deserialize, ToSchema)]
-pub struct PaginationApplicationWithSecretPermission {
-  pub has_more: bool,
-  pub data: Vec<ApplicationPermission>,
 }
 
 #[derive(Serialize, Deserialize, Clone, ToSchema, Validate)]

@@ -25,6 +25,7 @@ use crate::{
 
 #[utoipa::path(
   context_path = "/applications",
+  params(PaginationApplicationWithSecretQuery),
   responses(
     (status = 200, description = "Get all applications", body = PaginationApplicationWithSecret),
     (status = 500, body = Errors),

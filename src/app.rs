@@ -48,6 +48,8 @@ use crate::controller::{application, auth, oauth2, user, util};
     application::remove,
     application::config,
     application::update_config,
+    oauth2::authorize,
+    oauth2::application,
   ),
   components(
     schemas(
@@ -75,6 +77,7 @@ use crate::controller::{application, auth, oauth2, user, util};
       application_model::CreateApplicationRequest,
       application_model::UpdateApplicationRequest,
       application_model::UpdateApplicationConfigRequest,
+      oauth2_model::OAuth2Application,
     )
   ),
   tags(

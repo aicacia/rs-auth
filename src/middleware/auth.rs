@@ -3,9 +3,12 @@ use std::{
   sync::Arc,
 };
 
-use crate::service::{
-  application::{get_application_by_id, get_application_jwt_secret},
-  user::get_user_by_id,
+use crate::{
+  core::jwt::{parse_jwt, parse_jwt_no_validation},
+  service::{
+    application::{get_application_by_id, get_application_jwt_secret},
+    user::get_user_by_id,
+  },
 };
 use actix_web::{
   body::EitherBody,
@@ -85,7 +88,7 @@ where
             }
           };
 
-          let unvalidated_claims = match Claims::parse_no_validation(jwt) {
+          let unvalidated_claims = match parse_jwt_no_validation::<Claims>(jwt) {
             Ok(c) => c,
             Err(err) => {
               log::error!("Failed to parse JWT: {}", err);
@@ -110,7 +113,7 @@ where
           };
 
           let secret = get_application_jwt_secret(pool.as_ref(), unvalidated_claims.app).await;
-          let token_data = match Claims::parse(jwt, &secret) {
+          let token_data = match parse_jwt::<Claims>(jwt, &secret) {
             Ok(c) => c,
             Err(err) => {
               log::error!("Error: {}", err);
