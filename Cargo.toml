@@ -7,7 +7,7 @@ license = "MIT/Apache-2.0"
 name = "auth"
 readme = "README.md"
 repository = ""
-rust-version = "1.73"
+rust-version = "1.74"
 version = "0.1.0"
 
 [dependencies]
