@@ -65,7 +65,7 @@ pub async fn sign_in_with_password(
     }
   }
 
-  match user_has_application(pool.as_ref(), user.id, body.application_id).await {
+  match user_has_application(pool.as_ref(), body.application_id, user.id).await {
     Ok(true) => (),
     Ok(false) => {
       return HttpResponse::Unauthorized().json(Errors::from("user_not_authorized_for_application"))

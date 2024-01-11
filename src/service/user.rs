@@ -380,8 +380,8 @@ pub async fn set_user_primary_email(
 
 pub async fn user_has_application(
   pool: &Pool<Postgres>,
-  user_id: i32,
   application_id: Uuid,
+  user_id: i32,
 ) -> Result<bool> {
   let application_user = sqlx::query!(
     r#"SELECT application_id, user_id FROM application_users WHERE application_id=$1 AND user_id=$2 LIMIT 1;"#,

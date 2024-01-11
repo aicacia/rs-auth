@@ -8,9 +8,9 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - auth-postgres:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
 volumes:
-  auth-postgres:
+  postgres:
