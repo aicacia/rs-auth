@@ -31,9 +31,7 @@ pub async fn health(pool: Data<Pool<Postgres>>) -> impl Responder {
 )]
 #[get("/version")]
 pub async fn version() -> impl Responder {
-  HttpResponse::Ok().json(Version {
-    version: env!("CARGO_PKG_VERSION").to_owned(),
-  })
+  HttpResponse::Ok().json(Version::default())
 }
 
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {

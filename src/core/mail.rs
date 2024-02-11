@@ -6,13 +6,12 @@ use lettre::{
   SmtpTransport, Transport,
 };
 use sqlx::{Pool, Postgres};
-use uuid::Uuid;
 
 use crate::service::application::{get_application_config, get_application_uri};
 
 pub fn send_support_mail(
   pool: Pool<Postgres>,
-  application_id: Uuid,
+  application_id: i32,
   username: String,
   email: String,
   subject: String,
@@ -41,7 +40,7 @@ pub fn send_support_mail(
 
 async fn send_mail(
   pool: Pool<Postgres>,
-  application_id: Uuid,
+  application_id: i32,
   from_email_key: String,
   from_name_key: String,
   to_email: String,
@@ -87,7 +86,7 @@ async fn send_mail(
   Ok(())
 }
 
-async fn create_mailer(pool: &Pool<Postgres>, application_id: Uuid) -> Result<SmtpTransport> {
+async fn create_mailer(pool: &Pool<Postgres>, application_id: i32) -> Result<SmtpTransport> {
   let relay = get_application_config(pool, application_id, "mail.relay")
     .await
     .as_str()

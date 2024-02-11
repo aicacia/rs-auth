@@ -3,7 +3,6 @@ use base64::engine::{general_purpose::STANDARD_NO_PAD, Engine};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use uuid::Uuid;
 
 use super::encryption::generate_salt;
 
@@ -14,12 +13,12 @@ pub struct Claims {
   pub iss: String,
   pub nonce: String,
   pub sub: i32,
-  pub app: Uuid,
+  pub app: i32,
 }
 
 impl Claims {
   pub fn new(
-    app: Uuid,
+    app: i32,
     sub: i32,
     now_in_seconds: usize,
     expires_in_seconds: usize,

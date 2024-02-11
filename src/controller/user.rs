@@ -12,7 +12,7 @@ use crate::{
   core::{encryption::encrypt_password, mail::send_support_mail},
   middleware::{admin::AdminAuthorization, admin_app::AdminAppAuthorization, auth::Authorization},
   model::{
-    application::{Application, ApplicationRow, PaginationApplicationWithSecretQuery},
+    application::{Application, ApplicationRow, PaginationApplicationQuery},
     error::Errors,
     user::{
       ChangeUsernameRequest, CreateUserEmailRequest, Email, PaginationUser, PaginationUserQuery,
@@ -272,7 +272,7 @@ pub async fn change_username(
 
 #[utoipa::path(
   context_path = "/users",
-  params(PaginationApplicationWithSecretQuery),
+  params(PaginationApplicationQuery),
   responses(
       (status = 200, description = "Get current user's application", body = Vec<Application>),
       (status = 500, body = Errors),
@@ -285,7 +285,7 @@ pub async fn change_username(
 pub async fn applications(
   pool: Data<Pool<Postgres>>,
   user: UserRow,
-  query: Query<PaginationApplicationWithSecretQuery>,
+  query: Query<PaginationApplicationQuery>,
 ) -> impl Responder {
   let applications = match get_user_applications(
     pool.as_ref(),

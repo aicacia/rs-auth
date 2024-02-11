@@ -13,6 +13,7 @@ use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
 const APPLICATION_KEY: &str = "application";
 const INTERNAL_ERROR: &str = "internal_error";
+const BAD_REQUEST: &str = "bad_request";
 const UNAUTHORIZED: &str = "unauthorized";
 const NOT_FOUND: &str = "not_found";
 
@@ -102,6 +103,10 @@ impl ResponseError for Errors {
 impl Errors {
   pub fn new() -> Self {
     Self::default()
+  }
+
+  pub fn bad_request() -> Self {
+    Self::from(BAD_REQUEST)
   }
 
   pub fn internal_error() -> Self {

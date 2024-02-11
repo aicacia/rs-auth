@@ -1,14 +1,13 @@
 use rand::{distributions::Alphanumeric, Rng};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
-use uuid::Uuid;
 use validator::Validate;
 
 use super::application::{Application, ApplicationRow};
 
 #[derive(Deserialize, Validate, IntoParams)]
 pub struct AuthorizeQuery {
-  pub client_id: Uuid,
+  pub client_id: i32,
   pub redirect_uri: String,
   pub response_type: Option<String>,
   pub scope: Option<Vec<String>>,
@@ -21,7 +20,7 @@ pub struct OAuth2CodeClaims {
   pub iat: usize,
   pub iss: String,
   pub nonce: String,
-  pub client_id: Uuid,
+  pub client_id: i32,
   pub redirect_uri: String,
   pub state: Option<String>,
   pub scope: Vec<String>,
@@ -29,7 +28,7 @@ pub struct OAuth2CodeClaims {
 
 impl OAuth2CodeClaims {
   pub fn new(
-    client_id: Uuid,
+    client_id: i32,
     redirect_uri: String,
     state: Option<String>,
     scope: Vec<String>,

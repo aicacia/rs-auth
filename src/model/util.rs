@@ -1,3 +1,5 @@
+use build_time::build_time_utc;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -15,4 +17,16 @@ impl Health {
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct Version {
   pub version: String,
+  pub build: DateTime<Utc>,
+}
+
+impl Default for Version {
+  fn default() -> Self {
+    Version {
+      version: env!("CARGO_PKG_VERSION").to_string(),
+      build: DateTime::parse_from_rfc3339(build_time_utc!())
+        .expect("invalid build time")
+        .with_timezone(&Utc),
+    }
+  }
 }

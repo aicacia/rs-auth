@@ -1,8 +1,6 @@
-.vscode
-target
-.cargo/config.toml
-config/*.toml
-!config/default.toml
-.env
-!.env.example
+/.vscode
+/target
+/.cargo/config.toml
+/.env
+/!.env.example
 /values.yaml

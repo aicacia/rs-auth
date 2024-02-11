@@ -5,15 +5,14 @@ use actix_web::{
 };
 use actix_web_validator::{Json, Query};
 use sqlx::{Pool, Postgres};
-use uuid::Uuid;
 
 use crate::{
   middleware::{admin::AdminAuthorization, auth::Authorization},
   model::{
     application::{
-      ApplicationConfig, ApplicationWithSecret, CreateApplicationRequest,
-      PaginationApplicationWithSecret, PaginationApplicationWithSecretQuery,
-      UpdateApplicationConfigRequest, UpdateApplicationRequest,
+      Application, ApplicationConfig, ApplicationWithSecret, CreateApplicationRequest,
+      PaginationApplication, PaginationApplicationQuery, UpdateApplicationConfigRequest,
+      UpdateApplicationRequest,
     },
     error::Errors,
   },
@@ -25,9 +24,9 @@ use crate::{
 
 #[utoipa::path(
   context_path = "/applications",
-  params(PaginationApplicationWithSecretQuery),
+  params(PaginationApplicationQuery),
   responses(
-    (status = 200, description = "Get all applications", body = PaginationApplicationWithSecret),
+    (status = 200, description = "Get all applications", body = PaginationApplication),
     (status = 500, body = Errors),
   ),
   security(
@@ -37,7 +36,7 @@ use crate::{
 #[get("")]
 pub async fn index(
   pool: Data<Pool<Postgres>>,
-  query: Query<PaginationApplicationWithSecretQuery>,
+  query: Query<PaginationApplicationQuery>,
 ) -> impl Responder {
   let page_size = query.page_size.unwrap_or(20);
   let applications = match get_applications(pool.as_ref(), query.page.unwrap_or(0), page_size).await
@@ -48,9 +47,9 @@ pub async fn index(
       return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
-  let applications_response: Vec<ApplicationWithSecret> =
+  let applications_response: Vec<Application> =
     applications.into_iter().map(Into::into).collect::<Vec<_>>();
-  HttpResponse::Ok().json(PaginationApplicationWithSecret {
+  HttpResponse::Ok().json(PaginationApplication {
     has_more: applications_response.len() == page_size as usize,
     data: applications_response,
   })
@@ -59,7 +58,7 @@ pub async fn index(
 #[utoipa::path(
   context_path = "/applications",
   responses(
-    (status = 200, description = "Get an application", body = ApplicationWithSecret),
+    (status = 200, description = "Get an application", body = Application),
     (status = 500, body = Errors),
   ),
   security(
@@ -67,7 +66,7 @@ pub async fn index(
   )
 )]
 #[get("/{application_id}")]
-pub async fn show(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl Responder {
+pub async fn show(pool: Data<Pool<Postgres>>, path: Path<i32>) -> impl Responder {
   let application_id = path.into_inner();
   let application = match get_application_by_id(pool.as_ref(), application_id).await {
     Ok(Some(a)) => a,
@@ -77,7 +76,7 @@ pub async fn show(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl Responde
       return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
-  let applications_response: ApplicationWithSecret = application.into();
+  let applications_response: Application = application.into();
   HttpResponse::Ok().json(applications_response)
 }
 
@@ -85,7 +84,7 @@ pub async fn show(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl Responde
   context_path = "/applications",
   request_body = CreateApplicationRequest,
   responses(
-    (status = 200, description = "Update an application", body = ApplicationWithSecret),
+    (status = 200, description = "Update an application", body = Application),
     (status = 500, body = Errors),
   ),
   security(
@@ -97,7 +96,7 @@ pub async fn create(
   pool: Data<Pool<Postgres>>,
   body: Json<CreateApplicationRequest>,
 ) -> impl Responder {
-  let application = match create_application(pool.as_ref(), &body.name, &body.uri).await {
+  let application = match create_application(pool.as_ref(), &body.description, &body.uri).await {
     Ok(a) => a,
     Err(e) => {
       log::error!("{}", e);
@@ -112,7 +111,7 @@ pub async fn create(
   context_path = "/applications",
   request_body = UpdateApplicationRequest,
   responses(
-    (status = 200, description = "Update an application", body = ApplicationWithSecret),
+    (status = 200, description = "Update an application", body = Application),
     (status = 500, body = Errors),
   ),
   security(
@@ -122,14 +121,14 @@ pub async fn create(
 #[patch("/{application_id}")]
 pub async fn update(
   pool: Data<Pool<Postgres>>,
-  path: Path<Uuid>,
+  path: Path<i32>,
   body: Json<UpdateApplicationRequest>,
 ) -> impl Responder {
   let application_id = path.into_inner();
   let application = match update_application(
     pool.as_ref(),
     application_id,
-    body.name.as_ref(),
+    body.description.as_ref(),
     body.uri.as_ref(),
   )
   .await
@@ -141,7 +140,7 @@ pub async fn update(
       return HttpResponse::InternalServerError().json(Errors::internal_error());
     }
   };
-  let applications_response: ApplicationWithSecret = application.into();
+  let applications_response: Application = application.into();
   HttpResponse::Ok().json(applications_response)
 }
 
@@ -156,7 +155,7 @@ pub async fn update(
   )
 )]
 #[patch("/{application_id}/reset-secret")]
-pub async fn reset_secret(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl Responder {
+pub async fn reset_secret(pool: Data<Pool<Postgres>>, path: Path<i32>) -> impl Responder {
   let application_id = path.into_inner();
   let application = match reset_application_secret(pool.as_ref(), application_id).await {
     Ok(Some(a)) => a,
@@ -181,7 +180,7 @@ pub async fn reset_secret(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl 
   )
 )]
 #[delete("/{application_id}")]
-pub async fn remove(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl Responder {
+pub async fn remove(pool: Data<Pool<Postgres>>, path: Path<i32>) -> impl Responder {
   let application_id = path.into_inner();
   match delete_application(pool.as_ref(), application_id).await {
     Ok(Some(_)) => {}
@@ -205,7 +204,7 @@ pub async fn remove(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl Respon
   )
 )]
 #[get("/{application_id}/config")]
-pub async fn config(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl Responder {
+pub async fn config(pool: Data<Pool<Postgres>>, path: Path<i32>) -> impl Responder {
   let application_id = path.into_inner();
   let application_configs = match get_application_configs(pool.as_ref(), application_id).await {
     Ok(ac) => ac,
@@ -235,7 +234,7 @@ pub async fn config(pool: Data<Pool<Postgres>>, path: Path<Uuid>) -> impl Respon
 #[patch("/{application_id}/config")]
 pub async fn update_config(
   pool: Data<Pool<Postgres>>,
-  path: Path<Uuid>,
+  path: Path<i32>,
   body: Json<UpdateApplicationConfigRequest>,
 ) -> impl Responder {
   let application_id = path.into_inner();

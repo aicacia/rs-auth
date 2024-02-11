@@ -5,13 +5,12 @@ use oauth2::{
   TokenUrl,
 };
 use sqlx::{Pool, Postgres};
-use uuid::Uuid;
 
 use super::application::get_application_config;
 
 async fn create_authorization(
   pool: &Pool<Postgres>,
-  application_id: Uuid,
+  application_id: i32,
   client_uri: &str,
   scopes: &[String],
   redirect_url: &str,
@@ -26,7 +25,7 @@ async fn create_authorization(
 
 async fn create_client(
   pool: &Pool<Postgres>,
-  application_id: Uuid,
+  application_id: i32,
   client_uri: &str,
   redirect_url: &str,
 ) -> Result<

@@ -16,9 +16,8 @@ use actix_web_validator::JsonConfig;
 
 use sqlx::{Pool, Postgres};
 use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 
-use crate::controller::{application, auth, oauth2, user, util};
+use crate::controller::{application, auth, oauth2, openapi, user, util};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -73,7 +72,7 @@ use crate::controller::{application, auth, oauth2, user, util};
       application_model::ApplicationWithSecret,
       application_model::ApplicationConfig,
       application_model::ApplicationPermission,
-      application_model::PaginationApplicationWithSecret,
+      application_model::PaginationApplication,
       application_model::CreateApplicationRequest,
       application_model::UpdateApplicationRequest,
       application_model::UpdateApplicationConfigRequest,
@@ -89,7 +88,7 @@ use crate::controller::{application, auth, oauth2, user, util};
   ),
   modifiers(&SecurityAddon)
 )]
-struct ApiDoc;
+pub struct ApiDoc;
 
 pub fn create_app(
   pool: &Pool<Postgres>,
@@ -102,14 +101,13 @@ pub fn create_app(
     Error = error::Error,
   >,
 > {
-  let openapi = ApiDoc::openapi();
-
   let json_config =
     JsonConfig::default().error_handler(|err, _req| Errors::from_validation_error(err).into());
 
   App::new()
     .app_data(json_config)
     .app_data(web::Data::new(pool.clone()))
+    .app_data(web::Data::new(ApiDoc::openapi()))
     .wrap(Logger::default())
     .wrap(
       Cors::default()
@@ -119,12 +117,10 @@ pub fn create_app(
         .expose_any_header()
         .supports_credentials(),
     )
+    .configure(openapi::configure())
     .configure(util::configure())
     .configure(auth::configure())
     .configure(oauth2::configure())
     .configure(user::configure())
     .configure(application::configure())
-    .service(
-      SwaggerUi::new("/api-docs/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
-    )
 }

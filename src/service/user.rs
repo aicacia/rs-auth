@@ -79,6 +79,24 @@ pub async fn get_user_emails(pool: &Pool<Postgres>, user_id: i32) -> Result<Vec<
   Ok(emails)
 }
 
+pub async fn get_user_primary_email(
+  pool: &Pool<Postgres>,
+  user_id: i32,
+) -> Result<Option<EmailRow>> {
+  let email = sqlx::query_as!(
+    EmailRow,
+    r#"SELECT
+      e.id, e.user_id, e.email, e.confirmed, e.confirmation_token, e.created_at, e.updated_at
+    FROM emails e
+    JOIN users u ON u.id = e.user_id AND u.email_id = e.id
+    WHERE u.id = $1 AND e.confirmed = true;"#,
+    user_id
+  )
+  .fetch_optional(pool)
+  .await?;
+  Ok(email)
+}
+
 pub async fn get_user_by_username_or_email(
   pool: &Pool<Postgres>,
   username_or_email: &str,
@@ -138,7 +156,7 @@ pub struct CreateUser {
 
 pub async fn create_user(
   pool: &Pool<Postgres>,
-  application_id: Uuid,
+  application_id: i32,
   create_user: CreateUser,
 ) -> Result<(UserRow, Option<EmailRow>)> {
   let mut conn = pool.acquire().await?;
@@ -208,7 +226,7 @@ pub async fn create_user(
 pub async fn add_user_application(
   pool: &Pool<Postgres>,
   user_id: i32,
-  application_id: Uuid,
+  application_id: i32,
 ) -> Result<()> {
   sqlx::query!(
     "INSERT INTO application_users (application_id, user_id) VALUES ($1, $2);",
@@ -256,7 +274,7 @@ pub async fn get_user_applications(
     sqlx::query_as!(
       ApplicationRow,
       r#"SELECT
-        a.id, a.name, a.uri, a.secret, a.created_at, a.updated_at
+        a.id, a.description, a.uri, a.secret, a.created_at, a.updated_at
       FROM application_users au
         JOIN applications a ON a.id=au.application_id
       WHERE au.user_id=$1
@@ -272,32 +290,40 @@ pub async fn get_user_applications(
 
 pub async fn request_user_password_reset(
   pool: &Pool<Postgres>,
-  application_id: Uuid,
-  email: &str,
+  application_id: i32,
+  username_or_email: &str,
 ) -> Result<(UserRow, Uuid)> {
   let reset_password_token = Uuid::new_v4();
   let user = sqlx::query_as!(
     UserRow,
-    "UPDATE users u SET reset_password_token=$1 FROM emails e WHERE e.user_id=u.id AND e.email=$2
-        RETURNING u.id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at;",
+    "UPDATE users u
+      SET reset_password_token=$1
+      WHERE
+        u.username=$2 OR
+        u.id IN (
+          SELECT u.id FROM users u JOIN emails e ON e.user_id=u.id WHERE e.email=$2
+        )
+      RETURNING u.id, u.email_id, u.username, u.encrypted_password, u.reset_password_token, u.created_at, u.updated_at;",
     &reset_password_token,
-    &email
+    &username_or_email
   )
   .fetch_one(pool)
   .await?;
 
-  send_support_mail(
-    pool.clone(),
-    application_id,
-    user.username.to_owned(),
-    email.to_owned(),
-    "Reset Password Request".to_owned(),
-    format!(
-      r#"<h1>A Request to reset your password was made.</h1>
+  if let Some(email) = get_user_primary_email(pool, user.id).await? {
+    send_support_mail(
+      pool.clone(),
+      application_id,
+      user.username.to_owned(),
+      email.email.to_owned(),
+      "Reset Password Request".to_owned(),
+      format!(
+        r#"<h1>A Request to reset your password was made.</h1>
     <p>Your password reset token is: <code>{}</code></p>"#,
-      reset_password_token
-    ),
-  );
+        reset_password_token
+      ),
+    );
+  }
 
   Ok((user, reset_password_token))
 }
@@ -380,7 +406,7 @@ pub async fn set_user_primary_email(
 
 pub async fn user_has_application(
   pool: &Pool<Postgres>,
-  application_id: Uuid,
+  application_id: i32,
   user_id: i32,
 ) -> Result<bool> {
   let application_user = sqlx::query!(
@@ -411,7 +437,7 @@ pub async fn change_user_username(
 pub async fn get_user_permissions(
   pool: &Pool<Postgres>,
   user_id: i32,
-  application_id: Uuid,
+  application_id: i32,
 ) -> Result<Vec<String>> {
   let records = sqlx::query!(
     r#"SELECT ap.uri
@@ -430,7 +456,7 @@ pub async fn get_user_permissions(
 pub async fn user_has_permissions(
   pool: &Pool<Postgres>,
   user_id: i32,
-  application_id: Uuid,
+  application_id: i32,
   uri: &str,
 ) -> Result<bool> {
   let permission = sqlx::query!(

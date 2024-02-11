@@ -23,7 +23,7 @@ pub async fn get_config_or_else<F>(
 where
   F: FnOnce() -> serde_json::Value,
 {
-  sqlx::query!("SELECT value FROM config WHERE name = $1 LIMIT 1;", key)
+  sqlx::query!("SELECT value FROM config WHERE key = $1 LIMIT 1;", key)
     .fetch_optional(pool)
     .await
     .ok()
@@ -33,11 +33,11 @@ where
 }
 
 pub async fn get_configs(pool: &Pool<Postgres>) -> Result<HashMap<String, serde_json::Value>> {
-  let config = sqlx::query!("SELECT name, value FROM config;")
+  let config = sqlx::query!("SELECT key, value FROM config;")
     .fetch_all(pool)
     .await?
     .into_iter()
-    .map(|r| (r.name, r.value))
+    .map(|r| (r.key, r.value))
     .collect::<HashMap<String, serde_json::Value>>();
   Ok(config)
 }

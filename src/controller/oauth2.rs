@@ -4,7 +4,6 @@ use actix_web::{
   HttpResponse, Responder,
 };
 use actix_web_validator::Query;
-use futures::join;
 use sqlx::{Pool, Postgres};
 
 use crate::{
@@ -32,10 +31,13 @@ pub async fn authorize(pool: Data<Pool<Postgres>>, query: Query<AuthorizeQuery>)
   let admin_uri = get_application_uri(pool.as_ref(), config.admin_application_id).await;
 
   let now_in_seconds = chrono::Utc::now().timestamp() as usize;
-  let (iss, secret) = join!(
-    get_application_uri(pool.as_ref(), config.admin_application_id),
-    get_application_jwt_secret(pool.as_ref(), config.admin_application_id)
-  );
+  let secret = get_application_jwt_secret(pool.as_ref(), config.admin_application_id).await;
+  let iss = config
+    .server
+    .uri
+    .as_ref()
+    .map(String::as_str)
+    .unwrap_or("Auth");
   let code_jwt = match encode_jwt(
     &OAuth2CodeClaims::new(
       query.client_id.clone(),
@@ -44,7 +46,7 @@ pub async fn authorize(pool: Data<Pool<Postgres>>, query: Query<AuthorizeQuery>)
       query.scope.clone().unwrap_or_default(),
       now_in_seconds,
       120,
-      &iss,
+      iss,
     ),
     &secret,
   ) {

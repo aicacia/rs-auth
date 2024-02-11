@@ -1,5 +1,6 @@
 use crate::{
   core::{
+    config::get_config,
     encryption::{encrypt_password, verify_password},
     jwt::{encode_jwt, Claims},
   },
@@ -11,17 +12,13 @@ use crate::{
     error::Errors,
   },
   service::{
-    application::{get_application_config, get_application_uri},
-    user::{
-      confirm_user_email, request_user_password_reset, user_email_taken, user_has_application,
-      user_username_taken,
+    application::{
+      get_application_config, get_application_jwt_expires_in_seconds, get_application_jwt_secret,
     },
-  },
-  service::{
-    application::{get_application_jwt_expires_in_seconds, get_application_jwt_secret},
     user::{
-      create_user, get_user_by_reset_token, get_user_by_username_or_email, reset_user_password,
-      CreateUser,
+      confirm_user_email, create_user, get_user_by_reset_token, get_user_by_username_or_email,
+      request_user_password_reset, reset_user_password, user_email_taken, user_has_application,
+      user_username_taken, CreateUser,
     },
   },
 };
@@ -33,7 +30,6 @@ use actix_web::{
 use actix_web_validator::Json;
 use futures::join;
 use sqlx::{Pool, Postgres};
-use uuid::Uuid;
 
 #[utoipa::path(
     request_body = SignInWithPasswordRequest,
@@ -77,18 +73,24 @@ pub async fn sign_in_with_password(
   }
 
   let now_in_seconds = chrono::Utc::now().timestamp() as usize;
-  let (expires_in_seconds, iss, secret) = join!(
+  let (expires_in_seconds, secret) = join!(
     get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id),
-    get_application_uri(pool.as_ref(), body.application_id),
     get_application_jwt_secret(pool.as_ref(), body.application_id)
   );
+  let config = get_config();
+  let iss = config
+    .server
+    .uri
+    .as_ref()
+    .map(String::as_str)
+    .unwrap_or("Auth");
   let jwt = match encode_jwt(
     &Claims::new(
       body.application_id,
       user.id,
       now_in_seconds,
       expires_in_seconds,
-      &iss,
+      iss,
     ),
     &secret,
   ) {
@@ -179,18 +181,24 @@ pub async fn sign_up_with_password(
   };
 
   let now_in_seconds = chrono::Utc::now().timestamp() as usize;
-  let (expires_in_seconds, iss, secret) = join!(
+  let (expires_in_seconds, secret) = join!(
     get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id),
-    get_application_uri(pool.as_ref(), body.application_id),
     get_application_jwt_secret(pool.as_ref(), body.application_id)
   );
+  let config = get_config();
+  let iss = config
+    .server
+    .uri
+    .as_ref()
+    .map(String::as_str)
+    .unwrap_or("Auth");
   let jwt = match encode_jwt(
     &Claims::new(
       body.application_id,
       user.id,
       now_in_seconds,
       expires_in_seconds,
-      &iss,
+      iss,
     ),
     &secret,
   ) {
@@ -217,11 +225,13 @@ pub async fn request_reset_password(
   body: Json<RequestResetPasswordRequest>,
 ) -> impl Responder {
   let (_user, _reset_password_token) =
-    match request_user_password_reset(pool.as_ref(), body.application_id, &body.email).await {
+    match request_user_password_reset(pool.as_ref(), body.application_id, &body.username_or_email)
+      .await
+    {
       Ok(r) => r,
       Err(e) => {
         log::error!("{}", e);
-        return HttpResponse::InternalServerError().json(Errors::internal_error());
+        return HttpResponse::BadRequest().json(Errors::bad_request());
       }
     };
   HttpResponse::NoContent().finish()
@@ -267,18 +277,24 @@ pub async fn reset_password_with_token(
   };
 
   let now_in_seconds = chrono::Utc::now().timestamp() as usize;
-  let (expires_in_seconds, iss, secret) = join!(
+  let (expires_in_seconds, secret) = join!(
     get_application_jwt_expires_in_seconds(pool.as_ref(), body.application_id),
-    get_application_uri(pool.as_ref(), body.application_id),
     get_application_jwt_secret(pool.as_ref(), body.application_id)
   );
+  let config = get_config();
+  let iss = config
+    .server
+    .uri
+    .as_ref()
+    .map(String::as_str)
+    .unwrap_or("Auth");
   let jwt = match encode_jwt(
     &Claims::new(
       body.application_id,
       user.id,
       now_in_seconds,
       expires_in_seconds,
-      &iss,
+      iss,
     ),
     &secret,
   ) {
@@ -317,13 +333,10 @@ pub async fn confirm_email(path: Path<uuid::Uuid>, pool: Data<Pool<Postgres>>) -
   responses(
       (status = 200, description = "Returns sign up methods for an application", body = SignUpMethods),
       (status = 400, body = Errors),
-  ),
-  security(
-      ("Authorization" = [])
   )
 )]
 #[get("/auth/sign-up-methods/{application_id}")]
-pub async fn sign_up_methods(path: Path<Uuid>, pool: Data<Pool<Postgres>>) -> impl Responder {
+pub async fn sign_up_methods(path: Path<i32>, pool: Data<Pool<Postgres>>) -> impl Responder {
   let application_id = path.into_inner();
   let mut sign_up_methods_response = SignUpMethods::default();
 
