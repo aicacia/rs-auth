@@ -1,0 +1,8 @@
+/.vscode
+/target
+/.cargo/config.toml
+/.env
+/!.env.example
+/auth-dev.*
+/.openapi
+/openapitools.json

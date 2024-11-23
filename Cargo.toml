@@ -1,0 +1,65 @@
+[package]
+authors = ["nathanfaucett@gmail.com"]
+default-run = "auth"
+description = "auth"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+name = "auth"
+repository = ""
+rust-version = "1.82"
+version = "0.1.0"
+
+[lib]
+name = "auth"
+
+[[bin]]
+name = "auth"
+
+[dependencies]
+dotenv = { version = "0.15" }
+lazy_static = "1.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+axum = { version = "0.8.0-alpha.1", features = ["macros"] }
+utoipa = { version = "5.2", features = [
+  "axum_extras",
+  "chrono",
+  "uuid",
+  "debug",
+] }
+config = "0.14"
+rust-argon2 = "2.1"
+http = "1.1"
+rand = "0.5"
+tokio = { version = "1.0", features = ["full"] }
+validator = { version = "0.19", features = ["derive"] }
+log = "0.4"
+jsonwebtoken = "9.3"
+build-time = "0.1"
+chrono = { version = "0.4", features = ["serde"] }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+sqlx = { path = "/home/nathan/code/rust/sqlx", version = "0.8", features = [
+  "uuid",
+  "chrono",
+  "time",
+  "runtime-tokio-rustls",
+  "any",
+  "postgres",
+  "sqlite",
+] }
+uuid = { version = "1.11", features = ["serde"] }
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "z"
+panic = "abort"
+strip = true

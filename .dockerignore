@@ -1,0 +1,7 @@
+/.cargo
+/.github
+/.vscode
+/target
+/.env*
+/auth-dev.*
+/docker-compose.yaml
