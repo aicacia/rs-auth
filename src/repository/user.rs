@@ -1,5 +1,3 @@
-use sqlx::{AnyPool, Result};
-
 use crate::core::{database::run_transaction, encryption::encrypt_password};
 
 #[derive(Clone, sqlx::FromRow)]
@@ -17,7 +15,7 @@ impl UserRow {
   }
 }
 
-pub async fn get_user_by_id(pool: &AnyPool, user_id: i64) -> Result<Option<UserRow>> {
+pub async fn get_user_by_id(pool: &sqlx::AnyPool, user_id: i64) -> sqlx::Result<Option<UserRow>> {
   sqlx::query_as(
     r#"SELECT u.*
     FROM users u
@@ -29,7 +27,10 @@ pub async fn get_user_by_id(pool: &AnyPool, user_id: i64) -> Result<Option<UserR
   .await
 }
 
-pub async fn get_user_by_username(pool: &AnyPool, username: &str) -> Result<Option<UserRow>> {
+pub async fn get_user_by_username(
+  pool: &sqlx::AnyPool,
+  username: &str,
+) -> sqlx::Result<Option<UserRow>> {
   sqlx::query_as(
     r#"SELECT u.*
     FROM users u
@@ -40,18 +41,35 @@ pub async fn get_user_by_username(pool: &AnyPool, username: &str) -> Result<Opti
   .fetch_optional(pool)
   .await
 }
+pub async fn create_user(pool: &sqlx::AnyPool, params: CreateUser) -> sqlx::Result<UserRow> {
+  run_transaction(pool, |transaction| {
+    Box::pin(async move { create_user_internal(transaction, params).await })
+  })
+  .await
+}
 
 pub struct CreateUser {
   pub username: String,
   pub active: bool,
 }
 
-pub async fn create_user(pool: &AnyPool, params: CreateUser) -> Result<UserRow> {
-  sqlx::query_as(r#"INSERT INTO users (username, active) VALUES ($1, $2) RETURNING *;"#)
-    .bind(params.username)
-    .bind(params.active as i32)
-    .fetch_one(pool)
-    .await
+async fn create_user_internal(
+  transaction: &mut sqlx::Transaction<'_, sqlx::Any>,
+  params: CreateUser,
+) -> sqlx::Result<UserRow> {
+  let user: UserRow =
+    sqlx::query_as(r#"INSERT INTO users (username, active) VALUES ($1, $2) RETURNING *;"#)
+      .bind(params.username)
+      .bind(true as i32)
+      .fetch_one(&mut **transaction)
+      .await?;
+
+  sqlx::query(r#"INSERT INTO user_infos (user_id) VALUES ($1);"#)
+    .bind(user.id)
+    .execute(&mut **transaction)
+    .await?;
+
+  Ok(user)
 }
 
 pub struct CreateUserWithPassword {
@@ -60,9 +78,9 @@ pub struct CreateUserWithPassword {
 }
 
 pub async fn create_user_with_password(
-  pool: &AnyPool,
+  pool: &sqlx::AnyPool,
   params: CreateUserWithPassword,
-) -> Result<UserRow> {
+) -> sqlx::Result<UserRow> {
   let encrypted_password = match encrypt_password(&params.password) {
     Ok(encrypted_password) => encrypted_password,
     Err(e) => {
@@ -73,12 +91,14 @@ pub async fn create_user_with_password(
   };
   run_transaction(pool, |transaction| {
     Box::pin(async move {
-      let user: UserRow =
-        sqlx::query_as(r#"INSERT INTO users (username, active) VALUES ($1, $2) RETURNING *;"#)
-          .bind(params.username)
-          .bind(true as i32)
-          .fetch_one(&mut **transaction)
-          .await?;
+      let user = create_user_internal(
+        transaction,
+        CreateUser {
+          username: params.username,
+          active: true,
+        },
+      )
+      .await?;
 
       sqlx::query(r#"INSERT INTO user_passwords (user_id, encrypted_password) VALUES ($1, $2);"#)
         .bind(user.id)

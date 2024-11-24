@@ -1,8 +1,10 @@
-use std::{future::Future, pin::Pin, time::Duration};
+use std::{future::Future, pin::Pin, sync::atomic::Ordering, time::Duration};
 
-use super::config::get_config;
+use super::{atomic_value::AtomicValue, config::get_config};
 
-pub async fn create_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
+static POOL: AtomicValue<sqlx::AnyPool> = AtomicValue::empty();
+
+pub async fn init_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
   let config = get_config();
 
   let pool = sqlx::any::AnyPoolOptions::new()
@@ -14,7 +16,14 @@ pub async fn create_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
     .connect(&config.database.url)
     .await?;
 
+  POOL.set(pool.clone(), Ordering::SeqCst);
+
   Ok(pool)
+}
+
+pub fn get_pool() -> sqlx::AnyPool {
+  assert!(!POOL.is_empty(), "Pool not initialized");
+  POOL.get(Ordering::Relaxed)
 }
 
 pub async fn run_transaction<T, F>(

@@ -15,6 +15,7 @@ pub struct ApiDoc;
 #[utoipa::path(
   get,
   path = "openapi.json",
+  tags = ["openapi"],
   responses(
     (status = 200, description = "OpenApi documenation"),
   )

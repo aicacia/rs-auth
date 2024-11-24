@@ -3,7 +3,7 @@ use crate::{
   model::current_user::CurrentUser,
 };
 
-use axum::{extract::State, response::IntoResponse, routing::get, Json, Router};
+use axum::{response::IntoResponse, routing::get, Json, Router};
 use utoipa::OpenApi;
 
 use super::RouterState;
@@ -27,6 +27,7 @@ pub struct ApiDoc;
 #[utoipa::path(
   get,
   path = "current-user",
+  tags = ["current-user"],
   responses(
     (status = 200, content_type = "application/json", body = CurrentUser),
     (status = 400, content_type = "application/json", body = Errors),
@@ -37,10 +38,7 @@ pub struct ApiDoc;
     ("UserAuthorization" = [])
   )
 )]
-pub async fn current_user(
-  State(_state): State<RouterState>,
-  UserAuthorization(user): UserAuthorization,
-) -> impl IntoResponse {
+pub async fn current_user(UserAuthorization(user): UserAuthorization) -> impl IntoResponse {
   Json(CurrentUser::from(user)).into_response()
 }
 

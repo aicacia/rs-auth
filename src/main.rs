@@ -1,7 +1,7 @@
 use std::{net::SocketAddr, str::FromStr};
 
 use auth::{
-  core::{config::init_config, database::create_pool, error::Errors},
+  core::{config::init_config, database::init_pool, error::Errors},
   router::{create_router, RouterState},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -28,7 +28,7 @@ async fn main() -> Result<(), Errors> {
     .with(tracing_subscriber::fmt::layer())
     .init();
 
-  let pool = create_pool().await?;
+  let pool = init_pool().await?;
 
   let router = create_router(RouterState { pool: pool.clone() });
 

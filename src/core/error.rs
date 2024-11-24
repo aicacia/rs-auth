@@ -117,7 +117,7 @@ impl From<StatusCode> for Errors {
 
 impl From<ValidationErrors> for Errors {
   fn from(validation_errors: ValidationErrors) -> Self {
-    let mut new = Self::internal_error();
+    let mut new = Self::bad_request();
     handle_validation_errors(&mut new, &mut String::new(), &validation_errors);
     new
   }
@@ -137,6 +137,12 @@ impl From<sqlx::Error> for Errors {
 
 impl From<config::ConfigError> for Errors {
   fn from(error: config::ConfigError) -> Self {
+    Self::internal_error().with_application_error(error.to_string())
+  }
+}
+
+impl From<oauth2::url::ParseError> for Errors {
+  fn from(error: oauth2::url::ParseError) -> Self {
     Self::internal_error().with_application_error(error.to_string())
   }
 }

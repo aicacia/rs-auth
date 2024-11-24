@@ -19,7 +19,7 @@ pub async fn get_tenent_by_id(
   pool: &sqlx::AnyPool,
   tenent_id: i64,
 ) -> sqlx::Result<Option<TenentRow>> {
-  let tenent = sqlx::query_as(
+  sqlx::query_as(
     r#"SELECT t.*
     FROM tenents t
     WHERE t.id = $1
@@ -27,15 +27,14 @@ pub async fn get_tenent_by_id(
   )
   .bind(tenent_id)
   .fetch_optional(pool)
-  .await?;
-  Ok(tenent)
+  .await
 }
 
 pub async fn get_tenent_by_client_id(
   pool: &sqlx::AnyPool,
   tenent_client_id: &Uuid,
 ) -> sqlx::Result<Option<TenentRow>> {
-  let tenent = sqlx::query_as(
+  sqlx::query_as(
     r#"SELECT t.*
     FROM tenents t
     WHERE t.client_id = $1
@@ -43,6 +42,5 @@ pub async fn get_tenent_by_client_id(
   )
   .bind(tenent_client_id.to_string())
   .fetch_optional(pool)
-  .await?;
-  Ok(tenent)
+  .await
 }

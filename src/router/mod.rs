@@ -1,4 +1,5 @@
 pub mod current_user;
+pub mod oauth2;
 pub mod openapi;
 pub mod register;
 pub mod token;
@@ -21,15 +22,20 @@ pub struct RouterState {
   pub pool: AnyPool,
 }
 
+unsafe impl Send for RouterState {}
+unsafe impl Sync for RouterState {}
+
 #[derive(OpenApi)]
 #[openapi(
   info(license(name = "MIT OR Apache-2.0", identifier = "https://spdx.org/licenses/MIT.html")),
   nest(
-    (path = "/", api = openapi::ApiDoc),
-    (path = "/", api = util::ApiDoc),
-    (path = "/", api = token::ApiDoc),
     (path = "/", api = current_user::ApiDoc),
-    (path = "/", api = user::ApiDoc)
+    (path = "/", api = oauth2::ApiDoc),
+    (path = "/", api = openapi::ApiDoc),
+    (path = "/", api = register::ApiDoc),
+    (path = "/", api = token::ApiDoc),
+    (path = "/", api = user::ApiDoc),
+    (path = "/", api = util::ApiDoc),
   ),
   components(
     schemas(
@@ -52,11 +58,13 @@ pub fn create_router(state: RouterState) -> Router {
     .push(Server::new(config.server.url.clone()));
 
   Router::new()
-    .merge(util::create_router(state.clone()))
-    .merge(openapi::create_router(doc))
-    .merge(token::create_router(state.clone()))
     .merge(current_user::create_router(state.clone()))
-    .merge(user::create_router(state))
+    .merge(oauth2::create_router(state.clone()))
+    .merge(openapi::create_router(doc))
+    .merge(register::create_router(state.clone()))
+    .merge(token::create_router(state.clone()))
+    .merge(user::create_router(state.clone()))
+    .merge(util::create_router(state.clone()))
     .layer(CorsLayer::very_permissive())
     .layer(
       tower_http::trace::TraceLayer::new_for_http().make_span_with(

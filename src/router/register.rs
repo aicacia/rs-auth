@@ -1,15 +1,12 @@
-use std::collections::HashMap;
-
 use crate::{
-  core::error::{Errors, INVALID, REQUEST_BODY},
-  middleware::service_account_authorization::ServiceAccountAuthorization,
+  core::error::Errors,
+  middleware::validated_json::ValidatedJson,
   model::{current_user::CurrentUser, register::RegisterUser, user::User},
   repository::user::{create_user_with_password, CreateUserWithPassword},
 };
 
 use axum::{extract::State, response::IntoResponse, routing::post, Json, Router};
 use http::StatusCode;
-use serde_json::json;
 use utoipa::OpenApi;
 
 use super::RouterState;
@@ -34,6 +31,7 @@ pub struct ApiDoc;
 #[utoipa::path(
   post,
   path = "register",
+  tags = ["register"],
   request_body = RegisterUser,
   responses(
     (status = 201, content_type = "application/json", body = User),
@@ -42,26 +40,13 @@ pub struct ApiDoc;
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("ServiceAccountAuthorization" = [])
+    ("TenentId" = [])
   )
 )]
 pub async fn register(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization(_service_account): ServiceAccountAuthorization,
-  Json(payload): Json<RegisterUser>,
+  ValidatedJson(payload): ValidatedJson<RegisterUser>,
 ) -> impl IntoResponse {
-  if payload.password != payload.password_confirmation {
-    return Errors::bad_request()
-      .with_error(
-        "password_confirmation",
-        (
-          INVALID,
-          HashMap::from([("in".to_owned(), json!(REQUEST_BODY))]),
-        ),
-      )
-      .into_response();
-  }
-
   let new_user = match create_user_with_password(
     &state.pool,
     CreateUserWithPassword {

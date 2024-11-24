@@ -26,6 +26,7 @@ pub struct ApiDoc;
 #[utoipa::path(
   get,
   path = "health",
+  tags = ["util"],
   responses(
     (status = 200, description = "Health check response", body = Health),
     (status = 500, description = "Health check response", body = Health),
@@ -48,6 +49,7 @@ pub async fn health(State(state): State<RouterState>) -> impl IntoResponse {
 #[utoipa::path(
   get,
   path = "version",
+  tags = ["util"],
   responses(
     (status = 200, description = "Version response", body = Version),
   )

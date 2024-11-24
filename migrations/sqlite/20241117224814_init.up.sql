@@ -90,3 +90,27 @@ INSERT INTO "user_passwords"
 	("user_id", "encrypted_password")
 	VALUES 
 	((SELECT id FROM "users" WHERE username='test' LIMIT 1), '$argon2id$v=19$m=19456,t=2,p=1$SmhvV0Y1WUZTU2YyS1MxVA$x0HaVNrXTCZSJa7zJzT3v59PQedgZquZlWYnp848cpE');
+
+
+CREATE TABLE "user_emails" (
+  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "user_id" INTEGER NOT NULL,
+  "email" TEXT NOT NULL,
+  "confirmed" BOOLEAN NOT NULL DEFAULT FALSE,
+  "primary" BOOLEAN NOT NULL DEFAULT FALSE,
+  "updated_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
+  "created_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
+  FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+);
+
+
+CREATE TABLE "user_phone_numbers" (
+  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "user_id" INTEGER NOT NULL,
+  "phone_number" TEXT NOT NULL,
+  "confirmed" BOOLEAN NOT NULL DEFAULT FALSE,
+  "primary" BOOLEAN NOT NULL DEFAULT FALSE,
+  "updated_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
+  "created_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
+  FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+);

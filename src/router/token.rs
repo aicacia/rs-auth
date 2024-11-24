@@ -51,6 +51,7 @@ pub struct ApiDoc;
 #[utoipa::path(
   post,
   path = "token",
+  tags = ["token"],
   request_body = TokenRequest,
   responses(
     (status = 201, content_type = "application/json", body = Token),

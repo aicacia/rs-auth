@@ -1,10 +1,11 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use validator::Validate;
 
 use crate::repository::user::UserRow;
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Serialize, ToSchema)]
 pub struct User {
   pub id: i64,
   pub username: String,
@@ -25,7 +26,7 @@ impl From<UserRow> for User {
   }
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Validate, Deserialize, ToSchema)]
 pub struct CreateUser {
   pub username: String,
   pub active: bool,

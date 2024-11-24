@@ -17,7 +17,6 @@ name = "auth"
 
 [dependencies]
 dotenv = { version = "0.15" }
-lazy_static = "1.5"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 axum = { version = "0.8.0-alpha.1", features = ["macros"] }
@@ -27,10 +26,15 @@ utoipa = { version = "5.2", features = [
   "uuid",
   "debug",
 ] }
+expiringmap = "0.1"
+lazy_static = "1.5"
+reqwest = { version = "0.12", features = ["json"] }
 config = "0.14"
 rust-argon2 = "2.1"
+oauth2 = "4.4"
 http = "1.1"
 rand = "0.5"
+base64 = "0.22"
 tokio = { version = "1.0", features = ["full"] }
 validator = { version = "0.19", features = ["derive"] }
 log = "0.4"

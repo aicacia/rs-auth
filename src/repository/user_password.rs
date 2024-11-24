@@ -1,5 +1,3 @@
-use sqlx::{AnyPool, Result};
-
 use crate::core::encryption::verify_password;
 
 #[derive(sqlx::FromRow)]
@@ -13,16 +11,19 @@ pub struct UserPasswordRow {
 }
 
 impl UserPasswordRow {
+  pub fn is_active(&self) -> bool {
+    self.active != 0
+  }
   pub fn verify(&self, password: &str) -> Result<bool, argon2::Error> {
     verify_password(password, &self.encrypted_password)
   }
 }
 
 pub async fn get_active_user_password_by_user_id(
-  pool: &AnyPool,
+  pool: &sqlx::AnyPool,
   user_id: i64,
-) -> Result<Option<UserPasswordRow>> {
-  let user_password = sqlx::query_as(
+) -> sqlx::Result<Option<UserPasswordRow>> {
+  sqlx::query_as(
     r#"SELECT up.*
     FROM user_passwords up
     WHERE up.active AND up.user_id = $1 
@@ -30,6 +31,5 @@ pub async fn get_active_user_password_by_user_id(
   )
   .bind(user_id)
   .fetch_optional(pool)
-  .await?;
-  Ok(user_password)
+  .await
 }

@@ -3,6 +3,8 @@
 /.cargo/config.toml
 /.env
 /!.env.example
+/config.json
+/!config.json.example
 /auth-dev.*
 /.openapi
 /openapitools.json

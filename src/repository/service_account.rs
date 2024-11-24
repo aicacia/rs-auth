@@ -1,5 +1,3 @@
-use sqlx::{AnyPool, Result};
-
 use crate::core::encryption::verify_password;
 
 #[derive(Clone, sqlx::FromRow)]
@@ -23,10 +21,10 @@ impl ServiceAccountRow {
 }
 
 pub async fn get_service_account_by_id(
-  pool: &AnyPool,
+  pool: &sqlx::AnyPool,
   service_account_id: i64,
-) -> Result<Option<ServiceAccountRow>> {
-  let service_account = sqlx::query_as(
+) -> sqlx::Result<Option<ServiceAccountRow>> {
+  sqlx::query_as(
     r#"SELECT sa.*
     FROM service_accounts sa
     WHERE sa.id = $1
@@ -34,15 +32,14 @@ pub async fn get_service_account_by_id(
   )
   .bind(service_account_id)
   .fetch_optional(pool)
-  .await?;
-  Ok(service_account)
+  .await
 }
 
 pub async fn get_service_account_by_client_id(
-  pool: &AnyPool,
+  pool: &sqlx::AnyPool,
   client_id: &str,
-) -> Result<Option<ServiceAccountRow>> {
-  let service_account = sqlx::query_as(
+) -> sqlx::Result<Option<ServiceAccountRow>> {
+  sqlx::query_as(
     r#"SELECT sa.*
     FROM service_accounts sa
     WHERE sa.client_id = $1
@@ -50,6 +47,5 @@ pub async fn get_service_account_by_client_id(
   )
   .bind(client_id)
   .fetch_optional(pool)
-  .await?;
-  Ok(service_account)
+  .await
 }

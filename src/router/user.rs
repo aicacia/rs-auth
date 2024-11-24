@@ -1,6 +1,8 @@
 use crate::{
   core::error::Errors,
-  middleware::service_account_authorization::ServiceAccountAuthorization,
+  middleware::{
+    service_account_authorization::ServiceAccountAuthorization, validated_json::ValidatedJson,
+  },
   model::user::{CreateUser, User},
   repository,
 };
@@ -31,6 +33,7 @@ pub struct ApiDoc;
 #[utoipa::path(
   post,
   path = "user",
+  tags = ["user"],
   request_body = CreateUser,
   responses(
     (status = 201, content_type = "application/json", body = User),
@@ -45,7 +48,7 @@ pub struct ApiDoc;
 pub async fn create_user(
   State(state): State<RouterState>,
   ServiceAccountAuthorization(_service_account): ServiceAccountAuthorization,
-  Json(payload): Json<CreateUser>,
+  ValidatedJson(payload): ValidatedJson<CreateUser>,
 ) -> impl IntoResponse {
   let new_user = match repository::user::create_user(
     &state.pool,

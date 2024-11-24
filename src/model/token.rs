@@ -5,7 +5,7 @@ pub const TOKEN_ISSUED_TYPE_PASSWORD: &str = "password";
 pub const TOKEN_ISSUED_TYPE_REFRESH_TOKEN: &str = "refresh_token";
 pub const TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT: &str = "service_account";
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Serialize, ToSchema)]
 pub struct Token {
   pub access_token: String,
   pub token_type: String,
@@ -17,7 +17,7 @@ pub struct Token {
   pub id_token: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Deserialize, ToSchema)]
 #[serde(tag = "grant_type")]
 pub enum TokenRequest {
   #[serde(rename = "password")]

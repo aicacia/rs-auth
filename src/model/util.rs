@@ -1,9 +1,9 @@
 use build_time::build_time_utc;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Serialize, ToSchema)]
 pub struct Health {
   pub db: bool,
 }
@@ -14,7 +14,7 @@ impl Health {
   }
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Serialize, ToSchema)]
 pub struct Version {
   pub version: String,
   pub build: DateTime<Utc>,
