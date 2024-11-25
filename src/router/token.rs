@@ -3,7 +3,7 @@ use crate::{
   middleware::{
     claims::{
       parse_jwt, BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
-      TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_REFRESH,
+      TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_REFRESH,
     },
     openid_claims::{
       has_address_scope, has_email_scope, has_phone_scope, has_profile_scope, parse_scopes,
@@ -86,6 +86,12 @@ pub async fn token(
         .await
         .into_response()
     }
+    TokenRequest::AuthorizationCode {
+      code,
+      code_verifier,
+    } => authorization_code_request(&state.pool, tenent, code, code_verifier)
+      .await
+      .into_response(),
   }
 }
 
@@ -148,6 +154,45 @@ async fn refresh_token_request(
     }
   };
   if jwt.claims.kind != TOKEN_TYPE_REFRESH {
+    log::error!("invalid token type: {}", jwt.claims.kind);
+    return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+  }
+  let user = match get_user_by_id(pool, jwt.claims.sub).await {
+    Ok(Some(user)) => user,
+    Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
+    Err(e) => {
+      log::error!("error fetching user from database: {}", e);
+      return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+    }
+  };
+  let scope = jwt.claims.scopes.join(" ");
+  create_user_token(
+    pool,
+    CreateUserToken {
+      tenent,
+      user,
+      scope: if scope.is_empty() { None } else { Some(scope) },
+      issued_token_type: TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
+    },
+  )
+  .await
+  .into_response()
+}
+
+async fn authorization_code_request(
+  pool: &AnyPool,
+  tenent: TenentRow,
+  code: String,
+  _code_verifier: Option<String>,
+) -> impl IntoResponse {
+  let jwt = match parse_jwt::<BasicClaims>(&code, &tenent) {
+    Ok(claims) => claims,
+    Err(e) => {
+      log::error!("error decoding jwt: {}", e);
+      return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+    }
+  };
+  if jwt.claims.kind != TOKEN_TYPE_AUTHORIZATION_CODE {
     log::error!("invalid token type: {}", jwt.claims.kind);
     return Errors::from(StatusCode::UNAUTHORIZED).into_response();
   }

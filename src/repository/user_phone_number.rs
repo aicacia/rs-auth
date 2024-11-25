@@ -3,15 +3,15 @@ pub struct UserPhoneNumberRow {
   pub id: i64,
   pub user_id: i64,
   pub primary: i32,
-  pub confirmed: i32,
+  pub verified: i32,
   pub phone_number: String,
   pub created_at: i64,
   pub updated_at: i64,
 }
 
 impl UserPhoneNumberRow {
-  pub fn is_confirmed(&self) -> bool {
-    self.confirmed != 0
+  pub fn is_verified(&self) -> bool {
+    self.verified != 0
   }
   pub fn is_primary(&self) -> bool {
     self.primary != 0

@@ -4,8 +4,8 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE "tenents" (
 	"id" SERIAL PRIMARY KEY,
 	"client_id" UUID NOT NULL DEFAULT uuid_generate_v4(),
-  "issuer" TEXT NOT NULL,
-  "audience" TEXT NOT NULL,
+  "issuer" VARCHAR(255) NOT NULL,
+  "audience" VARCHAR(255) NOT NULL,
 	"algorithm" VARCHAR(255) NOT NULL DEFAULT 'HS256',
 	"public_key" TEXT,
 	"private_key" TEXT NOT NULL,
@@ -93,3 +93,15 @@ INSERT INTO "user_passwords"
 	("user_id", "encrypted_password")
 	VALUES 
 	((SELECT id FROM "users" WHERE username='test' LIMIT 1), '$argon2id$v=19$m=19456,t=2,p=1$SmhvV0Y1WUZTU2YyS1MxVA$x0HaVNrXTCZSJa7zJzT3v59PQedgZquZlWYnp848cpE');
+
+
+CREATE TABLE "user_oauth2_providers" (
+	"id" SERIAL PRIMARY KEY,
+  "user_id" INTEGER NOT NULL,
+  "email" VARCHAR(255) NOT NULL,
+  "provider" VARCHAR(255) NOT NULL,
+	"updated_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+	"created_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+	CONSTRAINT "user_oauth2_providers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX "user_oauth2_providers_user_id_provider_email_unique_idx" ON "user_oauth2_providers" ("user_id", "provider", "email");

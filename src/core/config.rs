@@ -73,6 +73,7 @@ pub struct OAuth2Config {
 
 #[derive(Debug, Deserialize)]
 pub struct OAuth2 {
+  pub redirect_url: String,
   pub code_timeout_in_seconds: u64,
   pub google: OAuth2Config,
 }
@@ -127,7 +128,10 @@ impl Config {
         "oauth2.google.token_url",
         "https://www.googleapis.com/oauth2/v3/token",
       )?
-      .set_default("oauth2.google.scopes", vec!["profile email"])?
+      .set_default(
+        "oauth2.google.scopes",
+        vec!["https://www.googleapis.com/auth/userinfo.email"],
+      )?
       // Defaults
       .set_default("log_level", "debug")?
       .add_source(config::File::with_name("./config.json"))

@@ -111,3 +111,17 @@ pub async fn create_user_with_password(
   })
   .await
 }
+
+pub struct CreateUserWithOAuth2ProviderAndEmail {
+  pub active: bool,
+  pub provider: String,
+  pub email: String,
+  pub email_verified: bool,
+}
+
+pub async fn create_user_with_oauth2_provider_and_email(
+  pool: &sqlx::AnyPool,
+  params: CreateUserWithOAuth2ProviderAndEmail,
+) -> sqlx::Result<UserRow> {
+  Err(sqlx::Error::RowNotFound)
+}

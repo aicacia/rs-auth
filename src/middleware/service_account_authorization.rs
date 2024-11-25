@@ -10,7 +10,7 @@ use super::claims::{
 };
 use crate::{
   core::{
-    error::{Errors, INVALID, REQUIRED_ERROR},
+    error::{Errors, INVALID_ERROR, REQUIRED_ERROR},
     openapi::AUTHORIZATION_HEADER,
   },
   repository::{
@@ -64,7 +64,10 @@ where
           log::error!("invalid authorization failed to check header: {}", e);
           return Err(Errors::unauthorized().with_error(
             AUTHORIZATION_HEADER,
-            (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+            (
+              INVALID_ERROR,
+              HashMap::from([("in".to_owned(), json!("header"))]),
+            ),
           ));
         }
       };
@@ -73,7 +76,10 @@ where
       {
         return Err(Errors::unauthorized().with_error(
           AUTHORIZATION_HEADER,
-          (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+          (
+            INVALID_ERROR,
+            HashMap::from([("in".to_owned(), json!("header"))]),
+          ),
         ));
       }
       let tenent_id = match maybe_invalid_token
@@ -88,14 +94,20 @@ where
           log::error!("invalid authorization failed to parse kid: {}", e);
           return Err(Errors::unauthorized().with_error(
             AUTHORIZATION_HEADER,
-            (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+            (
+              INVALID_ERROR,
+              HashMap::from([("in".to_owned(), json!("header"))]),
+            ),
           ));
         }
         None => {
           log::error!("invalid authorization kid is missing");
           return Err(Errors::unauthorized().with_error(
             AUTHORIZATION_HEADER,
-            (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+            (
+              INVALID_ERROR,
+              HashMap::from([("in".to_owned(), json!("header"))]),
+            ),
           ));
         }
       };
@@ -105,14 +117,20 @@ where
           log::error!("invalid authorization tenent not found by app");
           return Err(Errors::unauthorized().with_error(
             AUTHORIZATION_HEADER,
-            (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+            (
+              INVALID_ERROR,
+              HashMap::from([("in".to_owned(), json!("header"))]),
+            ),
           ));
         }
         Err(e) => {
           log::error!("invalid authorization token is invalid: {}", e);
           return Err(Errors::unauthorized().with_error(
             AUTHORIZATION_HEADER,
-            (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+            (
+              INVALID_ERROR,
+              HashMap::from([("in".to_owned(), json!("header"))]),
+            ),
           ));
         }
       };
@@ -122,7 +140,10 @@ where
           log::error!("invalid authorization failed to parse claims: {}", e);
           return Err(Errors::unauthorized().with_error(
             AUTHORIZATION_HEADER,
-            (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+            (
+              INVALID_ERROR,
+              HashMap::from([("in".to_owned(), json!("header"))]),
+            ),
           ));
         }
       };
@@ -132,7 +153,10 @@ where
             log::error!("invalid authorization service_account is not active");
             return Err(Errors::unauthorized().with_error(
               AUTHORIZATION_HEADER,
-              (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+              (
+                INVALID_ERROR,
+                HashMap::from([("in".to_owned(), json!("header"))]),
+              ),
             ));
           }
           return Ok(Self(service_account));
@@ -140,7 +164,10 @@ where
         Ok(None) => {
           return Err(Errors::unauthorized().with_error(
             AUTHORIZATION_HEADER,
-            (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+            (
+              INVALID_ERROR,
+              HashMap::from([("in".to_owned(), json!("header"))]),
+            ),
           ))
         }
         Err(e) => {
@@ -150,7 +177,10 @@ where
           );
           return Err(Errors::unauthorized().with_error(
             AUTHORIZATION_HEADER,
-            (INVALID, HashMap::from([("in".to_owned(), json!("header"))])),
+            (
+              INVALID_ERROR,
+              HashMap::from([("in".to_owned(), json!("header"))]),
+            ),
           ));
         }
       }

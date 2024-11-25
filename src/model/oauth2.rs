@@ -22,14 +22,16 @@ pub struct OAuth2CallbackQuery {
 
 #[derive(Serialize, Deserialize)]
 pub struct OAuth2State {
+  pub tenent_id: i64,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub register: Option<bool>,
   pub csrf_token: String,
 }
 
 impl OAuth2State {
-  pub fn new(register: bool) -> Self {
+  pub fn new(tenent_id: i64, register: bool) -> Self {
     Self {
+      tenent_id,
       register: Some(register),
       csrf_token: BASE64_STANDARD_NO_PAD.encode(random_bytes(16)),
     }
@@ -60,6 +62,7 @@ pub fn oauth2_create_basic_client(
 pub fn oauth2_authorize_url(
   oauth2_config: &OAuth2Config,
   provider: &str,
+  tenent_id: i64,
   register: bool,
 ) -> Result<(oauth2::url::Url, String, oauth2::PkceCodeVerifier), io::Error> {
   let client = match oauth2_create_basic_client(oauth2_config, provider) {
@@ -69,7 +72,7 @@ pub fn oauth2_authorize_url(
 
   let (pkce_code_challenge, pkce_code_verifier) = oauth2::PkceCodeChallenge::new_random_sha256();
 
-  let state = OAuth2State::new(register);
+  let state = OAuth2State::new(tenent_id, register);
   let state_string = match serde_json::to_string(&state) {
     Ok(state_string) => state_string,
     Err(err) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err)),

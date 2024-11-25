@@ -18,7 +18,7 @@ pub const APPLICATION_KEY: &str = "application";
 pub const REQUEST_BODY: &str = "request_body";
 
 pub const REQUIRED_ERROR: &str = "required";
-pub const INVALID: &str = "invalid";
+pub const INVALID_ERROR: &str = "invalid";
 pub const PARSE_ERROR: &str = "parse_error";
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]

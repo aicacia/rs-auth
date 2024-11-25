@@ -95,8 +95,8 @@ INSERT INTO "user_passwords"
 CREATE TABLE "user_emails" (
   "id" INTEGER PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
-  "email" TEXT NOT NULL,
-  "confirmed" BOOLEAN NOT NULL DEFAULT FALSE,
+  "email" VARCHAR(255) NOT NULL,
+  "verified" BOOLEAN NOT NULL DEFAULT FALSE,
   "primary" BOOLEAN NOT NULL DEFAULT FALSE,
   "updated_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
@@ -107,10 +107,22 @@ CREATE TABLE "user_emails" (
 CREATE TABLE "user_phone_numbers" (
   "id" INTEGER PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
-  "phone_number" TEXT NOT NULL,
-  "confirmed" BOOLEAN NOT NULL DEFAULT FALSE,
+  "phone_number" VARCHAR(255) NOT NULL,
+  "verified" BOOLEAN NOT NULL DEFAULT FALSE,
   "primary" BOOLEAN NOT NULL DEFAULT FALSE,
   "updated_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
+
+
+CREATE TABLE "user_oauth2_providers" (
+  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "user_id" INTEGER NOT NULL,
+  "provider" VARCHAR(255) NOT NULL,
+  "email" VARCHAR(255) NOT NULL,
+  "updated_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
+  "created_at" DATETIME NOT NULL DEFAULT (strftime('%s', 'now')),
+  FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX "user_oauth2_providers_user_id_provider_email_unique_idx" ON "user_oauth2_providers" ("user_id", "provider", "email");
