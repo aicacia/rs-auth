@@ -6,7 +6,10 @@ use crate::{
     error::{Errors, REQUIRED_ERROR},
   },
   middleware::{
-    claims::{BasicClaims, Claims, TOKEN_SUB_TYPE_USER, TOKEN_TYPE_AUTHORIZATION_CODE},
+    claims::{
+      parse_jwt, parse_jwt_no_validation, BasicClaims, Claims, TOKEN_SUB_TYPE_USER,
+      TOKEN_TYPE_AUTHORIZATION_CODE,
+    },
     tenent_id::TenentId,
   },
   model::oauth2::{
@@ -15,7 +18,8 @@ use crate::{
   },
   repository::{
     tenent::get_tenent_by_id,
-    user::{create_user_with_oauth2_provider_and_email, CreateUserWithOAuth2ProviderAndEmail},
+    user::{create_user_with_oauth2, CreateUserWithOAuth2},
+    user_info::UserInfoUpdate,
     user_oauth2_provider::get_user_by_oauth2_provider_and_email,
   },
 };
@@ -36,7 +40,7 @@ use utoipa::OpenApi;
 use super::RouterState;
 
 lazy_static! {
-  static ref PKCE_CODE_VERIFIERS: RwLock<ExpiringMap<String, oauth2::PkceCodeVerifier>> =
+  pub(crate) static ref PKCE_CODE_VERIFIERS: RwLock<ExpiringMap<String, oauth2::PkceCodeVerifier>> =
     RwLock::new(ExpiringMap::new());
 }
 
@@ -78,12 +82,13 @@ pub async fn oauth2(
   Query(OAuth2Query { register }): Query<OAuth2Query>,
 ) -> impl IntoResponse {
   let config = get_config();
-  let (url, csrf_token, pkce_code_verifier) = match match provider.as_str() {
+  let (url, oauth2_state_token, pkce_code_verifier) = match match provider.as_str() {
     "google" => oauth2_authorize_url(
       &config.oauth2.google,
+      &tenent,
       &provider,
-      tenent.id,
       register.unwrap_or_default(),
+      None,
     ),
     _ => {
       log::error!("Unknown OAuth2 provider: {}", provider);
@@ -100,7 +105,7 @@ pub async fn oauth2(
   match PKCE_CODE_VERIFIERS.write() {
     Ok(mut map) => {
       map.insert(
-        csrf_token.clone(),
+        oauth2_state_token.clone(),
         pkce_code_verifier,
         Duration::from_secs(config.oauth2.code_timeout_in_seconds),
       );
@@ -112,14 +117,6 @@ pub async fn oauth2(
   }
 
   url.as_str().to_owned().into_response()
-  // let url_header = match HeaderValue::try_from(url.as_str()) {
-  //   Ok(url_header) => url_header,
-  //   Err(e) => {
-  //     log::error!("Error converting URL to header value: {}", e);
-  //     return Errors::internal_error().into_response();
-  //   }
-  // };
-  // (StatusCode::FOUND, [(LOCATION, url_header)]).into_response()
 }
 
 #[utoipa::path(
@@ -141,7 +138,7 @@ pub async fn oauth2_callback(
   State(state): State<RouterState>,
   Path(provider): Path<String>,
   Query(OAuth2CallbackQuery {
-    state: oauth2_callback_state_str,
+    state: oauth2_state_token,
     code,
   }): Query<OAuth2CallbackQuery>,
 ) -> impl IntoResponse {
@@ -160,16 +157,8 @@ pub async fn oauth2_callback(
     }
   };
 
-  let oauth2_state = match serde_json::from_str::<OAuth2State>(&oauth2_callback_state_str) {
-    Ok(s) => s,
-    Err(e) => {
-      log::error!("Error parsing state \"{oauth2_callback_state_str}\": {e}");
-      return Errors::internal_error().into_response();
-    }
-  };
-
   let pkce_code_verifier = match PKCE_CODE_VERIFIERS.write() {
-    Ok(mut map) => match map.remove_entry(&oauth2_state.csrf_token) {
+    Ok(mut map) => match map.remove_entry(&oauth2_state_token) {
       Some((_, pkce_code_verifier)) => pkce_code_verifier,
       None => {
         log::error!("No PKCE code verifier found for CSRF token");
@@ -181,6 +170,51 @@ pub async fn oauth2_callback(
       return Errors::internal_error().into_response();
     }
   };
+
+  let maybe_invalid_token = match parse_jwt_no_validation::<OAuth2State>(&oauth2_state_token) {
+    Ok(token) => token,
+    Err(e) => {
+      log::error!("Error parsing OAuth2 state: {}", e);
+      return Errors::internal_error().into_response();
+    }
+  };
+  let tenent_id = match maybe_invalid_token
+    .header
+    .kid
+    .as_ref()
+    .map(String::as_str)
+    .map(str::parse::<i64>)
+  {
+    Some(Ok(tenent_id)) => tenent_id,
+    Some(Err(e)) => {
+      log::error!("Error parsing tenent id: {}", e);
+      return Errors::internal_error().into_response();
+    }
+    None => {
+      log::error!("No tenent id found in OAuth2 state");
+      return Errors::internal_error().into_response();
+    }
+  };
+  let tenent = match get_tenent_by_id(&state.pool, tenent_id).await {
+    Ok(Some(tenent)) => tenent,
+    Ok(None) => {
+      log::error!("Tenent not found");
+      return Errors::unauthorized().into_response();
+    }
+    Err(e) => {
+      log::error!("Error getting tenent from OAuth2 state: {}", e);
+      return Errors::internal_error().into_response();
+    }
+  };
+
+  let token: jsonwebtoken::TokenData<OAuth2State> =
+    match parse_jwt::<OAuth2State>(&oauth2_state_token, &tenent) {
+      Ok(token) => token,
+      Err(e) => {
+        log::error!("Error parsing OAuth2 state: {}", e);
+        return Errors::internal_error().into_response();
+      }
+    };
 
   let code = oauth2::AuthorizationCode::new(code);
 
@@ -206,8 +240,6 @@ pub async fn oauth2_callback(
     }
   };
 
-  log::info!("{provider} openid profile: {:?}", openid_profile);
-
   let email = match openid_profile.email {
     Some(email) => email,
     None => {
@@ -224,21 +256,35 @@ pub async fn oauth2_callback(
     }
   };
 
-  let user = if oauth2_state.register.unwrap_or_default() {
-    match create_user_with_oauth2_provider_and_email(
+  let user = if token.claims.register {
+    match create_user_with_oauth2(
       &state.pool,
-      CreateUserWithOAuth2ProviderAndEmail {
+      CreateUserWithOAuth2 {
         active: true,
         provider: provider,
         email: email,
-        email_verified: openid_profile.email_verified.unwrap_or_default(),
+        email_verified: openid_profile.email_verified.unwrap_or(false),
+        user_info: UserInfoUpdate {
+          name: openid_profile.name,
+          given_name: openid_profile.given_name,
+          family_name: openid_profile.family_name,
+          middle_name: openid_profile.middle_name,
+          nickname: openid_profile.nickname,
+          profile_picture: openid_profile.profile_picture,
+          website: openid_profile.website,
+          gender: openid_profile.gender,
+          birthdate: openid_profile.birthdate,
+          zone_info: openid_profile.zone_info,
+          locale: openid_profile.locale,
+          address: openid_profile.address,
+        },
       },
     )
     .await
     {
       Ok(user) => user,
       Err(e) => {
-        log::error!("Error fetching user by OAuth2 provider: {}", e);
+        log::error!("Error creating user with OAuth2 provider: {}", e);
         return Errors::internal_error().into_response();
       }
     }
@@ -250,15 +296,6 @@ pub async fn oauth2_callback(
         log::error!("Error fetching user by OAuth2 provider: {}", e);
         return Errors::internal_error().into_response();
       }
-    }
-  };
-
-  let tenent = match get_tenent_by_id(&state.pool, oauth2_state.tenent_id).await {
-    Ok(Some(tenent)) => tenent,
-    Ok(None) => return Errors::unauthorized().into_response(),
-    Err(e) => {
-      log::error!("Error fetching tenent by id: {}", e);
-      return Errors::internal_error().into_response();
     }
   };
 

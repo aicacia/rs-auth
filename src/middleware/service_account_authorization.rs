@@ -15,12 +15,12 @@ use crate::{
   },
   repository::{
     service_account::{get_service_account_by_id, ServiceAccountRow},
-    tenent::get_tenent_by_id,
+    tenent::{get_tenent_by_id, TenentRow},
   },
   router::RouterState,
 };
 
-pub struct ServiceAccountAuthorization(pub ServiceAccountRow);
+pub struct ServiceAccountAuthorization(pub ServiceAccountRow, pub TenentRow);
 
 impl<S> FromRequestParts<S> for ServiceAccountAuthorization
 where
@@ -159,7 +159,7 @@ where
               ),
             ));
           }
-          return Ok(Self(service_account));
+          return Ok(Self(service_account, tenent));
         }
         Ok(None) => {
           return Err(Errors::unauthorized().with_error(

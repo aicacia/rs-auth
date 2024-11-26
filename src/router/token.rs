@@ -86,12 +86,11 @@ pub async fn token(
         .await
         .into_response()
     }
-    TokenRequest::AuthorizationCode {
-      code,
-      code_verifier,
-    } => authorization_code_request(&state.pool, tenent, code, code_verifier)
-      .await
-      .into_response(),
+    TokenRequest::AuthorizationCode { code } => {
+      authorization_code_request(&state.pool, tenent, code)
+        .await
+        .into_response()
+    }
   }
 }
 
@@ -183,7 +182,6 @@ async fn authorization_code_request(
   pool: &AnyPool,
   tenent: TenentRow,
   code: String,
-  _code_verifier: Option<String>,
 ) -> impl IntoResponse {
   let jwt = match parse_jwt::<BasicClaims>(&code, &tenent) {
     Ok(claims) => claims,

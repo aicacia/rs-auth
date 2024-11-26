@@ -13,13 +13,13 @@ use crate::{
     openapi::AUTHORIZATION_HEADER,
   },
   repository::{
-    tenent::get_tenent_by_id,
+    tenent::{get_tenent_by_id, TenentRow},
     user::{get_user_by_id, UserRow},
   },
   router::RouterState,
 };
 
-pub struct UserAuthorization(pub UserRow);
+pub struct UserAuthorization(pub UserRow, pub TenentRow);
 
 impl<S> FromRequestParts<S> for UserAuthorization
 where
@@ -158,7 +158,7 @@ where
               ),
             ));
           }
-          return Ok(Self(user));
+          return Ok(Self(user, tenent));
         }
         Ok(None) => {
           return Err(Errors::unauthorized().with_error(

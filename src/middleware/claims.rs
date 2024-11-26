@@ -91,7 +91,7 @@ pub fn parse_jwt<T>(
   tenent: &TenentRow,
 ) -> Result<jsonwebtoken::TokenData<T>, jsonwebtoken::errors::Error>
 where
-  T: Claims,
+  T: DeserializeOwned,
 {
   let algorithm = jsonwebtoken::Algorithm::from_str(&tenent.algorithm)?;
 
@@ -109,7 +109,7 @@ pub fn parse_jwt_no_validation<T>(
   jwt: &str,
 ) -> Result<jsonwebtoken::TokenData<T>, jsonwebtoken::errors::Error>
 where
-  T: Claims,
+  T: DeserializeOwned,
 {
   let mut validation = jsonwebtoken::Validation::default();
 
@@ -123,7 +123,7 @@ where
   )
 }
 
-fn tenent_decoding_key(
+pub fn tenent_decoding_key(
   tenent: &TenentRow,
   algorithm: jsonwebtoken::Algorithm,
 ) -> Result<jsonwebtoken::DecodingKey, jsonwebtoken::errors::Error> {
@@ -141,7 +141,7 @@ fn tenent_decoding_key(
   }
 }
 
-fn tenent_encoding_key(
+pub fn tenent_encoding_key(
   tenent: &TenentRow,
   algorithm: jsonwebtoken::Algorithm,
 ) -> Result<jsonwebtoken::EncodingKey, jsonwebtoken::errors::Error> {

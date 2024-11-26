@@ -36,8 +36,6 @@ pub struct DatabaseConfig {
   pub acquire_timeout: u64,
   pub idle_timeout: u64,
   pub max_lifetime: u64,
-  pub journal_mode: String,
-  pub synchronize: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -106,8 +104,6 @@ impl Config {
       .set_default("database.acquire_timeout", 3)?
       .set_default("database.idle_timeout", 5)?
       .set_default("database.max_lifetime", 300)?
-      .set_default("database.journal_mode", "wal")?
-      .set_default("database.synchronize", true)?
       // Password Defaults
       .set_default("password.salt_length", 16)?
       .set_default("password.hash_length", 32)?

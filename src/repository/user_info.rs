@@ -32,6 +32,7 @@ pub async fn get_user_info_by_user_id(
   .await
 }
 
+#[derive(Default)]
 pub struct UserInfoUpdate {
   pub name: Option<String>,
   pub given_name: Option<String>,

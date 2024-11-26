@@ -47,7 +47,7 @@ pub struct ApiDoc;
 )]
 pub async fn create_user(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization(_service_account): ServiceAccountAuthorization,
+  ServiceAccountAuthorization(_service_account, _tenent): ServiceAccountAuthorization,
   ValidatedJson(payload): ValidatedJson<CreateUser>,
 ) -> impl IntoResponse {
   let new_user = match repository::user::create_user(
@@ -55,6 +55,7 @@ pub async fn create_user(
     repository::user::CreateUser {
       username: payload.username,
       active: payload.active,
+      user_info: Default::default(),
     },
   )
   .await

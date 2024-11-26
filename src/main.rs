@@ -4,6 +4,7 @@ use auth::{
   core::{config::init_config, database::init_pool, error::Errors},
   router::{create_router, RouterState},
 };
+use sqlx::Executor;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -40,6 +41,21 @@ async fn main() -> Result<(), Errors> {
   log::info!("Listening on {}", listener.local_addr()?);
   axum::serve(listener, router).await?;
 
+  // TODO: make this run on shutdown
+  match pool.acquire().await {
+    Ok(conn) => match conn.backend_name() {
+      "sqlite" => {
+        log::info!("Optimizing database");
+        pool
+          .execute("PRAGMA analysis_limit=400; PRAGMA optimize;")
+          .await?;
+      }
+      _ => {}
+    },
+    Err(e) => {
+      log::error!("Error acquiring connection: {}", e);
+    }
+  }
   pool.close().await;
 
   Ok(())

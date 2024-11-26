@@ -1,5 +1,7 @@
 use std::{future::Future, pin::Pin, sync::atomic::Ordering, time::Duration};
 
+use sqlx::Executor;
+
 use super::{atomic_value::AtomicValue, config::get_config};
 
 static POOL: AtomicValue<sqlx::AnyPool> = AtomicValue::empty();
@@ -13,6 +15,21 @@ pub async fn init_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
     .acquire_timeout(Duration::from_secs(config.database.acquire_timeout))
     .idle_timeout(Duration::from_secs(config.database.idle_timeout))
     .max_lifetime(Duration::from_secs(config.database.max_lifetime))
+    .after_connect(|conn, _meta| {
+      Box::pin(async move {
+        match conn.backend_name() {
+          "sqlite" => {
+            conn
+              .execute(
+                "PRAGMA journal_mode = wal; PRAGMA synchronous = normal; PRAGMA foreign_keys = on;",
+              )
+              .await?;
+          }
+          _ => (),
+        }
+        Ok(())
+      })
+    })
     .connect(&config.database.url)
     .await?;
 

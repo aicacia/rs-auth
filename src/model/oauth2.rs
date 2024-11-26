@@ -1,12 +1,12 @@
-use std::io;
+use std::{io, str::FromStr};
 
-use base64::{prelude::BASE64_STANDARD_NO_PAD, Engine};
 use serde::{Deserialize, Serialize};
 use utoipa::IntoParams;
 
-use crate::core::{
-  config::{get_config, OAuth2Config},
-  encryption::random_bytes,
+use crate::{
+  core::config::{get_config, OAuth2Config},
+  middleware::claims::tenent_encoding_key,
+  repository::tenent::TenentRow,
 };
 
 #[derive(Deserialize, IntoParams)]
@@ -24,17 +24,28 @@ pub struct OAuth2CallbackQuery {
 pub struct OAuth2State {
   pub tenent_id: i64,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub register: Option<bool>,
-  pub csrf_token: String,
+  pub user_id: Option<i64>,
+  pub register: bool,
 }
 
 impl OAuth2State {
-  pub fn new(tenent_id: i64, register: bool) -> Self {
+  pub fn new(tenent_id: i64, register: bool, user_id: Option<i64>) -> Self {
     Self {
       tenent_id,
-      register: Some(register),
-      csrf_token: BASE64_STANDARD_NO_PAD.encode(random_bytes(16)),
+      register: register,
+      user_id: user_id,
     }
+  }
+
+  fn encode(&self, tenent: &TenentRow) -> Result<String, jsonwebtoken::errors::Error> {
+    let algorithm = jsonwebtoken::Algorithm::from_str(&tenent.algorithm)?;
+
+    let mut header = jsonwebtoken::Header::new(algorithm);
+    header.kid = Some(tenent.id.to_string());
+
+    let key = tenent_encoding_key(tenent, algorithm)?;
+
+    jsonwebtoken::encode(&header, self, &key)
   }
 }
 
@@ -61,9 +72,10 @@ pub fn oauth2_create_basic_client(
 
 pub fn oauth2_authorize_url(
   oauth2_config: &OAuth2Config,
+  tenent: &TenentRow,
   provider: &str,
-  tenent_id: i64,
   register: bool,
+  user_id: Option<i64>,
 ) -> Result<(oauth2::url::Url, String, oauth2::PkceCodeVerifier), io::Error> {
   let client = match oauth2_create_basic_client(oauth2_config, provider) {
     Ok(client) => client,
@@ -72,14 +84,15 @@ pub fn oauth2_authorize_url(
 
   let (pkce_code_challenge, pkce_code_verifier) = oauth2::PkceCodeChallenge::new_random_sha256();
 
-  let state = OAuth2State::new(tenent_id, register);
-  let state_string = match serde_json::to_string(&state) {
-    Ok(state_string) => state_string,
+  let oauth2_state = OAuth2State::new(tenent.id, register, user_id);
+  let oauth2_state_token = match oauth2_state.encode(tenent) {
+    Ok(t) => t,
     Err(err) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err)),
   };
 
+  let csrf_token = oauth2_state_token.clone();
   let (url, _) = client
-    .authorize_url(move || oauth2::CsrfToken::new(state_string))
+    .authorize_url(move || oauth2::CsrfToken::new(csrf_token))
     .add_scopes(
       oauth2_config
         .scopes
@@ -90,10 +103,10 @@ pub fn oauth2_authorize_url(
     .set_pkce_challenge(pkce_code_challenge)
     .url();
 
-  Ok((url, state.csrf_token, pkce_code_verifier))
+  Ok((url, oauth2_state_token, pkce_code_verifier))
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct OpenIdProfile {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub name: Option<String>,
