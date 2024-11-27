@@ -4,9 +4,19 @@ use crate::{
   core::{config::get_config, error::Errors},
   middleware::user_authorization::UserAuthorization,
   model::{current_user::CurrentUser, oauth2::oauth2_authorize_url},
+  repository::{
+    user_email::get_user_emails_by_user_id,
+    user_oauth2_provider::get_user_oauth2_providers_by_user_id,
+    user_phone_number::get_user_phone_numbers_by_user_id,
+  },
 };
 
-use axum::{extract::Path, response::IntoResponse, routing::get, Json, Router};
+use axum::{
+  extract::{Path, State},
+  response::IntoResponse,
+  routing::get,
+  Json, Router,
+};
 use utoipa::OpenApi;
 
 use super::{oauth2::PKCE_CODE_VERIFIERS, RouterState};
@@ -42,9 +52,54 @@ pub struct ApiDoc;
   )
 )]
 pub async fn current_user(
+  State(state): State<RouterState>,
   UserAuthorization(user, _tenent): UserAuthorization,
 ) -> impl IntoResponse {
-  Json(CurrentUser::from(user)).into_response()
+  let mut current_user = CurrentUser::from(user);
+
+  let emails = match get_user_emails_by_user_id(&state.pool, current_user.id).await {
+    Ok(emails) => emails,
+    Err(e) => {
+      log::error!("Error getting user emails: {}", e);
+      return Errors::internal_error().into_response();
+    }
+  };
+  for email in emails {
+    if email.is_primary() {
+      current_user.email = Some(email.into());
+    } else {
+      current_user.emails.push(email.into());
+    }
+  }
+
+  let phone_numbers = match get_user_phone_numbers_by_user_id(&state.pool, current_user.id).await {
+    Ok(phone_numbers) => phone_numbers,
+    Err(e) => {
+      log::error!("Error getting user phone numbers: {}", e);
+      return Errors::internal_error().into_response();
+    }
+  };
+  for phone_number in phone_numbers {
+    if phone_number.is_primary() {
+      current_user.phone_number = Some(phone_number.into());
+    } else {
+      current_user.phone_numbers.push(phone_number.into());
+    }
+  }
+
+  let oauth2_providers =
+    match get_user_oauth2_providers_by_user_id(&state.pool, current_user.id).await {
+      Ok(oauth2_providers) => oauth2_providers,
+      Err(e) => {
+        log::error!("Error getting user oauth2 providers: {}", e);
+        return Errors::internal_error().into_response();
+      }
+    };
+  for oauth2_provider in oauth2_providers {
+    current_user.oauth2_providers.push(oauth2_provider.into());
+  }
+
+  Json(current_user).into_response()
 }
 
 #[utoipa::path(

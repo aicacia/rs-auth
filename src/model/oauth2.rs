@@ -22,6 +22,7 @@ pub struct OAuth2CallbackQuery {
 
 #[derive(Serialize, Deserialize)]
 pub struct OAuth2State {
+  pub exp: i64,
   pub tenent_id: i64,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub user_id: Option<i64>,
@@ -31,6 +32,7 @@ pub struct OAuth2State {
 impl OAuth2State {
   pub fn new(tenent_id: i64, register: bool, user_id: Option<i64>) -> Self {
     Self {
+      exp: chrono::Utc::now().timestamp() + (get_config().oauth2.code_timeout_in_seconds as i64),
       tenent_id,
       register: register,
       user_id: user_id,
