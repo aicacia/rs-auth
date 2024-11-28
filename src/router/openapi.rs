@@ -1,4 +1,4 @@
-use axum::{extract::State, routing::get, Json, Router};
+use axum::{extract::State, routing::get, Router};
 use utoipa::{openapi::OpenApi as OpenApiSpec, OpenApi};
 
 #[derive(OpenApi)]
@@ -20,8 +20,8 @@ pub struct ApiDoc;
     (status = 200, description = "OpenApi documenation"),
   )
 )]
-pub async fn openapi(State(openapi): State<OpenApiSpec>) -> Json<OpenApiSpec> {
-  Json(openapi)
+pub async fn openapi(State(openapi): State<OpenApiSpec>) -> axum::Json<OpenApiSpec> {
+  axum::Json(openapi)
 }
 
 pub fn create_router(openapi_spec: OpenApiSpec) -> Router {

@@ -7,7 +7,7 @@ use crate::{
   repository,
 };
 
-use axum::{extract::State, response::IntoResponse, routing::post, Json, Router};
+use axum::{extract::State, response::IntoResponse, routing::post, Router};
 use http::StatusCode;
 use utoipa::OpenApi;
 
@@ -66,7 +66,7 @@ pub async fn create_user(
       return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
     }
   };
-  Json(User::from(new_user)).into_response()
+  axum::Json(User::from(new_user)).into_response()
 }
 
 pub fn create_router(state: RouterState) -> Router {

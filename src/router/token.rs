@@ -1,10 +1,13 @@
+use std::collections::HashMap;
+
 use crate::{
-  core::error::Errors,
+  core::error::{Errors, INTERNAL_ERROR, NOT_ALLOWED_ERROR},
   middleware::{
     claims::{
       parse_jwt, BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
       TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_REFRESH,
     },
+    json::Json,
     openid_claims::{
       has_address_scope, has_email_scope, has_phone_scope, has_profile_scope, parse_scopes,
       OpenIdClaims,
@@ -24,8 +27,9 @@ use crate::{
   },
 };
 
-use axum::{extract::State, response::IntoResponse, routing::post, Json, Router};
+use axum::{extract::State, response::IntoResponse, routing::post, Router};
 use http::StatusCode;
+use serde_json::json;
 use sqlx::AnyPool;
 use utoipa::OpenApi;
 
@@ -110,7 +114,9 @@ async fn password_request(
     Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
     Err(e) => {
       log::error!("error fetching user from database: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   match get_active_user_password_by_user_id(pool, user.id).await {
@@ -129,13 +135,19 @@ async fn password_request(
       Ok(false) => Errors::from(StatusCode::UNAUTHORIZED).into_response(),
       Err(e) => {
         log::error!("error verifying user password: {}", e);
-        Errors::from(StatusCode::UNAUTHORIZED).into_response()
+        Errors::from(StatusCode::UNAUTHORIZED)
+          .with_application_error(INTERNAL_ERROR)
+          .into_response()
       }
     },
-    Ok(None) => Errors::from(StatusCode::UNAUTHORIZED).into_response(),
+    Ok(None) => Errors::from(StatusCode::FORBIDDEN)
+      .with_error("user-config", "password")
+      .into_response(),
     Err(e) => {
       log::error!("error fetching user password from database: {}", e);
-      Errors::from(StatusCode::UNAUTHORIZED).into_response()
+      Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response()
     }
   }
 }
@@ -299,7 +311,7 @@ async fn create_service_token_token(
 
   (
     StatusCode::CREATED,
-    Json(Token {
+    axum::Json(Token {
       access_token,
       token_type: claims.kind,
       issued_token_type,
@@ -426,7 +438,7 @@ async fn create_user_token(
 
   (
     StatusCode::CREATED,
-    Json(Token {
+    axum::Json(Token {
       access_token,
       token_type: claims.kind,
       issued_token_type,

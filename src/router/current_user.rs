@@ -1,7 +1,10 @@
 use std::time::Duration;
 
 use crate::{
-  core::{config::get_config, error::Errors},
+  core::{
+    config::get_config,
+    error::{Errors, INTERNAL_ERROR},
+  },
   middleware::user_authorization::UserAuthorization,
   model::{current_user::CurrentUser, oauth2::oauth2_authorize_url},
   repository::{
@@ -15,7 +18,7 @@ use axum::{
   extract::{Path, State},
   response::IntoResponse,
   routing::get,
-  Json, Router,
+  Router,
 };
 use utoipa::OpenApi;
 
@@ -62,7 +65,9 @@ pub async fn current_user(
     Ok(emails) => emails,
     Err(e) => {
       log::error!("Error getting user emails: {}", e);
-      return Errors::internal_error().into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   for email in emails {
@@ -77,7 +82,9 @@ pub async fn current_user(
     Ok(phone_numbers) => phone_numbers,
     Err(e) => {
       log::error!("Error getting user phone numbers: {}", e);
-      return Errors::internal_error().into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   for phone_number in phone_numbers {
@@ -93,14 +100,16 @@ pub async fn current_user(
       Ok(oauth2_providers) => oauth2_providers,
       Err(e) => {
         log::error!("Error getting user oauth2 providers: {}", e);
-        return Errors::internal_error().into_response();
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
       }
     };
   for oauth2_provider in oauth2_providers {
     current_user.oauth2_providers.push(oauth2_provider.into());
   }
 
-  Json(current_user).into_response()
+  axum::Json(current_user).into_response()
 }
 
 #[utoipa::path(
@@ -135,13 +144,17 @@ pub async fn add_oauth2_provider(
     ),
     _ => {
       log::error!("Unknown OAuth2 provider: {}", provider);
-      return Errors::internal_error().into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   } {
     Ok(tuple) => tuple,
     Err(e) => {
       log::error!("Error parsing OAuth2 config: {}", e);
-      return Errors::internal_error().into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
 
@@ -155,7 +168,9 @@ pub async fn add_oauth2_provider(
     }
     Err(e) => {
       log::error!("Error aquiring PKCE verifier map: {}", e);
-      return Errors::internal_error().into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   }
 

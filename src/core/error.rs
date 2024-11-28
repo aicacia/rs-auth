@@ -7,7 +7,6 @@ use std::{
 use axum::{
   http::{header, StatusCode},
   response::{IntoResponse, Response},
-  Json,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -15,12 +14,13 @@ use utoipa::ToSchema;
 use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
 pub const APPLICATION_KEY: &str = "application";
-pub const REQUEST_BODY: &str = "request_body";
+pub const REQUEST_BODY: &str = "request-body";
 
 pub const REQUIRED_ERROR: &str = "required";
 pub const INVALID_ERROR: &str = "invalid";
-pub const PARSE_ERROR: &str = "parse_error";
-pub const INTERNAL_ERROR: &str = "internal_error";
+pub const PARSE_ERROR: &str = "parse";
+pub const INTERNAL_ERROR: &str = "internal";
+pub const NOT_ALLOWED_ERROR: &str = "not-allowed";
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ErrorMessage {
@@ -151,13 +151,13 @@ impl From<oauth2::url::ParseError> for Errors {
 impl IntoResponse for Errors {
   fn into_response(self) -> Response {
     match StatusCode::from_u16(self.status_code) {
-      Ok(status_code) => (status_code, Json(self.messages)).into_response(),
+      Ok(status_code) => (status_code, axum::Json(self.messages)).into_response(),
       Err(err) => {
         log::error!("Invalid status code: {}", err);
         (
           StatusCode::INTERNAL_SERVER_ERROR,
           [(header::CONTENT_TYPE, "application/json")],
-          Json(self.messages),
+          axum::Json(self.messages),
         )
           .into_response()
       }
@@ -182,6 +182,20 @@ impl Errors {
     Self::from(StatusCode::NOT_FOUND)
   }
 
+  pub fn forbidden() -> Self {
+    Self::from(StatusCode::FORBIDDEN)
+  }
+
+  pub fn status(&mut self, status: StatusCode) -> &mut Self {
+    self.status_code = status.as_u16();
+    self
+  }
+
+  pub fn with_status(mut self, status: StatusCode) -> Self {
+    self.status(status);
+    self
+  }
+
   pub fn error(&mut self, name: impl Into<String>, msg: impl Into<ErrorMessage>) -> &mut Self {
     self
       .messages
@@ -192,11 +206,7 @@ impl Errors {
   }
 
   pub fn with_error(mut self, name: impl Into<String>, msg: impl Into<ErrorMessage>) -> Self {
-    self
-      .messages
-      .entry(name.into())
-      .or_insert_with(Default::default)
-      .error(msg);
+    self.error(name, msg);
     self
   }
 

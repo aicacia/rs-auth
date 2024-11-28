@@ -4,7 +4,7 @@ use axum::{
 };
 use validator::Validate;
 
-use crate::core::error::{Errors, PARSE_ERROR};
+use crate::core::error::{Errors, REQUEST_BODY};
 
 pub struct ValidatedJson<T>(pub T);
 
@@ -20,7 +20,7 @@ where
     let Json(value) = match Json::<T>::from_request(request, state).await {
       Ok(value) => value,
       Err(rejection) => {
-        return Err(Errors::bad_request().with_error(PARSE_ERROR, rejection.to_string()));
+        return Err(Errors::bad_request().with_error(REQUEST_BODY, rejection.to_string()));
       }
     };
 

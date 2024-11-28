@@ -60,6 +60,7 @@ pub struct UserConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct OAuth2Config {
+  pub name: String,
   pub enabled: bool,
   pub client_id: String,
   pub client_secret: String,

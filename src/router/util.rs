@@ -1,6 +1,6 @@
 use crate::model::util::{Health, Version};
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Router};
 use utoipa::OpenApi;
 
 use super::RouterState;
@@ -43,7 +43,7 @@ pub async fn health(State(state): State<RouterState>) -> impl IntoResponse {
     StatusCode::INTERNAL_SERVER_ERROR
   };
 
-  (status, Json(health))
+  (status, axum::Json(health))
 }
 
 #[utoipa::path(
@@ -54,8 +54,8 @@ pub async fn health(State(state): State<RouterState>) -> impl IntoResponse {
     (status = 200, description = "Version response", body = Version),
   )
 )]
-pub async fn version() -> Json<Version> {
-  Json(Version::default())
+pub async fn version() -> axum::Json<Version> {
+  axum::Json(Version::default())
 }
 
 pub fn create_router(state: RouterState) -> Router {
