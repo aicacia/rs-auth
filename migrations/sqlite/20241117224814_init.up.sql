@@ -125,4 +125,4 @@ CREATE TABLE "user_oauth2_providers" (
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 ) STRICT;
-CREATE UNIQUE INDEX "user_oauth2_providers_user_id_provider_email_unique_idx" ON "user_oauth2_providers" ("user_id", "provider", "email");
+CREATE UNIQUE INDEX "user_oauth2_providers_user_id_provider_email_unique_idx" ON "user_oauth2_providers" ("provider", "email");

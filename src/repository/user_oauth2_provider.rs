@@ -40,3 +40,23 @@ pub async fn get_user_oauth2_providers_by_user_id(
   .fetch_all(pool)
   .await
 }
+
+pub async fn create_user_oauth2_provider_and_email(
+  pool: &sqlx::AnyPool,
+  user_id: i64,
+  provider: &str,
+  email: &str,
+) -> sqlx::Result<UserOAuth2ProviderRow> {
+  sqlx::query_as(
+    r#"INSERT INTO user_oauth2_providers 
+          ("user_id", "provider", "email")
+          VALUES
+          ($1, $2, $3)
+          RETURNING *;"#,
+  )
+  .bind(user_id)
+  .bind(provider)
+  .bind(email)
+  .fetch_one(pool)
+  .await
+}

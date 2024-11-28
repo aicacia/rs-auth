@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::RwLock, time::Duration};
 use crate::{
   core::{
     config::get_config,
-    error::{Errors, REQUIRED_ERROR},
+    error::{Errors, INTERNAL_ERROR, INVALID_ERROR, PARSE_ERROR, REQUIRED_ERROR},
   },
   middleware::{
     claims::{
@@ -18,9 +18,11 @@ use crate::{
   },
   repository::{
     tenent::get_tenent_by_id,
-    user::{create_user_with_oauth2, CreateUserWithOAuth2},
+    user::{create_user_with_oauth2, get_user_by_id, CreateUserWithOAuth2},
     user_info::UserInfoUpdate,
-    user_oauth2_provider::get_user_by_oauth2_provider_and_email,
+    user_oauth2_provider::{
+      create_user_oauth2_provider_and_email, get_user_by_oauth2_provider_and_email,
+    },
   },
 };
 
@@ -138,47 +140,93 @@ pub async fn oauth2_callback(
   State(state): State<RouterState>,
   Path(provider): Path<String>,
   Query(OAuth2CallbackQuery {
-    state: oauth2_state_token,
+    state: oauth2_state_token_string,
     code,
   }): Query<OAuth2CallbackQuery>,
 ) -> impl IntoResponse {
   let config = get_config();
+  let mut errors = Errors::bad_request();
+  let mut redirect_url = match Url::parse(&config.oauth2.redirect_url) {
+    Ok(url) => url,
+    Err(e) => {
+      log::error!("Error parsing redirect URL: {}", e);
+      return Errors::internal_error()
+        .with_error("redirect_url", INVALID_ERROR)
+        .into_response();
+    }
+  };
   let client = match match provider.as_str() {
     "google" => oauth2_create_basic_client(&config.oauth2.google, &provider),
     _ => {
       log::error!("Unknown OAuth2 provider: {}", provider);
-      return Errors::internal_error().into_response();
+      errors.error(
+        PARSE_ERROR,
+        (
+          "provider",
+          HashMap::from([("in".to_owned(), json!("request"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   } {
     Ok(client) => client,
     Err(e) => {
       log::error!("Error parsing OAuth2 config: {}", e);
-      return Errors::internal_error().into_response();
+      errors.error(
+        INTERNAL_ERROR,
+        (
+          "provider",
+          HashMap::from([("in".to_owned(), json!("request"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   };
 
   let pkce_code_verifier = match PKCE_CODE_VERIFIERS.write() {
-    Ok(mut map) => match map.remove_entry(&oauth2_state_token) {
+    Ok(mut map) => match map.remove_entry(&oauth2_state_token_string) {
       Some((_, pkce_code_verifier)) => pkce_code_verifier,
       None => {
         log::error!("No PKCE code verifier found for CSRF token");
-        return Errors::unauthorized().into_response();
+        errors.error(
+          INTERNAL_ERROR,
+          (
+            "pkce-code-verifier",
+            HashMap::from([("in".to_owned(), json!("application"))]),
+          ),
+        );
+        return redirect_with_error(redirect_url, errors).into_response();
       }
     },
     Err(e) => {
       log::error!("Error aquiring PKCE verifier map: {}", e);
-      return Errors::internal_error().into_response();
+      errors.error(
+        INTERNAL_ERROR,
+        (
+          "pkce-code-verifier",
+          HashMap::from([("in".to_owned(), json!("application"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   };
 
-  let maybe_invalid_token = match parse_jwt_no_validation::<OAuth2State>(&oauth2_state_token) {
-    Ok(token) => token,
-    Err(e) => {
-      log::error!("Error parsing OAuth2 state: {}", e);
-      return Errors::internal_error().into_response();
-    }
-  };
-  let tenent_id = match maybe_invalid_token
+  let maybe_invalid_oauth2_state_token =
+    match parse_jwt_no_validation::<OAuth2State>(&oauth2_state_token_string) {
+      Ok(token) => token,
+      Err(e) => {
+        log::error!("Error parsing OAuth2 state: {}", e);
+        errors.error(
+          INVALID_ERROR,
+          (
+            "state",
+            HashMap::from([("in".to_owned(), json!("oauth2-state-token"))]),
+          ),
+        );
+        return redirect_with_error(redirect_url, errors).into_response();
+      }
+    };
+  let tenent_id = match maybe_invalid_oauth2_state_token
     .header
     .kid
     .as_ref()
@@ -188,38 +236,65 @@ pub async fn oauth2_callback(
     Some(Ok(tenent_id)) => tenent_id,
     Some(Err(e)) => {
       log::error!("Error parsing tenent id: {}", e);
-      return Errors::internal_error().into_response();
+      errors.error("oauth2_state_token", PARSE_ERROR);
+      return redirect_with_error(redirect_url, errors).into_response();
     }
     None => {
       log::error!("No tenent id found in OAuth2 state");
-      return Errors::internal_error().into_response();
+      errors.error(
+        INVALID_ERROR,
+        (
+          "state",
+          HashMap::from([("in".to_owned(), json!("oauth2-state-token"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   };
   let tenent = match get_tenent_by_id(&state.pool, tenent_id).await {
     Ok(Some(tenent)) => tenent,
     Ok(None) => {
       log::error!("Tenent not found");
-      return Errors::unauthorized().into_response();
+      errors.error(
+        INVALID_ERROR,
+        (
+          "state",
+          HashMap::from([("in".to_owned(), json!("oauth2-state-token"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
     Err(e) => {
       log::error!("Error getting tenent from OAuth2 state: {}", e);
-      return Errors::internal_error().into_response();
+      errors.error(
+        INVALID_ERROR,
+        (
+          "state",
+          HashMap::from([("in".to_owned(), json!("oauth2-state-token"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   };
 
-  let token: jsonwebtoken::TokenData<OAuth2State> =
-    match parse_jwt::<OAuth2State>(&oauth2_state_token, &tenent) {
+  let oauth2_state_token: jsonwebtoken::TokenData<OAuth2State> =
+    match parse_jwt::<OAuth2State>(&oauth2_state_token_string, &tenent) {
       Ok(token) => token,
       Err(e) => {
         log::error!("Error parsing OAuth2 state: {}", e);
-        return Errors::internal_error().into_response();
+        errors.error(
+          PARSE_ERROR,
+          (
+            "state",
+            HashMap::from([("in".to_owned(), json!("oauth2-state-token"))]),
+          ),
+        );
+        return redirect_with_error(redirect_url, errors).into_response();
       }
     };
 
-  let code = oauth2::AuthorizationCode::new(code);
-
   let token_response = match client
-    .exchange_code(code)
+    .exchange_code(oauth2::AuthorizationCode::new(code))
     .set_pkce_verifier(pkce_code_verifier)
     .request_async(oauth2::reqwest::async_http_client)
     .await
@@ -227,7 +302,14 @@ pub async fn oauth2_callback(
     Ok(token_response) => token_response,
     Err(e) => {
       log::error!("Error exchanging code for token: {}", e);
-      return Errors::internal_error().into_response();
+      errors.error(
+        INVALID_ERROR,
+        (
+          "token",
+          HashMap::from([("in".to_owned(), json!("oauth2-code-exchange"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   };
 
@@ -236,7 +318,14 @@ pub async fn oauth2_callback(
     Ok(p) => p,
     Err(e) => {
       log::error!("Error getting OAuth2 profile: {}", e);
-      return Errors::internal_error().into_response();
+      errors.error(
+        INVALID_ERROR,
+        (
+          "profile",
+          HashMap::from([("in".to_owned(), json!("oauth2-provider-profile"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   };
 
@@ -244,19 +333,18 @@ pub async fn oauth2_callback(
     Some(email) => email,
     None => {
       log::error!("No email found in openid profile");
-      return Errors::unauthorized()
-        .with_error(
-          REQUIRED_ERROR,
-          (
-            "email",
-            HashMap::from([("in".to_owned(), json!("oauth2-account"))]),
-          ),
-        )
-        .into_response();
+      errors.error(
+        REQUIRED_ERROR,
+        (
+          "email",
+          HashMap::from([("in".to_owned(), json!("oauth2-provider-profile"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   };
 
-  let user = if token.claims.register {
+  let user = if oauth2_state_token.claims.register {
     match create_user_with_oauth2(
       &state.pool,
       CreateUserWithOAuth2 {
@@ -285,16 +373,63 @@ pub async fn oauth2_callback(
       Ok(user) => user,
       Err(e) => {
         log::error!("Error creating user with OAuth2 provider: {}", e);
-        return Errors::internal_error().into_response();
+        errors.error(
+          INTERNAL_ERROR,
+          (
+            "create",
+            HashMap::from([("in".to_owned(), json!("oauth2-provider"))]),
+          ),
+        );
+        return redirect_with_error(redirect_url, errors).into_response();
       }
     }
+  } else if let Some(user_id) = oauth2_state_token.claims.user_id {
+    let user = match get_user_by_id(&state.pool, user_id).await {
+      Ok(Some(user)) => user,
+      Ok(None) => return Errors::unauthorized().into_response(),
+      Err(e) => {
+        log::error!("Error fetching user by ID: {}", e);
+        errors.error(
+          INTERNAL_ERROR,
+          (
+            "register",
+            HashMap::from([("in".to_owned(), json!("oauth2-provider"))]),
+          ),
+        );
+        return redirect_with_error(redirect_url, errors).into_response();
+      }
+    };
+
+    match create_user_oauth2_provider_and_email(&state.pool, user.id, &provider, &email).await {
+      Ok(_) => {}
+      Err(e) => {
+        log::error!("Error creating user OAuth2 provider: {}", e);
+        errors.error(
+          INTERNAL_ERROR,
+          (
+            "update",
+            HashMap::from([("in".to_owned(), json!("oauth2-provider"))]),
+          ),
+        );
+        return redirect_with_error(redirect_url, errors).into_response();
+      }
+    }
+
+    user
   } else {
     match get_user_by_oauth2_provider_and_email(&state.pool, &provider, &email).await {
       Ok(Some(user)) => user,
       Ok(None) => return Errors::unauthorized().into_response(),
       Err(e) => {
         log::error!("Error fetching user by OAuth2 provider: {}", e);
-        return Errors::internal_error().into_response();
+        errors.error(
+          INTERNAL_ERROR,
+          (
+            "view",
+            HashMap::from([("in".to_owned(), json!("oauth2-provider"))]),
+          ),
+        );
+        return redirect_with_error(redirect_url, errors).into_response();
       }
     }
   };
@@ -317,26 +452,19 @@ pub async fn oauth2_callback(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      errors.error(
+        INTERNAL_ERROR,
+        (
+          "encode",
+          HashMap::from([("in".to_owned(), json!("authorization-code"))]),
+        ),
+      );
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   };
 
-  let mut url = match Url::parse(&config.oauth2.redirect_url) {
-    Ok(url) => url,
-    Err(e) => {
-      log::error!("Error parsing redirect URL: {}", e);
-      return Errors::internal_error().into_response();
-    }
-  };
-  url.set_query(Some(&format!("authorization_code={authorization_code}")));
-  let url_header = match HeaderValue::try_from(url.as_str()) {
-    Ok(url_header) => url_header,
-    Err(e) => {
-      log::error!("Error converting url to header value URL: {}", e);
-      return Errors::internal_error().into_response();
-    }
-  };
-  (StatusCode::FOUND, [(LOCATION, url_header)]).into_response()
+  redirect_url.set_query(Some(&format!("authorization_code={authorization_code}")));
+  redirect(redirect_url).into_response()
 }
 
 pub fn create_router(state: RouterState) -> Router {
@@ -344,4 +472,25 @@ pub fn create_router(state: RouterState) -> Router {
     .route("/oauth2/{provider}", get(oauth2))
     .route("/oauth2/{provider}/callback", get(oauth2_callback))
     .with_state(state)
+}
+
+fn redirect_with_error(mut redirect_url: Url, error: Errors) -> impl IntoResponse {
+  redirect_url.set_query(Some(&format!(
+    "error={}",
+    urlencoding::encode(&error.to_string())
+  )));
+  redirect(redirect_url).into_response()
+}
+
+fn redirect(redirect_url: Url) -> impl IntoResponse {
+  let url_header = match HeaderValue::try_from(redirect_url.as_str()) {
+    Ok(url_header) => url_header,
+    Err(e) => {
+      log::error!("Error converting url to header value URL: {}", e);
+      return Errors::internal_error()
+        .with_error("redirect_url", INVALID_ERROR)
+        .into_response();
+    }
+  };
+  (StatusCode::FOUND, [(LOCATION, url_header)]).into_response()
 }

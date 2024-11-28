@@ -25,6 +25,7 @@ use super::{oauth2::PKCE_CODE_VERIFIERS, RouterState};
 #[openapi(
   paths(
     current_user,
+    add_oauth2_provider,
   ),
   components(
     schemas(
@@ -119,7 +120,7 @@ pub async fn current_user(
     ("UserAuthorization" = [])
   )
 )]
-pub async fn oauth2(
+pub async fn add_oauth2_provider(
   Path(provider): Path<String>,
   UserAuthorization(user, tenent): UserAuthorization,
 ) -> impl IntoResponse {
@@ -163,6 +164,7 @@ pub async fn oauth2(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
+    .route("/current-user/oauth2/{provider}", get(add_oauth2_provider))
     .route("/current-user", get(current_user))
     .with_state(state)
 }
