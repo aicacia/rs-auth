@@ -1,6 +1,6 @@
 use utoipa::{
-  openapi::security::{ApiKey, ApiKeyValue, HttpAuthScheme, HttpBuilder, SecurityScheme},
   Modify,
+  openapi::security::{ApiKey, ApiKeyValue, HttpAuthScheme, HttpBuilder, SecurityScheme},
 };
 
 pub const AUTHORIZATION_HEADER: &str = "Authorization";
@@ -22,6 +22,15 @@ impl Modify for SecurityAddon {
     );
     components.add_security_scheme(
       "ServiceAccountAuthorization",
+      SecurityScheme::Http(
+        HttpBuilder::new()
+          .scheme(HttpAuthScheme::Bearer)
+          .bearer_format("JWT")
+          .build(),
+      ),
+    );
+    components.add_security_scheme(
+      "Authorization",
       SecurityScheme::Http(
         HttpBuilder::new()
           .scheme(HttpAuthScheme::Bearer)
