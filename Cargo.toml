@@ -1,12 +1,14 @@
+cargo-features = ["edition2024"]
+
 [package]
 authors = ["nathanfaucett@gmail.com"]
 default-run = "auth"
 description = "auth"
-edition = "2021"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 name = "auth"
 repository = ""
-rust-version = "1.82"
+rust-version = "1.84"
 version = "0.1.0"
 
 [lib]
@@ -45,7 +47,7 @@ chrono = { version = "0.4", features = ["serde"] }
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-sqlx = { path = "/home/nathan/code/rust/sqlx", version = "0.8", features = [
+sqlx = { version = "0.8", features = [
   "uuid",
   "chrono",
   "time",

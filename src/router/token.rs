@@ -1,35 +1,33 @@
-use std::collections::HashMap;
-
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR, NOT_ALLOWED_ERROR},
+  core::error::{Errors, INTERNAL_ERROR},
   middleware::{
     claims::{
-      parse_jwt, BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
+      BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
       TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_REFRESH,
+      parse_jwt,
     },
     json::Json,
     openid_claims::{
-      has_address_scope, has_email_scope, has_phone_scope, has_profile_scope, parse_scopes,
-      OpenIdClaims,
+      OpenIdClaims, has_address_scope, has_email_scope, has_phone_scope, has_profile_scope,
+      parse_scopes,
     },
     tenent_id::TenentId,
   },
   model::token::{
-    Token, TokenRequest, TOKEN_ISSUED_TYPE_PASSWORD, TOKEN_ISSUED_TYPE_REFRESH_TOKEN,
-    TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT,
+    TOKEN_ISSUED_TYPE_PASSWORD, TOKEN_ISSUED_TYPE_REFRESH_TOKEN, TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT,
+    Token, TokenRequest,
   },
   repository::{
-    service_account::{get_service_account_by_client_id, ServiceAccountRow},
+    service_account::{ServiceAccountRow, get_service_account_by_client_id},
     tenent::TenentRow,
-    user::{get_user_by_id, get_user_by_username, UserRow},
+    user::{UserRow, get_user_by_id, get_user_by_username},
     user_info::get_user_info_by_user_id,
     user_password::get_active_user_password_by_user_id,
   },
 };
 
-use axum::{extract::State, response::IntoResponse, routing::post, Router};
+use axum::{Router, extract::State, response::IntoResponse, routing::post};
 use http::StatusCode;
-use serde_json::json;
 use sqlx::AnyPool;
 use utoipa::OpenApi;
 
@@ -121,15 +119,12 @@ async fn password_request(
   };
   match get_active_user_password_by_user_id(pool, user.id).await {
     Ok(Some(user_password)) => match user_password.verify(&password) {
-      Ok(true) => create_user_token(
-        pool,
-        CreateUserToken {
-          tenent,
-          user,
-          scope,
-          issued_token_type: TOKEN_ISSUED_TYPE_PASSWORD.to_owned(),
-        },
-      )
+      Ok(true) => create_user_token(pool, CreateUserToken {
+        tenent,
+        user,
+        scope,
+        issued_token_type: TOKEN_ISSUED_TYPE_PASSWORD.to_owned(),
+      })
       .await
       .into_response(),
       Ok(false) => Errors::from(StatusCode::UNAUTHORIZED).into_response(),
@@ -161,31 +156,38 @@ async fn refresh_token_request(
     Ok(claims) => claims,
     Err(e) => {
       log::error!("error decoding jwt: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   if jwt.claims.kind != TOKEN_TYPE_REFRESH {
     log::error!("invalid token type: {}", jwt.claims.kind);
-    return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+    return Errors::from(StatusCode::UNAUTHORIZED)
+      .with_application_error(INTERNAL_ERROR)
+      .into_response();
   }
   let user = match get_user_by_id(pool, jwt.claims.sub).await {
     Ok(Some(user)) => user,
-    Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
+    Ok(None) => {
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
     Err(e) => {
       log::error!("error fetching user from database: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   let scope = jwt.claims.scopes.join(" ");
-  create_user_token(
-    pool,
-    CreateUserToken {
-      tenent,
-      user,
-      scope: if scope.is_empty() { None } else { Some(scope) },
-      issued_token_type: TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
-    },
-  )
+  create_user_token(pool, CreateUserToken {
+    tenent,
+    user,
+    scope: if scope.is_empty() { None } else { Some(scope) },
+    issued_token_type: TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
+  })
   .await
   .into_response()
 }
@@ -199,31 +201,34 @@ async fn authorization_code_request(
     Ok(claims) => claims,
     Err(e) => {
       log::error!("error decoding jwt: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   if jwt.claims.kind != TOKEN_TYPE_AUTHORIZATION_CODE {
     log::error!("invalid token type: {}", jwt.claims.kind);
-    return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+    return Errors::from(StatusCode::UNAUTHORIZED)
+      .with_application_error(INTERNAL_ERROR)
+      .into_response();
   }
   let user = match get_user_by_id(pool, jwt.claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
     Err(e) => {
       log::error!("error fetching user from database: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   let scope = jwt.claims.scopes.join(" ");
-  create_user_token(
-    pool,
-    CreateUserToken {
-      tenent,
-      user,
-      scope: if scope.is_empty() { None } else { Some(scope) },
-      issued_token_type: TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
-    },
-  )
+  create_user_token(pool, CreateUserToken {
+    tenent,
+    user,
+    scope: if scope.is_empty() { None } else { Some(scope) },
+    issued_token_type: TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
+  })
   .await
   .into_response()
 }
@@ -243,20 +248,19 @@ async fn service_account_request(
     }
   };
   match service_account.verify(&secret.to_string()) {
-    Ok(true) => create_service_token_token(
-      pool,
-      CreateServiceAccountToken {
-        tenent,
-        service_account,
-        issued_token_type: TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT.to_owned(),
-      },
-    )
+    Ok(true) => create_service_token_token(pool, CreateServiceAccountToken {
+      tenent,
+      service_account,
+      issued_token_type: TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT.to_owned(),
+    })
     .await
     .into_response(),
     Ok(false) => Errors::from(StatusCode::UNAUTHORIZED).into_response(),
     Err(e) => {
       log::error!("error verifying user password: {}", e);
-      Errors::from(StatusCode::UNAUTHORIZED).into_response()
+      Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response()
     }
   }
 }
@@ -294,7 +298,9 @@ async fn create_service_token_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
 
@@ -305,7 +311,9 @@ async fn create_service_token_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
 
@@ -361,7 +369,9 @@ async fn create_user_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
 
@@ -372,7 +382,9 @@ async fn create_user_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
 
@@ -391,11 +403,15 @@ async fn create_user_token(
         Ok(Some(user_info)) => user_info,
         Ok(None) => {
           log::error!("user info not found for user: {}", user.id);
-          return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+          return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+            .with_application_error(INTERNAL_ERROR)
+            .into_response();
         }
         Err(e) => {
           log::error!("error fetching user info from database: {}", e);
-          return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+          return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+            .with_application_error(INTERNAL_ERROR)
+            .into_response();
         }
       };
       if show_address {
@@ -431,7 +447,9 @@ async fn create_user_token(
       Ok(token) => Some(token),
       Err(e) => {
         log::error!("error encoding jwt: {}", e);
-        return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+        return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
       }
     };
   }

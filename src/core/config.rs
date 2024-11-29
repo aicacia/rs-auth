@@ -2,7 +2,7 @@ use config::ConfigError;
 use serde::Deserialize;
 use std::{
   net::IpAddr,
-  sync::{atomic::Ordering, Arc},
+  sync::{Arc, atomic::Ordering},
 };
 
 use super::atomic_value::AtomicValue;
@@ -125,10 +125,10 @@ impl Config {
         "oauth2.google.token_url",
         "https://www.googleapis.com/oauth2/v3/token",
       )?
-      .set_default(
-        "oauth2.google.scopes",
-        vec!["https://www.googleapis.com/auth/userinfo.email"],
-      )?
+      .set_default("oauth2.google.scopes", vec![
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile",
+      ])?
       // Defaults
       .set_default("log_level", "debug")?
       .add_source(config::File::with_name("./config.json"))

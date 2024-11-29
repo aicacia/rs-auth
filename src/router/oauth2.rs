@@ -9,18 +9,19 @@ use crate::{
   },
   middleware::{
     claims::{
-      parse_jwt, parse_jwt_no_validation, BasicClaims, Claims, TOKEN_SUB_TYPE_USER,
-      TOKEN_TYPE_AUTHORIZATION_CODE,
+      BasicClaims, Claims, TOKEN_SUB_TYPE_USER, TOKEN_TYPE_AUTHORIZATION_CODE, parse_jwt,
+      parse_jwt_no_validation,
     },
+    openid_claims::{SCOPE_ADDRESS, SCOPE_EMAIL, SCOPE_PHONE, SCOPE_PROFILE},
     tenent_id::TenentId,
   },
   model::oauth2::{
-    oauth2_authorize_url, oauth2_create_basic_client, oauth2_profile, OAuth2CallbackQuery,
-    OAuth2Query, OAuth2State,
+    OAuth2CallbackQuery, OAuth2Query, OAuth2State, oauth2_authorize_url,
+    oauth2_create_basic_client, oauth2_profile,
   },
   repository::{
     tenent::get_tenent_by_id,
-    user::{create_user_with_oauth2, get_user_by_id, CreateUserWithOAuth2},
+    user::{CreateUserWithOAuth2, create_user_with_oauth2, get_user_by_id},
     user_info::UserInfoUpdate,
     user_oauth2_provider::{
       create_user_oauth2_provider_and_email, get_user_by_oauth2_provider_and_email,
@@ -29,14 +30,13 @@ use crate::{
 };
 
 use axum::{
+  Router,
   extract::{Path, Query, State},
   response::IntoResponse,
   routing::get,
-  Router,
 };
 use expiringmap::ExpiringMap;
-use http::{header::LOCATION, HeaderValue, StatusCode};
-use oauth2::TokenResponse;
+use http::{HeaderValue, StatusCode, header::LOCATION};
 use reqwest::Url;
 use serde_json::json;
 use utoipa::OpenApi;
@@ -261,8 +261,7 @@ pub async fn oauth2_callback(
     }
   };
 
-  let openid_profile = match oauth2_profile(&provider, token_response.access_token().secret()).await
-  {
+  let openid_profile = match oauth2_profile(&provider, token_response).await {
     Ok(p) => p,
     Err(e) => {
       log::error!("Error getting OAuth2 profile: {}", e);
@@ -286,30 +285,41 @@ pub async fn oauth2_callback(
     }
   };
 
+  let mut scopes = Vec::new();
+  scopes.push(SCOPE_EMAIL.to_owned());
+  if openid_profile.phone_number.is_some() {
+    scopes.push(SCOPE_PHONE.to_owned());
+  }
+  if openid_profile.address.is_some() {
+    scopes.push(SCOPE_ADDRESS.to_owned());
+  }
+  if openid_profile.name.is_some() {
+    scopes.push(SCOPE_PROFILE.to_owned());
+  }
+
   let user = if oauth2_state_token.claims.register {
-    match create_user_with_oauth2(
-      &state.pool,
-      CreateUserWithOAuth2 {
-        active: true,
-        provider: provider,
-        email: email,
-        email_verified: openid_profile.email_verified.unwrap_or(false),
-        user_info: UserInfoUpdate {
-          name: openid_profile.name,
-          given_name: openid_profile.given_name,
-          family_name: openid_profile.family_name,
-          middle_name: openid_profile.middle_name,
-          nickname: openid_profile.nickname,
-          profile_picture: openid_profile.profile_picture,
-          website: openid_profile.website,
-          gender: openid_profile.gender,
-          birthdate: openid_profile.birthdate,
-          zone_info: openid_profile.zone_info,
-          locale: openid_profile.locale,
-          address: openid_profile.address,
-        },
+    match create_user_with_oauth2(&state.pool, CreateUserWithOAuth2 {
+      active: true,
+      provider: provider,
+      email: email,
+      email_verified: openid_profile.email_verified.unwrap_or(false),
+      phone_number: openid_profile.phone_number,
+      phone_number_verified: openid_profile.phone_number_verified.unwrap_or(false),
+      user_info: UserInfoUpdate {
+        name: openid_profile.name,
+        given_name: openid_profile.given_name,
+        family_name: openid_profile.family_name,
+        middle_name: openid_profile.middle_name,
+        nickname: openid_profile.nickname,
+        profile_picture: openid_profile.profile_picture,
+        website: openid_profile.website,
+        gender: openid_profile.gender,
+        birthdate: openid_profile.birthdate,
+        zone_info: openid_profile.zone_info,
+        locale: openid_profile.locale,
+        address: openid_profile.address,
       },
-    )
+    })
     .await
     {
       Ok(user) => user,
@@ -364,7 +374,7 @@ pub async fn oauth2_callback(
     exp: now.timestamp() + tenent.expires_in_seconds,
     iss: tenent.issuer.clone(),
     aud: tenent.audience.clone(),
-    scopes: Vec::with_capacity(0),
+    scopes,
   };
 
   let authorization_code = match claims.encode(&tenent) {

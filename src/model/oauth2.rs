@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::IntoParams;
 
 use crate::{
-  core::config::{get_config, OAuth2Config},
+  core::config::{OAuth2Config, get_config},
   middleware::claims::tenent_encoding_key,
   repository::tenent::TenentRow,
 };
@@ -159,15 +159,19 @@ async fn oauth2_google_profile(
     .await
 }
 
-pub async fn oauth2_profile(
+pub async fn oauth2_profile<TR, TT>(
   provider: &str,
-  access_token: &str,
-) -> Result<OpenIdProfile, io::Error> {
+  token_response: TR,
+) -> Result<OpenIdProfile, io::Error>
+where
+  TR: oauth2::TokenResponse<TT>,
+  TT: oauth2::TokenType,
+{
   match provider {
     "google" => {
       oauth2_google_profile(
-        "https://www.googleapis.com/oauth2/v3/userinfo ",
-        access_token,
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        token_response.access_token().secret(),
       )
       .await
     }
@@ -175,7 +179,7 @@ pub async fn oauth2_profile(
       return Err(io::Error::new(
         io::ErrorKind::InvalidInput,
         "Unknown provider",
-      ))
+      ));
     }
   }
   .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))

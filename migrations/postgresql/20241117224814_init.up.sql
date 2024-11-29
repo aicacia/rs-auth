@@ -95,6 +95,44 @@ INSERT INTO "user_passwords"
 	((SELECT id FROM "users" WHERE username='test' LIMIT 1), '$argon2id$v=19$m=19456,t=2,p=1$SmhvV0Y1WUZTU2YyS1MxVA$x0HaVNrXTCZSJa7zJzT3v59PQedgZquZlWYnp848cpE');
 
 
+CREATE TABLE "user_totps"(
+	"user_id" INTEGER PRIMARY KEY,
+  "active" INTEGER NOT NULL DEFAULT TRUE,
+	"algorithm" VARCHAR(255) NOT NULL DEFAULT 'SHA1',
+  "digits" INTEGER NOT NULL DEFAULT 6,
+  "step" INTEGER NOT NULL DEFAULT 30,
+  "secret" VARCHAR(255) NOT NULL,
+	"updated_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+	"created_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+  CONSTRAINT "user_totps_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE "user_emails" (
+  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "user_id" INTEGER NOT NULL,
+  "email" TEXT NOT NULL,
+  "verified" INTEGER NOT NULL DEFAULT FALSE,
+  "primary" INTEGER NOT NULL DEFAULT FALSE,
+	"updated_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+	"created_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+  CONSTRAINT "user_emails_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+);
+
+
+CREATE TABLE "user_phone_numbers" (
+  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "user_id" INTEGER NOT NULL,
+  "phone_number" TEXT NOT NULL,
+  "verified" INTEGER NOT NULL DEFAULT FALSE,
+  "primary" INTEGER NOT NULL DEFAULT FALSE,
+	"updated_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+	"created_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+  CONSTRAINT "user_phone_numbers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+);
+
+
 CREATE TABLE "user_oauth2_providers" (
 	"id" SERIAL PRIMARY KEY,
   "user_id" INTEGER NOT NULL,
@@ -102,6 +140,6 @@ CREATE TABLE "user_oauth2_providers" (
   "provider" VARCHAR(255) NOT NULL,
 	"updated_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
 	"created_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-	CONSTRAINT "user_oauth2_providers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+  CONSTRAINT "user_oauth2_providers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX "user_oauth2_providers_user_id_provider_email_unique_idx" ON "user_oauth2_providers" ("provider", "email");

@@ -1,6 +1,6 @@
 use crate::model::util::{Health, Version};
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Router};
+use axum::{Router, extract::State, http::StatusCode, response::IntoResponse, routing::get};
 use utoipa::OpenApi;
 
 use super::RouterState;

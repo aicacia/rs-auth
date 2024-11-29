@@ -6,3 +6,4 @@ pub mod user_info;
 pub mod user_oauth2_provider;
 pub mod user_password;
 pub mod user_phone_number;
+pub mod user_totp;

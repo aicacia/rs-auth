@@ -108,19 +108,16 @@ pub async fn create_user_with_password(
     Err(e) => {
       return Err(sqlx::Error::Encode(
         format!("Failed to encrypt password: {}", e).into(),
-      ))
+      ));
     }
   };
   run_transaction(pool, |transaction| {
     Box::pin(async move {
-      let user = create_user_internal(
-        transaction,
-        CreateUser {
-          username: params.username,
-          active: true,
-          user_info: Default::default(),
-        },
-      )
+      let user = create_user_internal(transaction, CreateUser {
+        username: params.username,
+        active: true,
+        user_info: Default::default(),
+      })
       .await?;
 
       sqlx::query(
@@ -142,6 +139,8 @@ pub struct CreateUserWithOAuth2 {
   pub provider: String,
   pub email: String,
   pub email_verified: bool,
+  pub phone_number: Option<String>,
+  pub phone_number_verified: bool,
   pub user_info: UserInfoUpdate,
 }
 
@@ -187,6 +186,17 @@ pub async fn create_user_with_oauth2(
       .bind(params.email_verified)
       .execute(&mut **transaction)
       .await?;
+
+      if let Some(phone_number) = params.phone_number.as_ref() {
+        sqlx::query(
+          r#"INSERT INTO user_phone_numbers ("user_id", "phone_number", "verified", "primary") VALUES ($1, $2, $3, TRUE);"#,
+        )
+        .bind(user.id)
+        .bind(phone_number)
+        .bind(params.phone_number_verified)
+        .execute(&mut **transaction)
+        .await?;
+      }
 
       Ok(user)
     })

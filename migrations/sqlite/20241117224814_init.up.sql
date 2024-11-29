@@ -92,6 +92,19 @@ INSERT INTO "user_passwords"
 	((SELECT id FROM "users" WHERE username='test' LIMIT 1), '$argon2id$v=19$m=19456,t=2,p=1$SmhvV0Y1WUZTU2YyS1MxVA$x0HaVNrXTCZSJa7zJzT3v59PQedgZquZlWYnp848cpE');
 
 
+CREATE TABLE "user_totps"(
+	"user_id" INTEGER PRIMARY KEY,
+  "active" INTEGER NOT NULL DEFAULT TRUE,
+	"algorithm" TEXT NOT NULL DEFAULT 'SHA1',
+  "digits" INTEGER NOT NULL DEFAULT 6,
+  "step" INTEGER NOT NULL DEFAULT 30,
+  "secret" TEXT NOT NULL,
+  "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+) STRICT;
+
+
 CREATE TABLE "user_emails" (
   "id" INTEGER PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
