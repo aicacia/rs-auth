@@ -1,4 +1,8 @@
-use crate::core::encryption::verify_password;
+use crate::core::{
+  config::get_config,
+  database::run_transaction,
+  encryption::{encrypt_password, verify_password},
+};
 
 #[derive(sqlx::FromRow)]
 pub struct UserPasswordRow {
@@ -19,7 +23,7 @@ impl UserPasswordRow {
   }
 }
 
-pub async fn get_active_user_password_by_user_id(
+pub async fn get_user_active_password_by_user_id(
   pool: &sqlx::AnyPool,
   user_id: i64,
 ) -> sqlx::Result<Option<UserPasswordRow>> {
@@ -31,5 +35,60 @@ pub async fn get_active_user_password_by_user_id(
   )
   .bind(user_id)
   .fetch_optional(pool)
+  .await
+}
+
+pub async fn create_user_password(
+  pool: &sqlx::AnyPool,
+  user_id: i64,
+  password: &str,
+) -> sqlx::Result<UserPasswordRow> {
+  let encrypted_password = match encrypt_password(password) {
+    Ok(encrypted_password) => encrypted_password,
+    Err(e) => {
+      return Err(sqlx::Error::Encode(
+        format!("Failed to encrypt password: {}", e).into(),
+      ));
+    }
+  };
+  let current_password = password.to_owned();
+  run_transaction(pool, |transaction| {
+    Box::pin(async move {
+      let previous_passwords: Vec<UserPasswordRow> = sqlx::query_as(
+        r#"SELECT up.* 
+            FROM user_passwords up
+            WHERE "user_id" = $1 
+            ORDER BY "created_at" DESC
+            LIMIT $2;"#,
+      )
+      .bind(user_id)
+      .bind(get_config().password.history as i64)
+      .fetch_all(&mut **transaction)
+      .await?;
+
+      for previous_password in previous_passwords {
+        if previous_password.verify(&current_password).unwrap_or(false) {
+          return Err(sqlx::Error::Configuration("password_already_used".into()));
+        }
+      }
+
+      log::info!("removing old passwords for user: {}", user_id);
+      sqlx::query(
+        r#"UPDATE user_passwords SET "active" = FALSE WHERE "user_id" = $1 AND "active" = TRUE;"#,
+      )
+      .bind(user_id)
+      .execute(&mut **transaction)
+      .await?;
+
+      log::info!("inserting new password for user: {}", user_id);
+      sqlx::query_as(
+        r#"INSERT INTO user_passwords ("user_id", "encrypted_password") VALUES ($1, $2) RETURNING *;"#,
+      )
+      .bind(user_id)
+      .bind(encrypted_password)
+      .fetch_one(&mut **transaction)
+      .await
+    })
+  })
   .await
 }

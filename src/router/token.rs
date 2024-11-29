@@ -1,10 +1,13 @@
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR},
+  core::{
+    config::get_config,
+    error::{Errors, INTERNAL_ERROR},
+  },
   middleware::{
     claims::{
       BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
       TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_REFRESH,
-      parse_jwt,
+      TOKEN_TYPE_RESET_PASSWORD, parse_jwt,
     },
     json::Json,
     openid_claims::{
@@ -14,15 +17,15 @@ use crate::{
     tenent_id::TenentId,
   },
   model::token::{
-    TOKEN_ISSUED_TYPE_PASSWORD, TOKEN_ISSUED_TYPE_REFRESH_TOKEN, TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT,
-    Token, TokenRequest,
+    TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE, TOKEN_ISSUED_TYPE_PASSWORD,
+    TOKEN_ISSUED_TYPE_REFRESH_TOKEN, TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT, Token, TokenRequest,
   },
   repository::{
     service_account::{ServiceAccountRow, get_service_account_by_client_id},
     tenent::TenentRow,
     user::{UserRow, get_user_by_id, get_user_by_username},
     user_info::get_user_info_by_user_id,
-    user_password::get_active_user_password_by_user_id,
+    user_password::get_user_active_password_by_user_id,
   },
 };
 
@@ -117,34 +120,54 @@ async fn password_request(
         .into_response();
     }
   };
-  match get_active_user_password_by_user_id(pool, user.id).await {
-    Ok(Some(user_password)) => match user_password.verify(&password) {
-      Ok(true) => create_user_token(pool, CreateUserToken {
+  let user_password = match get_user_active_password_by_user_id(pool, user.id).await {
+    Ok(Some(user_password)) => user_password,
+    Ok(None) => {
+      return Errors::from(StatusCode::FORBIDDEN)
+        .with_error("authentication-types", "password")
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error fetching user password from database: {}", e);
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
+  match user_password.verify(&password) {
+    Ok(true) => {}
+    Ok(false) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
+    Err(e) => {
+      log::error!("error verifying user password: {}", e);
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+  let expire_days = get_config().password.expire_days;
+  if expire_days > 0 {
+    let expire_time = user_password.created_at + ((expire_days as i64) * 24 * 60 * 60);
+    if chrono::Utc::now().timestamp() >= expire_time {
+      return create_password_reset_token(
+        pool,
         tenent,
         user,
         scope,
-        issued_token_type: TOKEN_ISSUED_TYPE_PASSWORD.to_owned(),
-      })
+        TOKEN_ISSUED_TYPE_PASSWORD.to_owned(),
+      )
       .await
-      .into_response(),
-      Ok(false) => Errors::from(StatusCode::UNAUTHORIZED).into_response(),
-      Err(e) => {
-        log::error!("error verifying user password: {}", e);
-        Errors::from(StatusCode::UNAUTHORIZED)
-          .with_application_error(INTERNAL_ERROR)
-          .into_response()
-      }
-    },
-    Ok(None) => Errors::from(StatusCode::FORBIDDEN)
-      .with_error("user-config", "password")
-      .into_response(),
-    Err(e) => {
-      log::error!("error fetching user password from database: {}", e);
-      Errors::from(StatusCode::UNAUTHORIZED)
-        .with_application_error(INTERNAL_ERROR)
-        .into_response()
+      .into_response();
     }
   }
+  create_user_token(
+    pool,
+    tenent,
+    user,
+    scope,
+    TOKEN_ISSUED_TYPE_PASSWORD.to_owned(),
+  )
+  .await
+  .into_response()
 }
 
 async fn refresh_token_request(
@@ -182,12 +205,13 @@ async fn refresh_token_request(
     }
   };
   let scope = jwt.claims.scopes.join(" ");
-  create_user_token(pool, CreateUserToken {
+  create_user_token(
+    pool,
     tenent,
     user,
-    scope: if scope.is_empty() { None } else { Some(scope) },
-    issued_token_type: TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
-  })
+    if scope.is_empty() { None } else { Some(scope) },
+    TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
+  )
   .await
   .into_response()
 }
@@ -223,12 +247,13 @@ async fn authorization_code_request(
     }
   };
   let scope = jwt.claims.scopes.join(" ");
-  create_user_token(pool, CreateUserToken {
+  create_user_token(
+    pool,
     tenent,
     user,
-    scope: if scope.is_empty() { None } else { Some(scope) },
-    issued_token_type: TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
-  })
+    if scope.is_empty() { None } else { Some(scope) },
+    TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE.to_owned(),
+  )
   .await
   .into_response()
 }
@@ -333,21 +358,12 @@ async fn create_service_token_token(
     .into_response()
 }
 
-struct CreateUserToken {
+async fn create_user_token(
+  pool: &AnyPool,
   tenent: TenentRow,
   user: UserRow,
   scope: Option<String>,
   issued_token_type: String,
-}
-
-async fn create_user_token(
-  pool: &AnyPool,
-  CreateUserToken {
-    tenent,
-    user,
-    scope,
-    issued_token_type,
-  }: CreateUserToken,
 ) -> impl IntoResponse {
   let now = chrono::Utc::now();
   let scopes = parse_scopes(scope.as_ref().map(String::as_str));
@@ -465,6 +481,55 @@ async fn create_user_token(
       refresh_token: Some(refresh_token),
       refresh_token_expires_in: Some(tenent.refresh_expires_in_seconds),
       id_token: id_token,
+    }),
+  )
+    .into_response()
+}
+
+async fn create_password_reset_token(
+  _pool: &AnyPool,
+  tenent: TenentRow,
+  user: UserRow,
+  scope: Option<String>,
+  issued_token_type: String,
+) -> impl IntoResponse {
+  let now = chrono::Utc::now();
+  let scopes = parse_scopes(scope.as_ref().map(String::as_str));
+
+  let claims = BasicClaims {
+    kind: TOKEN_TYPE_RESET_PASSWORD.to_owned(),
+    app: tenent.id,
+    sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
+    sub: user.id,
+    iat: now.timestamp(),
+    nbf: now.timestamp(),
+    exp: now.timestamp() + tenent.expires_in_seconds,
+    iss: tenent.issuer.clone(),
+    aud: tenent.audience.clone(),
+    scopes: scopes.clone(),
+  };
+
+  let access_token = match claims.encode(&tenent) {
+    Ok(token) => token,
+    Err(e) => {
+      log::error!("error encoding jwt: {}", e);
+      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
+
+  (
+    StatusCode::CREATED,
+    axum::Json(Token {
+      access_token,
+      token_type: claims.kind,
+      issued_token_type,
+      expires_in: tenent.expires_in_seconds,
+      scope,
+      refresh_token: None,
+      refresh_token_expires_in: None,
+      id_token: None,
     }),
   )
     .into_response()

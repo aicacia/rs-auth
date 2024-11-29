@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use validator::Validate;
 
 use crate::repository::user::UserRow;
 
@@ -35,4 +36,13 @@ impl From<UserRow> for CurrentUser {
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
     }
   }
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
+pub struct ResetPasswordRequest {
+  pub current_password: String,
+  #[validate(length(min = 6), must_match(other = "password_confirmation"))]
+  pub password: String,
+  #[validate(length(min = 6))]
+  pub password_confirmation: String,
 }

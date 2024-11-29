@@ -1,38 +1,46 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 use crate::{
   core::{
     config::get_config,
-    error::{Errors, INTERNAL_ERROR},
+    error::{ALREADY_USED_ERROR, Errors, INTERNAL_ERROR, INVALID_ERROR},
   },
-  middleware::user_authorization::UserAuthorization,
-  model::{current_user::CurrentUser, oauth2::oauth2_authorize_url},
+  middleware::{user_authorization::UserAuthorization, validated_json::ValidatedJson},
+  model::{
+    current_user::{CurrentUser, ResetPasswordRequest},
+    oauth2::oauth2_authorize_url,
+  },
   repository::{
     user_email::get_user_emails_by_user_id,
     user_oauth2_provider::get_user_oauth2_providers_by_user_id,
+    user_password::{create_user_password, get_user_active_password_by_user_id},
     user_phone_number::get_user_phone_numbers_by_user_id,
   },
 };
 
 use axum::{
+  Router,
   extract::{Path, State},
   response::IntoResponse,
-  routing::get,
-  Router,
+  routing::{get, post},
 };
+use http::StatusCode;
+use serde_json::json;
 use utoipa::OpenApi;
 
-use super::{oauth2::PKCE_CODE_VERIFIERS, RouterState};
+use super::{RouterState, oauth2::PKCE_CODE_VERIFIERS};
 
 #[derive(OpenApi)]
 #[openapi(
   paths(
     current_user,
+    reset_password,
     add_oauth2_provider,
   ),
   components(
     schemas(
       CurrentUser,
+      ResetPasswordRequest
     )
   ),
   tags(
@@ -177,9 +185,86 @@ pub async fn add_oauth2_provider(
   url.as_str().to_owned().into_response()
 }
 
+#[utoipa::path(
+  post,
+  path = "current-user/reset-password",
+  tags = ["current-user", "oauth2"],
+  request_body = ResetPasswordRequest,
+  responses(
+    (status = 204),
+    (status = 400, content_type = "application/json", body = Errors),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("UserAuthorization" = [])
+  )
+)]
+pub async fn reset_password(
+  State(state): State<RouterState>,
+  UserAuthorization(user, _tenent): UserAuthorization,
+  ValidatedJson(payload): ValidatedJson<ResetPasswordRequest>,
+) -> impl IntoResponse {
+  match get_user_active_password_by_user_id(&state.pool, user.id).await {
+    Ok(Some(user_password)) => match user_password.verify(&payload.current_password) {
+      Ok(true) => {}
+      Ok(false) => {
+        return Errors::bad_request()
+          .with_error("current_password", INVALID_ERROR)
+          .into_response();
+      }
+      Err(e) => {
+        log::error!("Error verifying user password: {}", e);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    },
+    Ok(None) => {}
+    Err(e) => {
+      log::error!("Error getting user password: {}", e);
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+
+  match create_user_password(&state.pool, user.id, &payload.password).await {
+    Ok(_) => {}
+    Err(e) => {
+      match &e {
+        sqlx::Error::Configuration(e) => {
+          if e.to_string().contains("password_already_used") {
+            return Errors::bad_request()
+              .with_error(
+                "password",
+                (
+                  ALREADY_USED_ERROR,
+                  HashMap::from([(
+                    "password.history".to_owned(),
+                    json!(get_config().password.history),
+                  )]),
+                ),
+              )
+              .into_response();
+          }
+        }
+        _ => {}
+      }
+      log::error!("Error creating user password: {}", e);
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+
+  (StatusCode::NO_CONTENT, ()).into_response()
+}
+
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
     .route("/current-user/oauth2/{provider}", get(add_oauth2_provider))
     .route("/current-user", get(current_user))
+    .route("/current-user/reset-password", post(reset_password))
     .with_state(state)
 }

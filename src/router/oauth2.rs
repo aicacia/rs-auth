@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::RwLock, time::Duration};
+use std::{sync::RwLock, time::Duration};
 
 use crate::{
   core::{
@@ -38,7 +38,6 @@ use axum::{
 use expiringmap::ExpiringMap;
 use http::{HeaderValue, StatusCode, header::LOCATION};
 use reqwest::Url;
-use serde_json::json;
 use utoipa::OpenApi;
 
 use super::RouterState;
@@ -274,13 +273,7 @@ pub async fn oauth2_callback(
     Some(email) => email,
     None => {
       log::error!("No email found in openid profile");
-      errors.error(
-        "email",
-        (
-          REQUIRED_ERROR,
-          HashMap::from([("in".to_owned(), json!("oauth2-provider-profile"))]),
-        ),
-      );
+      errors.error("email", REQUIRED_ERROR);
       return redirect_with_error(redirect_url, errors).into_response();
     }
   };

@@ -2,8 +2,9 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 pub const TOKEN_ISSUED_TYPE_PASSWORD: &str = "password";
-pub const TOKEN_ISSUED_TYPE_REFRESH_TOKEN: &str = "refresh_token";
-pub const TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT: &str = "service_account";
+pub const TOKEN_ISSUED_TYPE_REFRESH_TOKEN: &str = "refresh-token";
+pub const TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE: &str = "authorization-code";
+pub const TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT: &str = "service-account";
 
 #[derive(Serialize, ToSchema)]
 pub struct Token {
@@ -11,9 +12,13 @@ pub struct Token {
   pub token_type: String,
   pub issued_token_type: String,
   pub expires_in: i64,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub scope: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub refresh_token: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub refresh_token_expires_in: Option<i64>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub id_token: Option<String>,
 }
 

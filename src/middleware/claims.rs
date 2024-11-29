@@ -1,12 +1,13 @@
 use std::str::FromStr;
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use crate::repository::tenent::TenentRow;
 
 pub const TOKEN_TYPE_BEARER: &str = "bearer";
 pub const TOKEN_TYPE_REFRESH: &str = "refresh";
 pub const TOKEN_TYPE_AUTHORIZATION_CODE: &str = "authorization_code";
+pub const TOKEN_TYPE_RESET_PASSWORD: &str = "reset_password";
 pub const TOKEN_TYPE_ID: &str = "id";
 
 pub const TOKEN_SUB_TYPE_USER: &str = "user";
@@ -136,7 +137,7 @@ pub fn tenent_decoding_key(
     _ => {
       return Err(jsonwebtoken::errors::Error::from(
         jsonwebtoken::errors::ErrorKind::InvalidAlgorithm,
-      ))
+      ));
     }
   }
 }
@@ -154,7 +155,7 @@ pub fn tenent_encoding_key(
     _ => {
       return Err(jsonwebtoken::errors::Error::from(
         jsonwebtoken::errors::ErrorKind::InvalidAlgorithm,
-      ))
+      ));
     }
   }
 }

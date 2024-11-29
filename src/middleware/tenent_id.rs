@@ -1,15 +1,12 @@
-use std::collections::HashMap;
-
 use axum::extract::{FromRef, FromRequestParts};
 use http::request::Parts;
-use serde_json::json;
 
 use crate::{
   core::{
     error::{Errors, PARSE_ERROR, REQUIRED_ERROR},
     openapi::TENENT_ID_HEADER,
   },
-  repository::tenent::{get_tenent_by_client_id, TenentRow},
+  repository::tenent::{TenentRow, get_tenent_by_client_id},
   router::RouterState,
 };
 
@@ -30,54 +27,24 @@ where
         Ok(id_string) => match id_string.parse::<uuid::Uuid>() {
           Ok(client_id) => match get_tenent_by_client_id(&router_state.pool, &client_id).await {
             Ok(Some(tenent)) => Ok(TenentId(tenent)),
-            Ok(None) => Err(Errors::bad_request().with_error(
-              TENENT_ID_HEADER,
-              (
-                PARSE_ERROR,
-                HashMap::from([("in".to_owned(), json!("header"))]),
-              ),
-            )),
+            Ok(None) => Err(Errors::bad_request().with_error(TENENT_ID_HEADER, PARSE_ERROR)),
             Err(e) => {
               log::error!("invalid tenent id: {}", e);
-              Err(Errors::bad_request().with_error(
-                TENENT_ID_HEADER,
-                (
-                  PARSE_ERROR,
-                  HashMap::from([("in".to_owned(), json!("header"))]),
-                ),
-              ))
+              Err(Errors::bad_request().with_error(TENENT_ID_HEADER, PARSE_ERROR))
             }
           },
           Err(e) => {
             log::error!("invalid tenent id: {}", e);
-            Err(Errors::bad_request().with_error(
-              TENENT_ID_HEADER,
-              (
-                PARSE_ERROR,
-                HashMap::from([("in".to_owned(), json!("header"))]),
-              ),
-            ))
+            Err(Errors::bad_request().with_error(TENENT_ID_HEADER, PARSE_ERROR))
           }
         },
         Err(e) => {
           log::error!("invalid tenent id: {}", e);
-          Err(Errors::bad_request().with_error(
-            TENENT_ID_HEADER,
-            (
-              REQUIRED_ERROR,
-              HashMap::from([("in".to_owned(), json!("header"))]),
-            ),
-          ))
+          Err(Errors::bad_request().with_error(TENENT_ID_HEADER, REQUIRED_ERROR))
         }
       }
     } else {
-      Err(Errors::bad_request().with_error(
-        TENENT_ID_HEADER,
-        (
-          REQUIRED_ERROR,
-          HashMap::from([("in".to_owned(), json!("header"))]),
-        ),
-      ))
+      Err(Errors::bad_request().with_error(TENENT_ID_HEADER, REQUIRED_ERROR))
     }
   }
 }

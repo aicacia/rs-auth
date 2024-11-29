@@ -9,8 +9,9 @@ use crate::{core::database::get_pool, repository::user::get_user_by_username};
 pub struct RegisterUser {
   #[validate(length(min = 1), custom(function = "validate_unique_username"))]
   pub username: String,
-  #[validate(must_match(other = "password_confirmation"))]
+  #[validate(length(min = 6), must_match(other = "password_confirmation"))]
   pub password: String,
+  #[validate(length(min = 6))]
   pub password_confirmation: String,
 }
 

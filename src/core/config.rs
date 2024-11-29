@@ -45,6 +45,8 @@ pub struct PasswordConfig {
   pub memory_mib: u32,
   pub iterations: u32,
   pub parallelism: u32,
+  pub history: u8,
+  pub expire_days: u8,
 }
 
 #[derive(Debug, Deserialize)]
@@ -111,6 +113,8 @@ impl Config {
       .set_default("password.memory_mib", 19)?
       .set_default("password.iterations", 2)?
       .set_default("password.parallelism", 1)?
+      .set_default("password.history", 24)?
+      .set_default("password.expire_days", 60)?
       // User Defaults
       .set_default("user.register.enabled", true)?
       .set_default("user.allow_passwords", true)?
