@@ -7,7 +7,7 @@ use crate::{
   repository,
 };
 
-use axum::{extract::State, response::IntoResponse, routing::post, Router};
+use axum::{Router, extract::State, response::IntoResponse, routing::post};
 use http::StatusCode;
 use utoipa::OpenApi;
 
@@ -47,17 +47,14 @@ pub struct ApiDoc;
 )]
 pub async fn create_user(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization(_service_account, _tenent): ServiceAccountAuthorization,
+  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
   ValidatedJson(payload): ValidatedJson<CreateUser>,
 ) -> impl IntoResponse {
-  let new_user = match repository::user::create_user(
-    &state.pool,
-    repository::user::CreateUser {
-      username: payload.username,
-      active: payload.active,
-      user_info: Default::default(),
-    },
-  )
+  let new_user = match repository::user::create_user(&state.pool, repository::user::CreateUser {
+    username: payload.username,
+    active: payload.active,
+    user_info: Default::default(),
+  })
   .await
   {
     Ok(user) => user,

@@ -5,13 +5,20 @@ use crate::{
     config::get_config,
     error::{ALREADY_USED_ERROR, Errors, INTERNAL_ERROR, INVALID_ERROR},
   },
-  middleware::{user_authorization::UserAuthorization, validated_json::ValidatedJson},
+  middleware::{
+    json::Json,
+    openid_claims::{has_address_scope, has_email_scope, has_phone_scope, has_profile_scope},
+    user_authorization::UserAuthorization,
+    validated_json::ValidatedJson,
+  },
   model::{
-    current_user::{CurrentUser, ResetPasswordRequest},
+    current_user::{CurrentUser, ResetPasswordRequest, UpdateUserInfoRequest},
     oauth2::oauth2_authorize_url,
+    user::UserOAuth2Provider,
   },
   repository::{
     user_email::get_user_emails_by_user_id,
+    user_info::{UserInfoUpdate, get_user_info_by_user_id},
     user_oauth2_provider::get_user_oauth2_providers_by_user_id,
     user_password::{create_user_password, get_user_active_password_by_user_id},
     user_phone_number::get_user_phone_numbers_by_user_id,
@@ -22,7 +29,7 @@ use axum::{
   Router,
   extract::{Path, State},
   response::IntoResponse,
-  routing::{get, post},
+  routing::{get, post, put},
 };
 use http::StatusCode;
 use serde_json::json;
@@ -65,41 +72,46 @@ pub struct ApiDoc;
 )]
 pub async fn current_user(
   State(state): State<RouterState>,
-  UserAuthorization(user, _tenent): UserAuthorization,
+  UserAuthorization { user, scopes, .. }: UserAuthorization,
 ) -> impl IntoResponse {
   let mut current_user = CurrentUser::from(user);
 
-  let emails = match get_user_emails_by_user_id(&state.pool, current_user.id).await {
-    Ok(emails) => emails,
-    Err(e) => {
-      log::error!("Error getting user emails: {}", e);
-      return Errors::internal_error()
-        .with_application_error(INTERNAL_ERROR)
-        .into_response();
-    }
-  };
-  for email in emails {
-    if email.is_primary() {
-      current_user.email = Some(email.into());
-    } else {
-      current_user.emails.push(email.into());
+  let show_email = has_email_scope(&scopes);
+  if show_email {
+    let emails = match get_user_emails_by_user_id(&state.pool, current_user.id).await {
+      Ok(emails) => emails,
+      Err(e) => {
+        log::error!("Error getting user emails: {}", e);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
+    for email in emails {
+      if email.is_primary() {
+        current_user.email = Some(email.into());
+      } else {
+        current_user.emails.push(email.into());
+      }
     }
   }
-
-  let phone_numbers = match get_user_phone_numbers_by_user_id(&state.pool, current_user.id).await {
-    Ok(phone_numbers) => phone_numbers,
-    Err(e) => {
-      log::error!("Error getting user phone numbers: {}", e);
-      return Errors::internal_error()
-        .with_application_error(INTERNAL_ERROR)
-        .into_response();
-    }
-  };
-  for phone_number in phone_numbers {
-    if phone_number.is_primary() {
-      current_user.phone_number = Some(phone_number.into());
-    } else {
-      current_user.phone_numbers.push(phone_number.into());
+  if has_phone_scope(&scopes) {
+    let phone_numbers = match get_user_phone_numbers_by_user_id(&state.pool, current_user.id).await
+    {
+      Ok(phone_numbers) => phone_numbers,
+      Err(e) => {
+        log::error!("Error getting user phone numbers: {}", e);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
+    for phone_number in phone_numbers {
+      if phone_number.is_primary() {
+        current_user.phone_number = Some(phone_number.into());
+      } else {
+        current_user.phone_numbers.push(phone_number.into());
+      }
     }
   }
 
@@ -113,8 +125,46 @@ pub async fn current_user(
           .into_response();
       }
     };
-  for oauth2_provider in oauth2_providers {
-    current_user.oauth2_providers.push(oauth2_provider.into());
+  for row in oauth2_providers {
+    let mut oauth2_provider: UserOAuth2Provider = row.into();
+    if !show_email {
+      oauth2_provider.email.clear();
+    }
+    current_user.oauth2_providers.push(oauth2_provider);
+  }
+
+  let show_profile = has_profile_scope(&scopes);
+  let show_address = has_address_scope(&scopes);
+  if show_address || show_profile {
+    let maybe_user_info = match get_user_info_by_user_id(&state.pool, current_user.id).await {
+      Ok(user_info) => user_info,
+      Err(e) => {
+        log::error!("Error getting user info: {}", e);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
+    if let Some(user_info) = maybe_user_info {
+      if show_profile {
+        current_user.info.name = user_info.name;
+        current_user.info.given_name = user_info.given_name;
+        current_user.info.family_name = user_info.family_name;
+        current_user.info.middle_name = user_info.middle_name;
+        current_user.info.nickname = user_info.nickname;
+        current_user.info.profile_picture = user_info.profile_picture;
+        current_user.info.website = user_info.website;
+        current_user.info.gender = user_info.gender;
+        current_user.info.birthdate = user_info.birthdate;
+        current_user.info.zone_info = user_info.zone_info.clone();
+        current_user.info.locale = user_info.locale.clone();
+      }
+      if show_address {
+        current_user.info.address = user_info.address;
+        current_user.info.zone_info = user_info.zone_info;
+        current_user.info.locale = user_info.locale;
+      }
+    }
   }
 
   axum::Json(current_user).into_response()
@@ -139,7 +189,7 @@ pub async fn current_user(
 )]
 pub async fn add_oauth2_provider(
   Path(provider): Path<String>,
-  UserAuthorization(user, tenent): UserAuthorization,
+  UserAuthorization { user, tenent, .. }: UserAuthorization,
 ) -> impl IntoResponse {
   let config = get_config();
   let (url, oauth2_state_token, pkce_code_verifier) = match match provider.as_str() {
@@ -188,7 +238,7 @@ pub async fn add_oauth2_provider(
 #[utoipa::path(
   post,
   path = "current-user/reset-password",
-  tags = ["current-user", "oauth2"],
+  tags = ["current-user"],
   request_body = ResetPasswordRequest,
   responses(
     (status = 204),
@@ -202,7 +252,7 @@ pub async fn add_oauth2_provider(
 )]
 pub async fn reset_password(
   State(state): State<RouterState>,
-  UserAuthorization(user, _tenent): UserAuthorization,
+  UserAuthorization { user, .. }: UserAuthorization,
   ValidatedJson(payload): ValidatedJson<ResetPasswordRequest>,
 ) -> impl IntoResponse {
   match get_user_active_password_by_user_id(&state.pool, user.id).await {
@@ -261,10 +311,59 @@ pub async fn reset_password(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
+#[utoipa::path(
+  put,
+  path = "current-user/info",
+  tags = ["current-user", "openid"],
+  request_body = UpdateUserInfoRequest,
+  responses(
+    (status = 204),
+    (status = 400, content_type = "application/json", body = Errors),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("UserAuthorization" = [])
+  )
+)]
+pub async fn update_user_info(
+  State(state): State<RouterState>,
+  UserAuthorization { user, .. }: UserAuthorization,
+  Json(payload): Json<UpdateUserInfoRequest>,
+) -> impl IntoResponse {
+  match crate::repository::user_info::update_user_info(&state.pool, user.id, UserInfoUpdate {
+    name: payload.name,
+    given_name: payload.given_name,
+    family_name: payload.family_name,
+    middle_name: payload.middle_name,
+    nickname: payload.nickname,
+    profile_picture: payload.profile_picture,
+    website: payload.website,
+    gender: payload.gender,
+    birthdate: payload.birthdate,
+    address: payload.address,
+    zone_info: payload.zone_info,
+    locale: payload.locale,
+  })
+  .await
+  {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("Error updating user info: {}", e);
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+
+  (StatusCode::NO_CONTENT, ()).into_response()
+}
+
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
     .route("/current-user/oauth2/{provider}", get(add_oauth2_provider))
     .route("/current-user", get(current_user))
     .route("/current-user/reset-password", post(reset_password))
+    .route("/current-user/info", put(update_user_info))
     .with_state(state)
 }

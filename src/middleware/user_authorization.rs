@@ -16,7 +16,11 @@ use crate::{
   router::RouterState,
 };
 
-pub struct UserAuthorization(pub UserRow, pub TenentRow);
+pub struct UserAuthorization {
+  pub user: UserRow,
+  pub tenent: TenentRow,
+  pub scopes: Vec<String>,
+}
 
 impl<S> FromRequestParts<S> for UserAuthorization
 where
@@ -95,7 +99,11 @@ where
             log::error!("invalid authorization user is not active");
             return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
           }
-          return Ok(Self(user, tenent));
+          return Ok(Self {
+            user,
+            tenent,
+            scopes: token_data.claims.scopes,
+          });
         }
         Ok(None) => {
           return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));

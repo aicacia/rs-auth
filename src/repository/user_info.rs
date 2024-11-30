@@ -1,4 +1,4 @@
-#[derive(sqlx::FromRow)]
+#[derive(Debug, sqlx::FromRow)]
 pub struct UserInfoRow {
   pub user_id: i64,
   pub name: Option<String>,

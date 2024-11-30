@@ -4,8 +4,8 @@ use utoipa::ToSchema;
 use validator::Validate;
 
 use crate::repository::{
-  user::UserRow, user_email::UserEmailRow, user_oauth2_provider::UserOAuth2ProviderRow,
-  user_phone_number::UserPhoneNumberRow,
+  user::UserRow, user_email::UserEmailRow, user_info::UserInfoRow,
+  user_oauth2_provider::UserOAuth2ProviderRow, user_phone_number::UserPhoneNumberRow,
 };
 
 #[derive(Serialize, ToSchema)]
@@ -13,8 +13,10 @@ pub struct User {
   pub id: i64,
   pub username: String,
   pub active: bool,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub email: Option<UserEmail>,
   pub emails: Vec<UserEmail>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub phone_number: Option<UserPhoneNumber>,
   pub phone_numbers: Vec<UserPhoneNumber>,
   pub oauth2_providers: Vec<UserOAuth2Provider>,
@@ -35,6 +37,53 @@ impl From<UserRow> for User {
       oauth2_providers: Vec::default(),
       created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
+    }
+  }
+}
+
+#[derive(Serialize, ToSchema, Default)]
+pub struct UserInfo {
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub name: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub given_name: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub family_name: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub middle_name: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub nickname: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub profile_picture: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub website: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub gender: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub birthdate: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub zone_info: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub locale: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub address: Option<String>,
+}
+
+impl From<UserInfoRow> for UserInfo {
+  fn from(row: UserInfoRow) -> Self {
+    Self {
+      name: row.name,
+      given_name: row.given_name,
+      family_name: row.family_name,
+      middle_name: row.middle_name,
+      nickname: row.nickname,
+      profile_picture: row.profile_picture,
+      website: row.website,
+      gender: row.gender,
+      birthdate: row.birthdate,
+      zone_info: row.zone_info,
+      locale: row.locale,
+      address: row.address,
     }
   }
 }
@@ -89,6 +138,7 @@ impl From<UserPhoneNumberRow> for UserPhoneNumber {
 pub struct UserOAuth2Provider {
   pub id: i64,
   pub provider: String,
+  #[serde(skip_serializing_if = "String::is_empty")]
   pub email: String,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
