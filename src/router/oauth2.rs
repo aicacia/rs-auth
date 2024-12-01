@@ -378,7 +378,7 @@ pub async fn oauth2_callback(
     }
   };
 
-  redirect_url.set_query(Some(&format!("authorization_code={authorization_code}")));
+  redirect_url.set_query(Some(&format!("authorization-code={authorization_code}")));
   redirect(redirect_url).into_response()
 }
 

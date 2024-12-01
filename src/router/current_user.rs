@@ -69,7 +69,7 @@ pub struct ApiDoc;
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("UserAuthorization" = [])
+    ("Authorization" = [])
   )
 )]
 pub async fn current_user(
@@ -187,7 +187,7 @@ pub async fn current_user(
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("UserAuthorization" = [])
+    ("Authorization" = [])
   )
 )]
 pub async fn add_oauth2_provider(
@@ -250,7 +250,7 @@ pub async fn add_oauth2_provider(
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("UserAuthorization" = [])
+    ("Authorization" = [])
   )
 )]
 pub async fn reset_password(
@@ -326,7 +326,7 @@ pub async fn reset_password(
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("UserAuthorization" = [])
+    ("Authorization" = [])
   )
 )]
 pub async fn update_user_info(

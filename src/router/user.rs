@@ -4,10 +4,15 @@ use crate::{
     service_account_authorization::ServiceAccountAuthorization, validated_json::ValidatedJson,
   },
   model::user::{CreateUser, User},
-  repository,
+  repository::{self, user::get_users},
 };
 
-use axum::{Router, extract::State, response::IntoResponse, routing::post};
+use axum::{
+  Router,
+  extract::State,
+  response::IntoResponse,
+  routing::{get, post},
+};
 use http::StatusCode;
 use utoipa::OpenApi;
 
@@ -16,6 +21,7 @@ use super::RouterState;
 #[derive(OpenApi)]
 #[openapi(
   paths(
+    users,
     create_user,
   ),
   components(
@@ -31,8 +37,36 @@ use super::RouterState;
 pub struct ApiDoc;
 
 #[utoipa::path(
+  get,
+  path = "users",
+  tags = ["user"],
+  responses(
+    (status = 200, content_type = "application/json", body = Vec<User>),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+pub async fn users(
+  State(state): State<RouterState>,
+  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+) -> impl IntoResponse {
+  let user_rows = match get_users(&state.pool).await {
+    Ok(users) => users,
+    Err(e) => {
+      log::error!("error getting users: {}", e);
+      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+    }
+  };
+  let users: Vec<User> = user_rows.into_iter().map(Into::into).collect();
+  axum::Json(users).into_response()
+}
+
+#[utoipa::path(
   post,
-  path = "user",
+  path = "users",
   tags = ["user"],
   request_body = CreateUser,
   responses(
@@ -42,7 +76,7 @@ pub struct ApiDoc;
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("ServiceAccountAuthorization" = [])
+    ("Authorization" = [])
   )
 )]
 pub async fn create_user(
@@ -68,6 +102,7 @@ pub async fn create_user(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/user", post(create_user))
+    .route("/users", get(users))
+    .route("/users", post(create_user))
     .with_state(state)
 }

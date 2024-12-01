@@ -1,14 +1,14 @@
 use crate::{
   core::{
     config::get_config,
-    error::{Errors, INTERNAL_ERROR, INVALID_ERROR, REQUIRED_ERROR},
-    openapi::AUTHORIZATION_HEADER,
+    error::{Errors, INTERNAL_ERROR},
   },
   middleware::{
+    authorization::Authorization,
     claims::{
       BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
       TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_MFA_TOTP,
-      TOKEN_TYPE_REFRESH, TOKEN_TYPE_RESET_PASSWORD, parse_jwt, valid_jwt,
+      TOKEN_TYPE_REFRESH, TOKEN_TYPE_RESET_PASSWORD, parse_jwt,
     },
     json::Json,
     openid_claims::{
@@ -36,7 +36,7 @@ use crate::{
 use axum::{
   Router,
   extract::State,
-  http::{HeaderMap, StatusCode},
+  http::StatusCode,
   response::IntoResponse,
   routing::{get, post},
 };
@@ -74,44 +74,11 @@ pub struct ApiDoc;
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("TenentId" = []),
     ("Authorization" = [])
   )
 )]
-pub async fn token_is_valid(TenentId(tenent): TenentId, headers: HeaderMap) -> impl IntoResponse {
-  if let Some(authorization_header_value) = headers.get(AUTHORIZATION_HEADER) {
-    let authorization_string = match authorization_header_value.to_str() {
-      Ok(authorization_string) => {
-        if authorization_string.len() < TOKEN_TYPE_BEARER.len() + 1 {
-          log::error!("invalid authorization header is missing");
-          return Errors::unauthorized()
-            .with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR)
-            .into_response();
-        }
-        &authorization_string[(TOKEN_TYPE_BEARER.len() + 1)..]
-      }
-      Err(e) => {
-        log::error!("invalid authorization header is missing: {}", e);
-        return Errors::unauthorized()
-          .with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR)
-          .into_response();
-      }
-    };
-    match valid_jwt(authorization_string, &tenent) {
-      Ok(_) => {}
-      Err(e) => {
-        log::error!("invalid authorization header: {}", e);
-        return Errors::unauthorized()
-          .with_error(AUTHORIZATION_HEADER, INVALID_ERROR)
-          .into_response();
-      }
-    }
-    (StatusCode::NO_CONTENT, ()).into_response()
-  } else {
-    Errors::unauthorized()
-      .with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR)
-      .into_response()
-  }
+pub async fn token_is_valid(Authorization { .. }: Authorization) -> impl IntoResponse {
+  (StatusCode::NO_CONTENT, ()).into_response()
 }
 
 #[utoipa::path(

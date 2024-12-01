@@ -2,8 +2,15 @@ use axum::{Router, extract::State, response::IntoResponse, routing::post};
 use utoipa::OpenApi;
 
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR, INVALID_ERROR, REQUIRED_ERROR},
-  middleware::{authorization::Authorization, claims::BasicClaims, json::Json},
+  core::{
+    error::{Errors, INTERNAL_ERROR, INVALID_ERROR, REQUIRED_ERROR},
+    openapi::AUTHORIZATION_HEADER,
+  },
+  middleware::{
+    authorization::Authorization,
+    claims::{BasicClaims, TOKEN_TYPE_MFA_TOTP},
+    json::Json,
+  },
   model::{
     mfa::MFARequest,
     token::{TOKEN_ISSUED_TYPE_MFA, Token},
@@ -62,6 +69,11 @@ async fn totp_request(
   tenent: TenentRow,
   code: String,
 ) -> impl IntoResponse {
+  if claims.kind != TOKEN_TYPE_MFA_TOTP {
+    return Errors::unauthorized()
+      .with_error(AUTHORIZATION_HEADER, "invalid-token-type")
+      .into_response();
+  }
   let user = match get_user_by_id(pool, claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => {

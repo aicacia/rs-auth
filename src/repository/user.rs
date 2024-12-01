@@ -19,6 +19,15 @@ impl UserRow {
   }
 }
 
+pub async fn get_users(pool: &sqlx::AnyPool) -> sqlx::Result<Vec<UserRow>> {
+  sqlx::query_as(
+    r#"SELECT u.*
+    FROM users u;"#,
+  )
+  .fetch_all(pool)
+  .await
+}
+
 pub async fn get_user_by_id(pool: &sqlx::AnyPool, user_id: i64) -> sqlx::Result<Option<UserRow>> {
   sqlx::query_as(
     r#"SELECT u.*

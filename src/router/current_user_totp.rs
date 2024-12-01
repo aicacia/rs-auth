@@ -45,7 +45,7 @@ pub struct ApiDoc;
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("UserAuthorization" = [])
+    ("Authorization" = [])
   )
 )]
 pub async fn create_totp(
@@ -84,7 +84,7 @@ pub async fn create_totp(
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("UserAuthorization" = [])
+    ("Authorization" = [])
   )
 )]
 pub async fn delete_totp(

@@ -88,11 +88,6 @@ impl Claims for BasicClaims {
   }
 }
 
-pub fn valid_jwt(jwt: &str, tenent: &TenentRow) -> Result<(), jsonwebtoken::errors::Error> {
-  parse_jwt::<BasicClaims>(jwt, tenent)?;
-  Ok(())
-}
-
 pub fn parse_jwt<T>(
   jwt: &str,
   tenent: &TenentRow,

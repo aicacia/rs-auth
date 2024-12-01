@@ -33,13 +33,13 @@ pub enum TokenRequest {
     password: String,
     scope: Option<String>,
   },
-  #[serde(rename = "refresh_token")]
+  #[serde(rename = "refresh-token")]
   RefreshToken { refresh_token: String },
-  #[serde(rename = "service_account")]
+  #[serde(rename = "service-account")]
   ServiceAccount {
     client_id: uuid::Uuid,
     secret: uuid::Uuid,
   },
-  #[serde(rename = "authorization_code")]
+  #[serde(rename = "authorization-code")]
   AuthorizationCode { code: String },
 }

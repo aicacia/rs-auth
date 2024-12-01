@@ -33,7 +33,7 @@ Tenent-Id: 6fcf0235-cb11-4160-9df8-b9114f8dcdae
 
 ```json
 {
-  "grant_type": "service_account",
+  "grant_type": "service-account",
   "client_id": "dba9fb13-f2d0-498e-aaf2-65c435ffe797",
   "secret": "7694ab3c-a1e0-4345-accc-85504ad475d8"
 }
