@@ -19,7 +19,8 @@ fn validate_unique_username(username: &str) -> Result<(), validator::ValidationE
   match tokio::task::block_in_place(move || {
     Handle::current().block_on(async move { get_user_by_username(&get_pool(), username).await })
   }) {
-    Ok(_) => Err(validator::ValidationError::new("unique_username")),
+    Ok(Some(_)) => Err(validator::ValidationError::new("unique_username")),
+    Ok(None) => Ok(()),
     Err(_) => Ok(()),
   }
 }

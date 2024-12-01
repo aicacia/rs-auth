@@ -50,13 +50,8 @@ pub struct PasswordConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct RegisterConfig {
-  pub enabled: bool,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct UserConfig {
-  pub register: RegisterConfig,
+  pub register_enabled: bool,
   pub allow_passwords: bool,
 }
 
@@ -116,7 +111,7 @@ impl Config {
       .set_default("password.history", 24)?
       .set_default("password.expire_days", 60)?
       // User Defaults
-      .set_default("user.register.enabled", true)?
+      .set_default("user.register_enabled", false)?
       .set_default("user.allow_passwords", true)?
       // OAuth2 Defaults
       .set_default("oauth2.code_timeout_in_seconds", 60 * 5)?

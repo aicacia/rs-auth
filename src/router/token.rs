@@ -422,7 +422,7 @@ async fn create_service_token_token(
     .into_response()
 }
 
-async fn create_user_token(
+pub(crate) async fn create_user_token(
   pool: &AnyPool,
   tenent: TenentRow,
   user: UserRow,

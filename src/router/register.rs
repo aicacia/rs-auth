@@ -1,7 +1,10 @@
 use crate::{
-  core::error::Errors,
-  middleware::validated_json::ValidatedJson,
-  model::{register::RegisterUser, user::User},
+  core::{
+    config::get_config,
+    error::{Errors, NOT_ALLOWED_ERROR},
+  },
+  middleware::{openid_claims::SCOPE_OPENID, tenent_id::TenentId, validated_json::ValidatedJson},
+  model::{register::RegisterUser, token::TOKEN_ISSUED_TYPE_REGISTER, user::User},
   repository::user::{CreateUserWithPassword, create_user_with_password},
 };
 
@@ -9,7 +12,7 @@ use axum::{Router, extract::State, response::IntoResponse, routing::post};
 use http::StatusCode;
 use utoipa::OpenApi;
 
-use super::RouterState;
+use super::{RouterState, token::create_user_token};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -45,8 +48,14 @@ pub struct ApiDoc;
 )]
 pub async fn register(
   State(state): State<RouterState>,
+  TenentId(tenent): TenentId,
   ValidatedJson(payload): ValidatedJson<RegisterUser>,
 ) -> impl IntoResponse {
+  if !get_config().user.register_enabled {
+    return Errors::from(StatusCode::FORBIDDEN)
+      .with_application_error(NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let new_user = match create_user_with_password(&state.pool, CreateUserWithPassword {
     username: payload.username,
     password: payload.password,
@@ -59,7 +68,15 @@ pub async fn register(
       return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
     }
   };
-  axum::Json(User::from(new_user)).into_response()
+  create_user_token(
+    &state.pool,
+    tenent,
+    new_user,
+    Some(SCOPE_OPENID.to_owned()),
+    TOKEN_ISSUED_TYPE_REGISTER.to_owned(),
+  )
+  .await
+  .into_response()
 }
 
 pub fn create_router(state: RouterState) -> Router {
