@@ -9,7 +9,7 @@ pub struct UserInfoRow {
   pub profile_picture: Option<String>,
   pub website: Option<String>,
   pub gender: Option<String>,
-  pub birthdate: Option<String>,
+  pub birthdate: Option<i64>,
   pub zone_info: Option<String>,
   pub locale: Option<String>,
   pub address: Option<String>,
@@ -42,7 +42,7 @@ pub struct UserInfoUpdate {
   pub profile_picture: Option<String>,
   pub website: Option<String>,
   pub gender: Option<String>,
-  pub birthdate: Option<String>,
+  pub birthdate: Option<i64>,
   pub zone_info: Option<String>,
   pub locale: Option<String>,
   pub address: Option<String>,
@@ -54,7 +54,7 @@ pub async fn update_user_info(
   updates: UserInfoUpdate,
 ) -> sqlx::Result<UserInfoRow> {
   sqlx::query_as(
-    r#"UPDATE SET
+    r#"UPDATE user_infos SET
       name = COALESCE($2, name),
       given_name = COALESCE($3, given_name),
       family_name = COALESCE($4, family_name),

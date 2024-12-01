@@ -32,6 +32,21 @@ pub async fn get_user_by_email(pool: &sqlx::AnyPool, email: &str) -> sqlx::Resul
   .await
 }
 
+pub async fn get_user_primary_email(
+  pool: &sqlx::AnyPool,
+  user_id: i64,
+) -> sqlx::Result<Option<UserEmailRow>> {
+  sqlx::query_as(
+    r#"SELECT ue.*
+    FROM user_emails ue
+    WHERE ue.user_id = $1 AND ue."primary" = TRUE 
+    LIMIT 1;"#,
+  )
+  .bind(user_id)
+  .fetch_optional(pool)
+  .await
+}
+
 pub async fn get_user_emails_by_user_id(
   pool: &sqlx::AnyPool,
   user_id: i64,

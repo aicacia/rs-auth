@@ -25,8 +25,10 @@ use crate::{
     service_account::{ServiceAccountRow, get_service_account_by_client_id},
     tenent::TenentRow,
     user::{UserRow, get_user_by_id, get_user_by_username},
+    user_email::get_user_primary_email,
     user_info::get_user_info_by_user_id,
     user_password::get_user_active_password_by_user_id,
+    user_phone_number::get_user_primary_phone_number,
   },
 };
 
@@ -37,6 +39,7 @@ use axum::{
   response::IntoResponse,
   routing::{get, post},
 };
+use chrono::{DateTime, Utc};
 use sqlx::AnyPool;
 use utoipa::OpenApi;
 
@@ -466,8 +469,8 @@ async fn create_user_token(
   };
 
   let mut id_token = None;
-  let show_address = has_profile_scope(&scopes);
-  let show_profile = has_address_scope(&scopes);
+  let show_address = has_address_scope(&scopes);
+  let show_profile = has_profile_scope(&scopes);
   let show_email = has_email_scope(&scopes);
   let show_phone = has_phone_scope(&scopes);
   if show_address || show_profile || show_email || show_phone {
@@ -492,32 +495,54 @@ async fn create_user_token(
         }
       };
       if show_address {
-        id_claims.address = user_info.address;
+        id_claims.profile.address = user_info.address;
       }
       if show_profile {
-        id_claims.name = user_info.name;
-        id_claims.given_name = user_info.given_name;
-        id_claims.family_name = user_info.family_name;
-        id_claims.middle_name = user_info.middle_name;
-        id_claims.nickname = user_info.nickname;
-        id_claims.preferred_username = Some(user.username.clone());
-        id_claims.profile_picture = user_info.profile_picture;
-        id_claims.website = user_info.website;
-        id_claims.gender = user_info.gender;
-        id_claims.birthdate = user_info.birthdate;
-        id_claims.zone_info = user_info.zone_info;
-        id_claims.locale = user_info.locale;
+        id_claims.profile.name = user_info.name;
+        id_claims.profile.given_name = user_info.given_name;
+        id_claims.profile.family_name = user_info.family_name;
+        id_claims.profile.middle_name = user_info.middle_name;
+        id_claims.profile.nickname = user_info.nickname;
+        id_claims.profile.preferred_username = Some(user.username.clone());
+        id_claims.profile.profile_picture = user_info.profile_picture;
+        id_claims.profile.website = user_info.website;
+        id_claims.profile.gender = user_info.gender;
+        id_claims.profile.birthdate = user_info
+          .birthdate
+          .map(|birthdate| DateTime::<Utc>::from_timestamp(birthdate, 0).unwrap_or_default());
+        id_claims.profile.zone_info = user_info.zone_info;
+        id_claims.profile.locale = user_info.locale;
       }
     }
     if show_email {
-      // TODO: get email
-      id_claims.email = None;
-      id_claims.email_verified = None;
+      match get_user_primary_email(pool, user.id).await {
+        Ok(Some(email)) => {
+          id_claims.profile.email_verified = Some(email.is_verified());
+          id_claims.profile.email = Some(email.email);
+        }
+        Ok(None) => {}
+        Err(e) => {
+          log::error!("Error getting user primary email: {}", e);
+          return Errors::internal_error()
+            .with_application_error(INTERNAL_ERROR)
+            .into_response();
+        }
+      }
     }
     if show_phone {
-      // TODO: get phone number
-      id_claims.phone_number = None;
-      id_claims.phone_number_verified = None;
+      match get_user_primary_phone_number(pool, user.id).await {
+        Ok(Some(phone_number)) => {
+          id_claims.profile.phone_number_verified = Some(phone_number.is_verified());
+          id_claims.profile.phone_number = Some(phone_number.phone_number);
+        }
+        Ok(None) => {}
+        Err(e) => {
+          log::error!("Error getting user primary phone number: {}", e);
+          return Errors::internal_error()
+            .with_application_error(INTERNAL_ERROR)
+            .into_response();
+        }
+      }
     }
     id_claims.claims.kind = TOKEN_TYPE_ID.to_owned();
     id_token = match id_claims.encode(&tenent) {

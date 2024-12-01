@@ -18,6 +18,21 @@ impl UserPhoneNumberRow {
   }
 }
 
+pub async fn get_user_primary_phone_number(
+  pool: &sqlx::AnyPool,
+  user_id: i64,
+) -> sqlx::Result<Option<UserPhoneNumberRow>> {
+  sqlx::query_as(
+    r#"SELECT upn.*
+    FROM user_phone_numbers upn
+    WHERE upn.user_id = $1 AND upn."primary" = TRUE 
+    LIMIT 1;"#,
+  )
+  .bind(user_id)
+  .fetch_optional(pool)
+  .await
+}
+
 pub async fn get_user_phone_numbers_by_user_id(
   pool: &sqlx::AnyPool,
   user_id: i64,

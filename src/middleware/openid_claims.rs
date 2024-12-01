@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::claims::{BasicClaims, Claims};
@@ -9,9 +10,7 @@ pub const SCOPE_PHONE: &str = "phone";
 pub const SCOPE_ADDRESS: &str = "address";
 
 #[derive(Serialize, Deserialize, Default, Clone)]
-pub struct OpenIdClaims {
-  #[serde(flatten)]
-  pub claims: BasicClaims,
+pub struct OpenIdProfile {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub name: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -35,7 +34,7 @@ pub struct OpenIdClaims {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub gender: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub birthdate: Option<String>,
+  pub birthdate: Option<DateTime<Utc>>,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub zone_info: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -46,6 +45,14 @@ pub struct OpenIdClaims {
   pub phone_number_verified: Option<bool>,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub address: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct OpenIdClaims {
+  #[serde(flatten)]
+  pub claims: BasicClaims,
+  #[serde(flatten)]
+  pub profile: OpenIdProfile,
 }
 
 unsafe impl Send for OpenIdClaims {}

@@ -57,7 +57,7 @@ where
       if maybe_invalid_token.claims.kind != TOKEN_TYPE_BEARER
         || maybe_invalid_token.claims.sub_kind != TOKEN_SUB_TYPE_SERVICE_ACCOUNT
       {
-        return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
+        return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, "invalid-token-type"));
       }
       let tenent_id = match maybe_invalid_token
         .header

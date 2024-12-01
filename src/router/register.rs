@@ -1,11 +1,11 @@
 use crate::{
   core::error::Errors,
   middleware::validated_json::ValidatedJson,
-  model::{current_user::CurrentUser, register::RegisterUser, user::User},
-  repository::user::{create_user_with_password, CreateUserWithPassword},
+  model::{register::RegisterUser, user::User},
+  repository::user::{CreateUserWithPassword, create_user_with_password},
 };
 
-use axum::{extract::State, response::IntoResponse, routing::post, Router};
+use axum::{Router, extract::State, response::IntoResponse, routing::post};
 use http::StatusCode;
 use utoipa::OpenApi;
 
@@ -18,7 +18,7 @@ use super::RouterState;
   ),
   components(
     schemas(
-      CurrentUser,
+      User,
       RegisterUser,
     )
   ),
@@ -47,13 +47,10 @@ pub async fn register(
   State(state): State<RouterState>,
   ValidatedJson(payload): ValidatedJson<RegisterUser>,
 ) -> impl IntoResponse {
-  let new_user = match create_user_with_password(
-    &state.pool,
-    CreateUserWithPassword {
-      username: payload.username,
-      password: payload.password,
-    },
-  )
+  let new_user = match create_user_with_password(&state.pool, CreateUserWithPassword {
+    username: payload.username,
+    password: payload.password,
+  })
   .await
   {
     Ok(user) => user,
@@ -62,7 +59,7 @@ pub async fn register(
       return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
     }
   };
-  axum::Json(CurrentUser::from(new_user)).into_response()
+  axum::Json(User::from(new_user)).into_response()
 }
 
 pub fn create_router(state: RouterState) -> Router {

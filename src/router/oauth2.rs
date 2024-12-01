@@ -35,6 +35,7 @@ use axum::{
   response::IntoResponse,
   routing::get,
 };
+use chrono::DateTime;
 use expiringmap::ExpiringMap;
 use http::{HeaderValue, StatusCode, header::LOCATION};
 use reqwest::Url;
@@ -307,7 +308,7 @@ pub async fn oauth2_callback(
         profile_picture: openid_profile.profile_picture,
         website: openid_profile.website,
         gender: openid_profile.gender,
-        birthdate: openid_profile.birthdate,
+        birthdate: openid_profile.birthdate.as_ref().map(DateTime::timestamp),
         zone_info: openid_profile.zone_info,
         locale: openid_profile.locale,
         address: openid_profile.address,

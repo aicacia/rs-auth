@@ -12,9 +12,9 @@ use crate::{
     validated_json::ValidatedJson,
   },
   model::{
-    current_user::{CurrentUser, ResetPasswordRequest, UpdateUserInfoRequest},
+    current_user::{ResetPasswordRequest, UpdateUserInfoRequest},
     oauth2::oauth2_authorize_url,
-    user::UserOAuth2Provider,
+    user::{User, UserOAuth2Provider},
   },
   repository::{
     user_email::get_user_emails_by_user_id,
@@ -31,6 +31,7 @@ use axum::{
   response::IntoResponse,
   routing::{get, post, put},
 };
+use chrono::{DateTime, Utc};
 use http::StatusCode;
 use serde_json::json;
 use utoipa::OpenApi;
@@ -43,11 +44,13 @@ use super::{RouterState, oauth2::PKCE_CODE_VERIFIERS};
     current_user,
     reset_password,
     add_oauth2_provider,
+    update_user_info,
   ),
   components(
     schemas(
-      CurrentUser,
-      ResetPasswordRequest
+      User,
+      ResetPasswordRequest,
+      UpdateUserInfoRequest
     )
   ),
   tags(
@@ -61,7 +64,7 @@ pub struct ApiDoc;
   path = "current-user",
   tags = ["current-user"],
   responses(
-    (status = 200, content_type = "application/json", body = CurrentUser),
+    (status = 200, content_type = "application/json", body = User),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -74,7 +77,7 @@ pub async fn current_user(
   State(state): State<RouterState>,
   UserAuthorization { user, scopes, .. }: UserAuthorization,
 ) -> impl IntoResponse {
-  let mut current_user = CurrentUser::from(user);
+  let mut current_user = User::from(user);
 
   let show_email = has_email_scope(&scopes);
   if show_email {
@@ -128,7 +131,7 @@ pub async fn current_user(
   for row in oauth2_providers {
     let mut oauth2_provider: UserOAuth2Provider = row.into();
     if !show_email {
-      oauth2_provider.email.clear();
+      oauth2_provider.email.take();
     }
     current_user.oauth2_providers.push(oauth2_provider);
   }
@@ -155,7 +158,9 @@ pub async fn current_user(
         current_user.info.profile_picture = user_info.profile_picture;
         current_user.info.website = user_info.website;
         current_user.info.gender = user_info.gender;
-        current_user.info.birthdate = user_info.birthdate;
+        current_user.info.birthdate = user_info
+          .birthdate
+          .map(|birthdate| DateTime::<Utc>::from_timestamp(birthdate, 0).unwrap_or_default());
         current_user.info.zone_info = user_info.zone_info.clone();
         current_user.info.locale = user_info.locale.clone();
       }
@@ -340,7 +345,7 @@ pub async fn update_user_info(
     profile_picture: payload.profile_picture,
     website: payload.website,
     gender: payload.gender,
-    birthdate: payload.birthdate,
+    birthdate: payload.birthdate.as_ref().map(DateTime::timestamp),
     address: payload.address,
     zone_info: payload.zone_info,
     locale: payload.locale,

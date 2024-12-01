@@ -1,11 +1,10 @@
-use std::{io, str::FromStr};
-
 use serde::{Deserialize, Serialize};
+use std::{io, str::FromStr};
 use utoipa::IntoParams;
 
 use crate::{
   core::config::{OAuth2Config, get_config},
-  middleware::claims::tenent_encoding_key,
+  middleware::{claims::tenent_encoding_key, openid_claims::OpenIdProfile},
   repository::tenent::TenentRow,
 };
 
@@ -106,44 +105,6 @@ pub fn oauth2_authorize_url(
     .url();
 
   Ok((url, oauth2_state_token, pkce_code_verifier))
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct OpenIdProfile {
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub name: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub given_name: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub family_name: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub middle_name: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub nickname: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub preferred_username: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub profile_picture: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub website: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub email: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub email_verified: Option<bool>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub gender: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub birthdate: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub zone_info: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub locale: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub phone_number: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub phone_number_verified: Option<bool>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub address: Option<String>,
 }
 
 async fn oauth2_google_profile(

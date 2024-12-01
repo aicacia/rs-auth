@@ -20,6 +20,7 @@ pub struct User {
   pub phone_number: Option<UserPhoneNumber>,
   pub phone_numbers: Vec<UserPhoneNumber>,
   pub oauth2_providers: Vec<UserOAuth2Provider>,
+  pub info: UserInfo,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
 }
@@ -35,6 +36,7 @@ impl From<UserRow> for User {
       phone_number: None,
       phone_numbers: Vec::default(),
       oauth2_providers: Vec::default(),
+      info: UserInfo::default(),
       created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
     }
@@ -60,7 +62,7 @@ pub struct UserInfo {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub gender: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub birthdate: Option<String>,
+  pub birthdate: Option<DateTime<Utc>>,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub zone_info: Option<String>,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -80,7 +82,9 @@ impl From<UserInfoRow> for UserInfo {
       profile_picture: row.profile_picture,
       website: row.website,
       gender: row.gender,
-      birthdate: row.birthdate,
+      birthdate: row
+        .birthdate
+        .map(|birthdate| DateTime::<Utc>::from_timestamp(birthdate, 0).unwrap_or_default()),
       zone_info: row.zone_info,
       locale: row.locale,
       address: row.address,
@@ -138,8 +142,8 @@ impl From<UserPhoneNumberRow> for UserPhoneNumber {
 pub struct UserOAuth2Provider {
   pub id: i64,
   pub provider: String,
-  #[serde(skip_serializing_if = "String::is_empty")]
-  pub email: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub email: Option<String>,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
 }
@@ -149,7 +153,7 @@ impl From<UserOAuth2ProviderRow> for UserOAuth2Provider {
     Self {
       id: row.id,
       provider: row.provider,
-      email: row.email,
+      email: Some(row.email),
       created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
     }
