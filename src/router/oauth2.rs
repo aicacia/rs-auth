@@ -72,7 +72,6 @@ pub struct ApiDoc;
   ),
   responses(
     (status = 200, content_type = "text/plain", body = String),
-    (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
   ),
@@ -139,7 +138,6 @@ pub async fn oauth2(
   ),
   responses(
     (status = 302),
-    (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
   )

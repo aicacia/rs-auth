@@ -7,8 +7,8 @@ use crate::{
   middleware::{
     claims::{
       BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
-      TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_REFRESH,
-      TOKEN_TYPE_RESET_PASSWORD, parse_jwt, valid_jwt,
+      TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_MFA_TOTP,
+      TOKEN_TYPE_REFRESH, TOKEN_TYPE_RESET_PASSWORD, parse_jwt, valid_jwt,
     },
     json::Json,
     openid_claims::{
@@ -29,6 +29,7 @@ use crate::{
     user_info::get_user_info_by_user_id,
     user_password::get_user_active_password_by_user_id,
     user_phone_number::get_user_primary_phone_number,
+    user_totp::get_user_totp_by_user_id,
   },
 };
 
@@ -212,7 +213,7 @@ async fn password_request(
   if expire_days > 0 {
     let expire_time = user_password.created_at + ((expire_days as i64) * 24 * 60 * 60);
     if chrono::Utc::now().timestamp() >= expire_time {
-      return create_password_reset_token(
+      return create_reset_password_token(
         pool,
         tenent,
         user,
@@ -229,6 +230,7 @@ async fn password_request(
     user,
     scope,
     TOKEN_ISSUED_TYPE_PASSWORD.to_owned(),
+    false,
   )
   .await
   .into_response()
@@ -275,6 +277,7 @@ async fn refresh_token_request(
     user,
     if scope.is_empty() { None } else { Some(scope) },
     TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
+    false,
   )
   .await
   .into_response()
@@ -317,6 +320,7 @@ async fn authorization_code_request(
     user,
     if scope.is_empty() { None } else { Some(scope) },
     TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE.to_owned(),
+    false,
   )
   .await
   .into_response()
@@ -428,7 +432,31 @@ pub(crate) async fn create_user_token(
   user: UserRow,
   scope: Option<String>,
   issued_token_type: String,
+  mfa_validated: bool,
 ) -> impl IntoResponse {
+  if !mfa_validated {
+    match get_user_totp_by_user_id(pool, user.id).await {
+      Ok(Some(_)) => {
+        return create_mfa_token(
+          pool,
+          tenent,
+          user,
+          scope,
+          issued_token_type,
+          TOKEN_TYPE_MFA_TOTP.to_owned(),
+        )
+        .await
+        .into_response();
+      }
+      Ok(None) => {}
+      Err(e) => {
+        log::error!("error fetching user totp from database: {}", e);
+        return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    }
+  }
   let now = chrono::Utc::now();
   let scopes = parse_scopes(scope.as_ref().map(String::as_str));
 
@@ -572,7 +600,7 @@ pub(crate) async fn create_user_token(
     .into_response()
 }
 
-async fn create_password_reset_token(
+async fn create_reset_password_token(
   _pool: &AnyPool,
   tenent: TenentRow,
   user: UserRow,
@@ -584,6 +612,56 @@ async fn create_password_reset_token(
 
   let claims = BasicClaims {
     kind: TOKEN_TYPE_RESET_PASSWORD.to_owned(),
+    app: tenent.id,
+    sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
+    sub: user.id,
+    iat: now.timestamp(),
+    nbf: now.timestamp(),
+    exp: now.timestamp() + tenent.expires_in_seconds,
+    iss: tenent.issuer.clone(),
+    aud: tenent.audience.clone(),
+    scopes: scopes.clone(),
+  };
+
+  let access_token = match claims.encode(&tenent) {
+    Ok(token) => token,
+    Err(e) => {
+      log::error!("error encoding jwt: {}", e);
+      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
+
+  (
+    StatusCode::CREATED,
+    axum::Json(Token {
+      access_token,
+      token_type: claims.kind,
+      issued_token_type,
+      expires_in: tenent.expires_in_seconds,
+      scope,
+      refresh_token: None,
+      refresh_token_expires_in: None,
+      id_token: None,
+    }),
+  )
+    .into_response()
+}
+
+async fn create_mfa_token(
+  _pool: &AnyPool,
+  tenent: TenentRow,
+  user: UserRow,
+  scope: Option<String>,
+  issued_token_type: String,
+  mfa_token_type: String,
+) -> impl IntoResponse {
+  let now = chrono::Utc::now();
+  let scopes = parse_scopes(scope.as_ref().map(String::as_str));
+
+  let claims = BasicClaims {
+    kind: mfa_token_type,
     app: tenent.id,
     sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,

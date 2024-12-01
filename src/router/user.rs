@@ -63,7 +63,7 @@ pub async fn create_user(
       return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
     }
   };
-  axum::Json(User::from(new_user)).into_response()
+  (StatusCode::CREATED, axum::Json(User::from(new_user))).into_response()
 }
 
 pub fn create_router(state: RouterState) -> Router {

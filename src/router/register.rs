@@ -74,6 +74,7 @@ pub async fn register(
     new_user,
     Some(SCOPE_OPENID.to_owned()),
     TOKEN_ISSUED_TYPE_REGISTER.to_owned(),
+    true,
   )
   .await
   .into_response()

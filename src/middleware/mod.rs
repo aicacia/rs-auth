@@ -1,3 +1,4 @@
+pub mod authorization;
 pub mod claims;
 pub mod json;
 pub mod openid_claims;

@@ -1,4 +1,6 @@
 pub mod current_user;
+pub mod current_user_totp;
+pub mod mfa;
 pub mod oauth2;
 pub mod openapi;
 pub mod register;
@@ -9,7 +11,7 @@ pub mod util;
 use axum::Router;
 use sqlx::AnyPool;
 use tower_http::cors::CorsLayer;
-use utoipa::{openapi::Server, OpenApi};
+use utoipa::{OpenApi, openapi::Server};
 
 use crate::core::{
   config::get_config,
@@ -29,7 +31,9 @@ unsafe impl Sync for RouterState {}
 #[openapi(
   info(license(name = "MIT OR Apache-2.0", identifier = "https://spdx.org/licenses/MIT.html")),
   nest(
+    (path = "/", api = current_user_totp::ApiDoc),
     (path = "/", api = current_user::ApiDoc),
+    (path = "/", api = mfa::ApiDoc),
     (path = "/", api = oauth2::ApiDoc),
     (path = "/", api = openapi::ApiDoc),
     (path = "/", api = register::ApiDoc),
@@ -58,7 +62,9 @@ pub fn create_router(state: RouterState) -> Router {
     .push(Server::new(config.server.url.clone()));
 
   Router::new()
+    .merge(current_user_totp::create_router(state.clone()))
     .merge(current_user::create_router(state.clone()))
+    .merge(mfa::create_router(state.clone()))
     .merge(oauth2::create_router(state.clone()))
     .merge(openapi::create_router(doc))
     .merge(register::create_router(state.clone()))

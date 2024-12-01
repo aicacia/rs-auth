@@ -72,7 +72,6 @@ pub async fn create_user_password(
         }
       }
 
-      log::info!("removing old passwords for user: {}", user_id);
       sqlx::query(
         r#"UPDATE user_passwords SET "active" = FALSE WHERE "user_id" = $1 AND "active" = TRUE;"#,
       )
@@ -80,7 +79,6 @@ pub async fn create_user_password(
       .execute(&mut **transaction)
       .await?;
 
-      log::info!("inserting new password for user: {}", user_id);
       sqlx::query_as(
         r#"INSERT INTO user_passwords ("user_id", "encrypted_password") VALUES ($1, $2) RETURNING *;"#,
       )

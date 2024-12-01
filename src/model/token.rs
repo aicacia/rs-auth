@@ -6,6 +6,7 @@ pub const TOKEN_ISSUED_TYPE_REFRESH_TOKEN: &str = "refresh-token";
 pub const TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE: &str = "authorization-code";
 pub const TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT: &str = "service-account";
 pub const TOKEN_ISSUED_TYPE_REGISTER: &str = "register";
+pub const TOKEN_ISSUED_TYPE_MFA: &str = "mfa";
 
 #[derive(Serialize, ToSchema)]
 pub struct Token {

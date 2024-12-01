@@ -69,6 +69,7 @@ CREATE TABLE "user_infos"(
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 ) STRICT;
+CREATE UNIQUE INDEX "user_infos_user_id_unique_idx" ON "user_infos" ("user_id");
 
 INSERT INTO "user_infos" 
 	("user_id")
@@ -103,6 +104,7 @@ CREATE TABLE "user_totps"(
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 ) STRICT;
+CREATE UNIQUE INDEX "user_totps_user_id_unique_idx" ON "user_totps" ("user_id");
 
 
 CREATE TABLE "user_emails" (
