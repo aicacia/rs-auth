@@ -8,6 +8,8 @@ use crate::repository::{
   user_oauth2_provider::UserOAuth2ProviderRow, user_phone_number::UserPhoneNumberRow,
 };
 
+use super::register::validate_unique_username;
+
 #[derive(Serialize, ToSchema)]
 pub struct User {
   pub id: i64,
@@ -162,6 +164,14 @@ impl From<UserOAuth2ProviderRow> for UserOAuth2Provider {
 
 #[derive(Validate, Deserialize, ToSchema)]
 pub struct CreateUser {
+  #[validate(length(min = 1), custom(function = "validate_unique_username"))]
   pub username: String,
   pub active: bool,
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
+pub struct UserResetPassword {
+  pub user_id: i64,
+  pub tenent_id: i64,
+  pub scope: Option<String>,
 }

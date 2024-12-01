@@ -15,7 +15,7 @@ pub struct RegisterUser {
   pub password_confirmation: String,
 }
 
-fn validate_unique_username(username: &str) -> Result<(), validator::ValidationError> {
+pub fn validate_unique_username(username: &str) -> Result<(), validator::ValidationError> {
   match tokio::task::block_in_place(move || {
     Handle::current().block_on(async move { get_user_by_username(&get_pool(), username).await })
   }) {

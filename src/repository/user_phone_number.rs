@@ -18,6 +18,18 @@ impl UserPhoneNumberRow {
   }
 }
 
+pub async fn get_users_phone_numbers(
+  pool: &sqlx::AnyPool,
+  limit: usize,
+  offset: usize,
+) -> sqlx::Result<Vec<UserPhoneNumberRow>> {
+  sqlx::query_as(r#"SELECT upn.* FROM user_phone_numbers upn WHERE upn.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#)
+    .bind(limit as i64)
+    .bind(offset as i64)
+    .fetch_all(pool)
+    .await
+}
+
 pub async fn get_user_primary_phone_number(
   pool: &sqlx::AnyPool,
   user_id: i64,

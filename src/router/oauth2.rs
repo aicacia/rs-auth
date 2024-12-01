@@ -76,7 +76,7 @@ pub struct ApiDoc;
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("TenentId" = [])
+    ("TenentUUID" = [])
   )
 )]
 pub async fn oauth2(

@@ -94,7 +94,7 @@ pub async fn token_is_valid(Authorization { .. }: Authorization) -> impl IntoRes
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("TenentId" = [])
+    ("TenentUUID" = [])
   )
 )]
 pub async fn token(
@@ -185,7 +185,7 @@ async fn password_request(
         tenent,
         user,
         scope,
-        TOKEN_ISSUED_TYPE_PASSWORD.to_owned(),
+        Some(TOKEN_ISSUED_TYPE_PASSWORD.to_owned()),
       )
       .await
       .into_response();
@@ -196,7 +196,7 @@ async fn password_request(
     tenent,
     user,
     scope,
-    TOKEN_ISSUED_TYPE_PASSWORD.to_owned(),
+    Some(TOKEN_ISSUED_TYPE_PASSWORD.to_owned()),
     false,
   )
   .await
@@ -243,7 +243,7 @@ async fn refresh_token_request(
     tenent,
     user,
     if scope.is_empty() { None } else { Some(scope) },
-    TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned(),
+    Some(TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned()),
     false,
   )
   .await
@@ -286,7 +286,7 @@ async fn authorization_code_request(
     tenent,
     user,
     if scope.is_empty() { None } else { Some(scope) },
-    TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE.to_owned(),
+    Some(TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE.to_owned()),
     false,
   )
   .await
@@ -308,11 +308,12 @@ async fn service_account_request(
     }
   };
   match service_account.verify(&secret.to_string()) {
-    Ok(true) => create_service_token_token(pool, CreateServiceAccountToken {
+    Ok(true) => create_service_token_token(
+      pool,
       tenent,
       service_account,
-      issued_token_type: TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT.to_owned(),
-    })
+      Some(TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT.to_owned()),
+    )
     .await
     .into_response(),
     Ok(false) => Errors::from(StatusCode::UNAUTHORIZED).into_response(),
@@ -325,19 +326,11 @@ async fn service_account_request(
   }
 }
 
-struct CreateServiceAccountToken {
-  tenent: TenentRow,
-  service_account: ServiceAccountRow,
-  issued_token_type: String,
-}
-
 async fn create_service_token_token(
   _pool: &AnyPool,
-  CreateServiceAccountToken {
-    tenent,
-    service_account,
-    issued_token_type,
-  }: CreateServiceAccountToken,
+  tenent: TenentRow,
+  service_account: ServiceAccountRow,
+  issued_token_type: Option<String>,
 ) -> impl IntoResponse {
   let now = chrono::Utc::now();
 
@@ -398,7 +391,7 @@ pub(crate) async fn create_user_token(
   tenent: TenentRow,
   user: UserRow,
   scope: Option<String>,
-  issued_token_type: String,
+  issued_token_type: Option<String>,
   mfa_validated: bool,
 ) -> impl IntoResponse {
   if !mfa_validated {
@@ -567,12 +560,12 @@ pub(crate) async fn create_user_token(
     .into_response()
 }
 
-async fn create_reset_password_token(
+pub(crate) async fn create_reset_password_token(
   _pool: &AnyPool,
   tenent: TenentRow,
   user: UserRow,
   scope: Option<String>,
-  issued_token_type: String,
+  issued_token_type: Option<String>,
 ) -> impl IntoResponse {
   let now = chrono::Utc::now();
   let scopes = parse_scopes(scope.as_ref().map(String::as_str));
@@ -621,7 +614,7 @@ async fn create_mfa_token(
   tenent: TenentRow,
   user: UserRow,
   scope: Option<String>,
-  issued_token_type: String,
+  issued_token_type: Option<String>,
   mfa_token_type: String,
 ) -> impl IntoResponse {
   let now = chrono::Utc::now();

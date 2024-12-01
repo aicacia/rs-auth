@@ -3,7 +3,7 @@ use utoipa::OpenApi;
 
 use crate::{
   core::{
-    error::{Errors, INTERNAL_ERROR, INVALID_ERROR, REQUIRED_ERROR},
+    error::{Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
     openapi::AUTHORIZATION_HEADER,
   },
   middleware::{
@@ -78,7 +78,7 @@ async fn totp_request(
     Ok(Some(user)) => user,
     Ok(None) => {
       return Errors::not_found()
-        .with_error("user", REQUIRED_ERROR)
+        .with_error("user", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {
@@ -93,7 +93,7 @@ async fn totp_request(
     Ok(Some(totp)) => totp,
     Ok(None) => {
       return Errors::not_found()
-        .with_error("totp", REQUIRED_ERROR)
+        .with_error("totp", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {
@@ -124,7 +124,7 @@ async fn totp_request(
     tenent,
     user,
     Some(claims.scopes.join(" ")),
-    TOKEN_ISSUED_TYPE_MFA.to_owned(),
+    Some(TOKEN_ISSUED_TYPE_MFA.to_owned()),
     true,
   )
   .await

@@ -8,7 +8,7 @@ use http::StatusCode;
 use utoipa::OpenApi;
 
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR, REQUIRED_ERROR},
+  core::error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, user_authorization::UserAuthorization},
   model::totp::{CreateTOTPRequest, UserTOTP},
   repository::user_totp::{CreateUserTOTP, create_user_totp, delete_user_totp},
@@ -95,7 +95,7 @@ pub async fn delete_totp(
     Ok(Some(_)) => {}
     Ok(None) => {
       return Errors::not_found()
-        .with_error("totp", REQUIRED_ERROR)
+        .with_error("totp", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {

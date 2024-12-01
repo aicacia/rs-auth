@@ -17,6 +17,18 @@ pub struct UserInfoRow {
   pub updated_at: i64,
 }
 
+pub async fn get_users_infos(
+  pool: &sqlx::AnyPool,
+  limit: usize,
+  offset: usize,
+) -> sqlx::Result<Vec<UserInfoRow>> {
+  sqlx::query_as(r#"SELECT ui.* FROM user_infos ui WHERE ui.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#)
+    .bind(limit as i64)
+    .bind(offset as i64)
+    .fetch_all(pool)
+    .await
+}
+
 pub async fn get_user_info_by_user_id(
   pool: &sqlx::AnyPool,
   user_id: i64,

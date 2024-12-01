@@ -17,6 +17,7 @@ pub const APPLICATION_KEY: &str = "application";
 pub const REQUEST_BODY: &str = "request-body";
 
 pub const REQUIRED_ERROR: &str = "required";
+pub const NOT_FOUND_ERROR: &str = "not-found";
 pub const INVALID_ERROR: &str = "invalid";
 pub const PARSE_ERROR: &str = "parse";
 pub const INTERNAL_ERROR: &str = "internal";

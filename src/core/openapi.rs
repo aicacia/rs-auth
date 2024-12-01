@@ -21,7 +21,7 @@ impl Modify for SecurityAddon {
       ),
     );
     components.add_security_scheme(
-      "TenentId",
+      "TenentUUID",
       SecurityScheme::ApiKey(ApiKey::Header(ApiKeyValue::new(TENENT_ID_HEADER))),
     );
   }

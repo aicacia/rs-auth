@@ -12,7 +12,8 @@ pub const TOKEN_ISSUED_TYPE_MFA: &str = "mfa";
 pub struct Token {
   pub access_token: String,
   pub token_type: String,
-  pub issued_token_type: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub issued_token_type: Option<String>,
   pub expires_in: i64,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub scope: Option<String>,

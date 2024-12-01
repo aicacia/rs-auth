@@ -20,6 +20,18 @@ impl UserEmailRow {
   }
 }
 
+pub async fn get_users_emails(
+  pool: &sqlx::AnyPool,
+  limit: usize,
+  offset: usize,
+) -> sqlx::Result<Vec<UserEmailRow>> {
+  sqlx::query_as(r#"SELECT ue.* FROM user_emails ue WHERE ue.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#)
+    .bind(limit as i64)
+    .bind(offset as i64)
+    .fetch_all(pool)
+    .await
+}
+
 pub async fn get_user_by_email(pool: &sqlx::AnyPool, email: &str) -> sqlx::Result<Option<UserRow>> {
   sqlx::query_as(
     r#"SELECT u.*

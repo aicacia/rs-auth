@@ -10,6 +10,18 @@ pub struct UserOAuth2ProviderRow {
   pub updated_at: i64,
 }
 
+pub async fn get_users_oauth2_providers(
+  pool: &sqlx::AnyPool,
+  limit: usize,
+  offset: usize,
+) -> sqlx::Result<Vec<UserOAuth2ProviderRow>> {
+  sqlx::query_as(r#"SELECT uop.* FROM user_oauth2_providers uop WHERE uop.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#)
+    .bind(limit as i64)
+    .bind(offset as i64)
+    .fetch_all(pool)
+    .await
+}
+
 pub async fn get_user_by_oauth2_provider_and_email(
   pool: &sqlx::AnyPool,
   provider: &str,

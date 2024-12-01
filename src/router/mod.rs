@@ -4,6 +4,7 @@ pub mod mfa;
 pub mod oauth2;
 pub mod openapi;
 pub mod register;
+pub mod tenent;
 pub mod token;
 pub mod user;
 pub mod util;
@@ -37,6 +38,7 @@ unsafe impl Sync for RouterState {}
     (path = "/", api = oauth2::ApiDoc),
     (path = "/", api = openapi::ApiDoc),
     (path = "/", api = register::ApiDoc),
+    (path = "/", api = tenent::ApiDoc),
     (path = "/", api = token::ApiDoc),
     (path = "/", api = user::ApiDoc),
     (path = "/", api = util::ApiDoc),
@@ -68,6 +70,7 @@ pub fn create_router(state: RouterState) -> Router {
     .merge(oauth2::create_router(state.clone()))
     .merge(openapi::create_router(doc))
     .merge(register::create_router(state.clone()))
+    .merge(tenent::create_router(state.clone()))
     .merge(token::create_router(state.clone()))
     .merge(user::create_router(state.clone()))
     .merge(util::create_router(state.clone()))

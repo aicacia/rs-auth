@@ -1,7 +1,7 @@
 use build_time::build_time_utc;
 use chrono::{DateTime, Utc};
-use serde::Serialize;
-use utoipa::ToSchema;
+use serde::{Deserialize, Serialize};
+use utoipa::{IntoParams, ToSchema};
 
 #[derive(Serialize, ToSchema)]
 pub struct Health {
@@ -29,4 +29,18 @@ impl Default for Version {
         .with_timezone(&Utc),
     }
   }
+}
+
+pub const DEFAULT_LIMIT: usize = 20;
+
+#[derive(Deserialize, IntoParams)]
+pub struct OffsetAndLimit {
+  pub offset: Option<usize>,
+  pub limit: Option<usize>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct Pagination<T> {
+  pub has_more: bool,
+  pub items: Vec<T>,
 }

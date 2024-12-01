@@ -59,7 +59,7 @@ sqlx = { version = "0.8", features = [
   "postgres",
   "sqlite",
 ] }
-uuid = { version = "1.11", features = ["serde"] }
+uuid = { version = "1.11", features = ["serde", "v4"] }
 
 [profile.dev]
 opt-level = 1
