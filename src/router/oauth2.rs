@@ -9,19 +9,19 @@ use crate::{
   },
   middleware::{
     claims::{
-      BasicClaims, Claims, TOKEN_SUB_TYPE_USER, TOKEN_TYPE_AUTHORIZATION_CODE, parse_jwt,
-      parse_jwt_no_validation,
+      parse_jwt, parse_jwt_no_validation, BasicClaims, Claims, TOKEN_SUB_TYPE_USER,
+      TOKEN_TYPE_AUTHORIZATION_CODE,
     },
     openid_claims::{SCOPE_ADDRESS, SCOPE_EMAIL, SCOPE_PHONE, SCOPE_PROFILE},
     tenent_id::TenentId,
   },
   model::oauth2::{
-    OAuth2CallbackQuery, OAuth2Query, OAuth2State, oauth2_authorize_url,
-    oauth2_create_basic_client, oauth2_profile,
+    oauth2_authorize_url, oauth2_create_basic_client, oauth2_profile, OAuth2CallbackQuery,
+    OAuth2Query, OAuth2State,
   },
   repository::{
     tenent::get_tenent_by_id,
-    user::{CreateUserWithOAuth2, create_user_with_oauth2, get_user_by_id},
+    user::{create_user_with_oauth2, get_user_by_id, CreateUserWithOAuth2},
     user_info::UserInfoUpdate,
     user_oauth2_provider::{
       create_user_oauth2_provider_and_email, get_user_by_oauth2_provider_and_email,
@@ -30,14 +30,14 @@ use crate::{
 };
 
 use axum::{
-  Router,
   extract::{Path, Query, State},
   response::IntoResponse,
   routing::get,
+  Router,
 };
 use chrono::DateTime;
 use expiringmap::ExpiringMap;
-use http::{HeaderValue, StatusCode, header::LOCATION};
+use http::{header::LOCATION, HeaderValue, StatusCode};
 use reqwest::Url;
 use utoipa::OpenApi;
 
@@ -88,6 +88,13 @@ pub async fn oauth2(
   let (url, oauth2_state_token, pkce_code_verifier) = match match provider.as_str() {
     "google" => oauth2_authorize_url(
       &config.oauth2.google,
+      &tenent,
+      &provider,
+      register.unwrap_or_default(),
+      None,
+    ),
+    "facebook" => oauth2_authorize_url(
+      &config.oauth2.facebook,
       &tenent,
       &provider,
       register.unwrap_or_default(),
@@ -163,6 +170,7 @@ pub async fn oauth2_callback(
   };
   let client = match match provider.as_str() {
     "google" => oauth2_create_basic_client(&config.oauth2.google, &provider),
+    "facebook" => oauth2_create_basic_client(&config.oauth2.facebook, &provider),
     _ => {
       log::error!("Unknown OAuth2 provider: {}", provider);
       errors.error("provider", PARSE_ERROR);
@@ -290,28 +298,31 @@ pub async fn oauth2_callback(
   }
 
   let user = if oauth2_state_token.claims.register {
-    match create_user_with_oauth2(&state.pool, CreateUserWithOAuth2 {
-      active: true,
-      provider: provider,
-      email: email,
-      email_verified: openid_profile.email_verified.unwrap_or(false),
-      phone_number: openid_profile.phone_number,
-      phone_number_verified: openid_profile.phone_number_verified.unwrap_or(false),
-      user_info: UserInfoUpdate {
-        name: openid_profile.name,
-        given_name: openid_profile.given_name,
-        family_name: openid_profile.family_name,
-        middle_name: openid_profile.middle_name,
-        nickname: openid_profile.nickname,
-        profile_picture: openid_profile.profile_picture,
-        website: openid_profile.website,
-        gender: openid_profile.gender,
-        birthdate: openid_profile.birthdate.as_ref().map(DateTime::timestamp),
-        zone_info: openid_profile.zone_info,
-        locale: openid_profile.locale,
-        address: openid_profile.address,
+    match create_user_with_oauth2(
+      &state.pool,
+      CreateUserWithOAuth2 {
+        active: true,
+        provider: provider,
+        email: email,
+        email_verified: openid_profile.email_verified.unwrap_or(false),
+        phone_number: openid_profile.phone_number,
+        phone_number_verified: openid_profile.phone_number_verified.unwrap_or(false),
+        user_info: UserInfoUpdate {
+          name: openid_profile.name,
+          given_name: openid_profile.given_name,
+          family_name: openid_profile.family_name,
+          middle_name: openid_profile.middle_name,
+          nickname: openid_profile.nickname,
+          profile_picture: openid_profile.profile_picture,
+          website: openid_profile.website,
+          gender: openid_profile.gender,
+          birthdate: openid_profile.birthdate.as_ref().map(DateTime::timestamp),
+          zone_info: openid_profile.zone_info,
+          locale: openid_profile.locale,
+          address: openid_profile.address,
+        },
       },
-    })
+    )
     .await
     {
       Ok(user) => user,
@@ -345,7 +356,11 @@ pub async fn oauth2_callback(
   } else {
     match get_user_by_oauth2_provider_and_email(&state.pool, &provider, &email).await {
       Ok(Some(user)) => user,
-      Ok(None) => return Errors::unauthorized().into_response(),
+      Ok(None) => {
+        errors.status(StatusCode::FORBIDDEN);
+        errors.error("oauth2-provider", NOT_ALLOWED_ERROR);
+        return redirect_with_error(redirect_url, errors).into_response();
+      }
       Err(e) => {
         log::error!("Error fetching user by OAuth2 provider: {}", e);
         errors.status(StatusCode::FORBIDDEN);

@@ -1,14 +1,12 @@
-cargo-features = ["edition2024"]
-
 [package]
 authors = ["nathanfaucett@gmail.com"]
 default-run = "auth"
 description = "auth"
-edition = "2024"
+edition = "2021"
 license = "MIT OR Apache-2.0"
 name = "auth"
 repository = ""
-rust-version = "1.84"
+rust-version = "1.82"
 version = "0.1.0"
 
 [lib]

@@ -3,7 +3,7 @@ use std::{collections::HashMap, time::Duration};
 use crate::{
   core::{
     config::get_config,
-    error::{ALREADY_USED_ERROR, Errors, INTERNAL_ERROR, INVALID_ERROR},
+    error::{Errors, ALREADY_USED_ERROR, INTERNAL_ERROR, INVALID_ERROR},
   },
   middleware::{
     json::Json,
@@ -18,7 +18,7 @@ use crate::{
   },
   repository::{
     user_email::get_user_emails_by_user_id,
-    user_info::{UserInfoUpdate, get_user_info_by_user_id},
+    user_info::{get_user_info_by_user_id, UserInfoUpdate},
     user_oauth2_provider::get_user_oauth2_providers_by_user_id,
     user_password::{create_user_password, get_user_active_password_by_user_id},
     user_phone_number::get_user_phone_numbers_by_user_id,
@@ -26,17 +26,17 @@ use crate::{
 };
 
 use axum::{
-  Router,
   extract::{Path, State},
   response::IntoResponse,
   routing::{get, post, put},
+  Router,
 };
 use chrono::{DateTime, Utc};
 use http::StatusCode;
 use serde_json::json;
 use utoipa::OpenApi;
 
-use super::{RouterState, oauth2::PKCE_CODE_VERIFIERS};
+use super::{oauth2::PKCE_CODE_VERIFIERS, RouterState};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -203,6 +203,13 @@ pub async fn add_oauth2_provider(
       false,
       Some(user.id),
     ),
+    "facebook" => oauth2_authorize_url(
+      &config.oauth2.facebook,
+      &tenent,
+      &provider,
+      false,
+      Some(user.id),
+    ),
     _ => {
       log::error!("Unknown OAuth2 provider: {}", provider);
       return Errors::internal_error()
@@ -334,20 +341,24 @@ pub async fn update_user_info(
   UserAuthorization { user, .. }: UserAuthorization,
   Json(payload): Json<UpdateUserInfoRequest>,
 ) -> impl IntoResponse {
-  match crate::repository::user_info::update_user_info(&state.pool, user.id, UserInfoUpdate {
-    name: payload.name,
-    given_name: payload.given_name,
-    family_name: payload.family_name,
-    middle_name: payload.middle_name,
-    nickname: payload.nickname,
-    profile_picture: payload.profile_picture,
-    website: payload.website,
-    gender: payload.gender,
-    birthdate: payload.birthdate.as_ref().map(DateTime::timestamp),
-    address: payload.address,
-    zone_info: payload.zone_info,
-    locale: payload.locale,
-  })
+  match crate::repository::user_info::update_user_info(
+    &state.pool,
+    user.id,
+    UserInfoUpdate {
+      name: payload.name,
+      given_name: payload.given_name,
+      family_name: payload.family_name,
+      middle_name: payload.middle_name,
+      nickname: payload.nickname,
+      profile_picture: payload.profile_picture,
+      website: payload.website,
+      gender: payload.gender,
+      birthdate: payload.birthdate.as_ref().map(DateTime::timestamp),
+      address: payload.address,
+      zone_info: payload.zone_info,
+      locale: payload.locale,
+    },
+  )
   .await
   {
     Ok(_) => {}

@@ -3,7 +3,7 @@ use std::{io, str::FromStr};
 use utoipa::IntoParams;
 
 use crate::{
-  core::config::{OAuth2Config, get_config},
+  core::config::{get_config, OAuth2Config},
   middleware::{claims::tenent_encoding_key, openid_claims::OpenIdProfile},
   repository::tenent::TenentRow,
 };
@@ -107,13 +107,21 @@ pub fn oauth2_authorize_url(
   Ok((url, oauth2_state_token, pkce_code_verifier))
 }
 
-async fn oauth2_google_profile(
-  google_profile_url: &str,
-  access_token: &str,
-) -> Result<OpenIdProfile, reqwest::Error> {
+async fn oauth2_google_profile(access_token: &str) -> Result<OpenIdProfile, reqwest::Error> {
   reqwest::Client::new()
-    .get(google_profile_url)
+    .get("https://www.googleapis.com/oauth2/v3/userinfo")
     .bearer_auth(access_token)
+    .send()
+    .await?
+    .json::<OpenIdProfile>()
+    .await
+}
+
+async fn oauth2_facebook_profile(access_token: &str) -> Result<OpenIdProfile, reqwest::Error> {
+  reqwest::Client::new()
+    .get(format!(
+      "https://graph.facebook.com/me?fields=email&access_token={access_token}"
+    ))
     .send()
     .await?
     .json::<OpenIdProfile>()
@@ -129,13 +137,8 @@ where
   TT: oauth2::TokenType,
 {
   match provider {
-    "google" => {
-      oauth2_google_profile(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
-        token_response.access_token().secret(),
-      )
-      .await
-    }
+    "google" => oauth2_google_profile(token_response.access_token().secret()).await,
+    "facebook" => oauth2_facebook_profile(token_response.access_token().secret()).await,
     _ => {
       return Err(io::Error::new(
         io::ErrorKind::InvalidInput,

@@ -6,25 +6,25 @@ use crate::{
   middleware::{
     authorization::Authorization,
     claims::{
-      BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
+      parse_jwt, BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
       TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_MFA_TOTP,
-      TOKEN_TYPE_REFRESH, TOKEN_TYPE_RESET_PASSWORD, parse_jwt,
+      TOKEN_TYPE_REFRESH, TOKEN_TYPE_RESET_PASSWORD,
     },
     json::Json,
     openid_claims::{
-      OpenIdClaims, has_address_scope, has_email_scope, has_phone_scope, has_profile_scope,
-      parse_scopes,
+      has_address_scope, has_email_scope, has_phone_scope, has_profile_scope, parse_scopes,
+      OpenIdClaims,
     },
     tenent_id::TenentId,
   },
   model::token::{
-    TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE, TOKEN_ISSUED_TYPE_PASSWORD,
-    TOKEN_ISSUED_TYPE_REFRESH_TOKEN, TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT, Token, TokenRequest,
+    Token, TokenRequest, TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE, TOKEN_ISSUED_TYPE_PASSWORD,
+    TOKEN_ISSUED_TYPE_REFRESH_TOKEN, TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT,
   },
   repository::{
-    service_account::{ServiceAccountRow, get_service_account_by_client_id},
+    service_account::{get_service_account_by_client_id, ServiceAccountRow},
     tenent::TenentRow,
-    user::{UserRow, get_user_by_id, get_user_by_username},
+    user::{get_user_by_id, get_user_by_username, UserRow},
     user_email::get_user_primary_email,
     user_info::get_user_info_by_user_id,
     user_password::get_user_active_password_by_user_id,
@@ -34,11 +34,11 @@ use crate::{
 };
 
 use axum::{
-  Router,
   extract::State,
   http::StatusCode,
   response::IntoResponse,
   routing::{get, post},
+  Router,
 };
 use chrono::{DateTime, Utc};
 use sqlx::AnyPool;
@@ -270,6 +270,12 @@ async fn authorization_code_request(
       .with_application_error(INTERNAL_ERROR)
       .into_response();
   }
+  if jwt.claims.sub_kind != TOKEN_SUB_TYPE_USER {
+    log::error!("invalid token sub_type: {}", jwt.claims.sub_kind);
+    return Errors::from(StatusCode::UNAUTHORIZED)
+      .with_application_error(INTERNAL_ERROR)
+      .into_response();
+  }
   let user = match get_user_by_id(pool, jwt.claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
@@ -287,7 +293,7 @@ async fn authorization_code_request(
     user,
     if scope.is_empty() { None } else { Some(scope) },
     Some(TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE.to_owned()),
-    false,
+    true,
   )
   .await
   .into_response()
