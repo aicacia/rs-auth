@@ -1,17 +1,17 @@
 use axum::{
-  Router,
   extract::State,
   response::IntoResponse,
   routing::{delete, post},
+  Router,
 };
 use http::StatusCode;
 use utoipa::OpenApi;
 
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, user_authorization::UserAuthorization},
   model::totp::{CreateTOTPRequest, UserTOTP},
-  repository::user_totp::{CreateUserTOTP, create_user_totp, delete_user_totp},
+  repository::user_totp::{create_user_totp, delete_user_totp, CreateUserTOTP},
 };
 
 use super::RouterState;
@@ -42,6 +42,7 @@ pub struct ApiDoc;
     (status = 201, content_type = "application/json", body = UserTOTP),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
+    (status = 409, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
@@ -53,16 +54,29 @@ pub async fn create_totp(
   UserAuthorization { user, .. }: UserAuthorization,
   Json(payload): Json<CreateTOTPRequest>,
 ) -> impl IntoResponse {
-  let totp = match create_user_totp(&state.pool, user.id, CreateUserTOTP {
-    secret: totp_rs::Secret::generate_secret().to_encoded().to_string(),
-    algorithm: payload.algorithm.unwrap_or("SHA1".to_owned()),
-    digits: payload.digits.unwrap_or(6),
-    step: payload.step.unwrap_or(30),
-  })
+  let totp = match create_user_totp(
+    &state.pool,
+    user.id,
+    CreateUserTOTP {
+      secret: totp_rs::Secret::generate_secret().to_encoded().to_string(),
+      algorithm: payload.algorithm.unwrap_or("SHA1".to_owned()),
+      digits: payload.digits.unwrap_or(6),
+      step: payload.step.unwrap_or(30),
+    },
+  )
   .await
   {
     Ok(totp) => totp,
     Err(e) => {
+      if e
+        .to_string()
+        .to_lowercase()
+        .contains("unique constraint failed")
+      {
+        return Errors::from(StatusCode::CONFLICT)
+          .with_error("totp", ALREADY_EXISTS_ERROR)
+          .into_response();
+      }
       log::error!("Error creating user TOTP: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)

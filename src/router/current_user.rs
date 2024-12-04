@@ -17,6 +17,7 @@ use crate::{
     user::{User, UserOAuth2Provider},
   },
   repository::{
+    user::get_user_mfa_types_by_user_id,
     user_email::get_user_emails_by_user_id,
     user_info::{get_user_info_by_user_id, UserInfoUpdate},
     user_oauth2_provider::get_user_oauth2_providers_by_user_id,
@@ -133,6 +134,19 @@ pub async fn current_user(
       oauth2_provider.email.take();
     }
     current_user.oauth2_providers.push(oauth2_provider);
+  }
+
+  let mfa_types = match get_user_mfa_types_by_user_id(&state.pool, current_user.id).await {
+    Ok(mfa_types) => mfa_types,
+    Err(e) => {
+      log::error!("Error getting user MFA types: {}", e);
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
+  for row in mfa_types {
+    current_user.mfa_types.push(row.into());
   }
 
   let show_profile = has_profile_scope(&scopes);

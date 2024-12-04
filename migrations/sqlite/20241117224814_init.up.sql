@@ -1,5 +1,5 @@
 CREATE TABLE "tenents" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"client_id" TEXT NOT NULL,
   "issuer" TEXT NOT NULL,
   "audience" TEXT NOT NULL,
@@ -11,6 +11,7 @@ CREATE TABLE "tenents" (
 	"updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
 	"created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 ) STRICT;
+CREATE UNIQUE INDEX "tenents_id_unique_idx" ON "tenents" ("id");
 CREATE UNIQUE INDEX "tenents_client_id_unique_idx" ON "tenents" ("client_id");
 
 INSERT INTO "tenents"
@@ -20,7 +21,7 @@ INSERT INTO "tenents"
 
 
 CREATE TABLE "service_accounts" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"client_id" TEXT NOT NULL,
   "encrypted_secret" TEXT NOT NULL,
   "name" TEXT NOT NULL,
@@ -28,6 +29,7 @@ CREATE TABLE "service_accounts" (
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 ) STRICT;
+CREATE UNIQUE INDEX "service_accounts_id_unique_idx" ON "service_accounts" ("id");
 CREATE UNIQUE INDEX "service_accounts_client_id_unique_idx" ON "service_accounts" ("client_id");
 CREATE UNIQUE INDEX "service_accounts_name_unique_idx" ON "service_accounts" ("name");
 
@@ -38,12 +40,13 @@ INSERT INTO "service_accounts"
 
 
 CREATE TABLE "users" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "username" TEXT NOT NULL,
   "active" INTEGER NOT NULL DEFAULT TRUE,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 ) STRICT;
+CREATE UNIQUE INDEX "users_id_unique_idx" ON "users" ("id");
 CREATE UNIQUE INDEX "users_username_unique_idx" ON "users" ("username");
 
 INSERT INTO "users" ("username") 
@@ -52,7 +55,7 @@ INSERT INTO "users" ("username")
 
 
 CREATE TABLE "user_infos"(
-	"user_id" INTEGER PRIMARY KEY,
+	"user_id" INTEGER NOT NULL PRIMARY KEY,
 	"name" TEXT,
 	"given_name" TEXT,
 	"family_name" TEXT,
@@ -78,7 +81,7 @@ INSERT INTO "user_infos"
 
 
 CREATE TABLE "user_passwords" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
   "active" INTEGER NOT NULL DEFAULT TRUE,
   "encrypted_password" TEXT NOT NULL,
@@ -86,6 +89,7 @@ CREATE TABLE "user_passwords" (
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 ) STRICT;
+CREATE UNIQUE INDEX "user_passwords_id_unique_idx" ON "user_passwords" ("id");
 
 INSERT INTO "user_passwords" 
 	("user_id", "encrypted_password")
@@ -94,7 +98,7 @@ INSERT INTO "user_passwords"
 
 
 CREATE TABLE "user_totps"(
-	"user_id" INTEGER PRIMARY KEY,
+	"user_id" INTEGER NOT NULL PRIMARY KEY,
   "active" INTEGER NOT NULL DEFAULT TRUE,
 	"algorithm" TEXT NOT NULL DEFAULT 'SHA1',
   "digits" INTEGER NOT NULL DEFAULT 6,
@@ -108,7 +112,7 @@ CREATE UNIQUE INDEX "user_totps_user_id_unique_idx" ON "user_totps" ("user_id");
 
 
 CREATE TABLE "user_emails" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
   "email" TEXT NOT NULL,
   "verified" INTEGER NOT NULL DEFAULT FALSE,
@@ -117,10 +121,11 @@ CREATE TABLE "user_emails" (
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 ) STRICT;
+CREATE UNIQUE INDEX "user_emails_id_unique_idx" ON "user_emails" ("id");
 
 
 CREATE TABLE "user_phone_numbers" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
   "phone_number" TEXT NOT NULL,
   "verified" INTEGER NOT NULL DEFAULT FALSE,
@@ -129,10 +134,11 @@ CREATE TABLE "user_phone_numbers" (
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 ) STRICT;
+CREATE UNIQUE INDEX "user_phone_numbers_id_unique_idx" ON "user_phone_numbers" ("id");
 
 
 CREATE TABLE "user_oauth2_providers" (
-  "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
   "provider" TEXT NOT NULL,
   "email" TEXT NOT NULL,
@@ -140,4 +146,5 @@ CREATE TABLE "user_oauth2_providers" (
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 ) STRICT;
+CREATE UNIQUE INDEX "user_oauth2_providers_id_unique_idx" ON "user_oauth2_providers" ("id");
 CREATE UNIQUE INDEX "user_oauth2_providers_user_id_provider_email_unique_idx" ON "user_oauth2_providers" ("provider", "email");

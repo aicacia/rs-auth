@@ -18,8 +18,8 @@ aicacia auth api
 
 ## Default token request for testing only should be deleted
 
-```json
-Tenent-Id: 6fcf0235-cb11-4160-9df8-b9114f8dcdae
+```
+Tenent-ID: 6fcf0235-cb11-4160-9df8-b9114f8dcdae
 ```
 
 ```json

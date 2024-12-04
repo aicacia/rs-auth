@@ -5,7 +5,7 @@ use std::{
 };
 
 use axum::{
-  http::{StatusCode, header},
+  http::{header, StatusCode},
   response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
@@ -23,6 +23,7 @@ pub const PARSE_ERROR: &str = "parse";
 pub const INTERNAL_ERROR: &str = "internal";
 pub const NOT_ALLOWED_ERROR: &str = "not-allowed";
 pub const ALREADY_USED_ERROR: &str = "already-used";
+pub const ALREADY_EXISTS_ERROR: &str = "already-exists";
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ErrorMessage {

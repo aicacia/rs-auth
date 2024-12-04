@@ -9,29 +9,29 @@ use crate::{
   model::{
     token::Token,
     user::{CreateUser, User, UserResetPassword},
-    util::{DEFAULT_LIMIT, OffsetAndLimit, Pagination},
+    util::{OffsetAndLimit, Pagination, DEFAULT_LIMIT},
   },
   repository::{
     self,
     tenent::get_tenent_by_id,
-    user::{get_user_by_id, get_users},
-    user_email::{UserEmailRow, get_users_emails},
-    user_info::get_users_infos,
-    user_oauth2_provider::{UserOAuth2ProviderRow, get_users_oauth2_providers},
-    user_phone_number::{UserPhoneNumberRow, get_users_phone_numbers},
+    user::{get_user_by_id, get_users, get_users_mfa_types, UserMFATypeRow},
+    user_email::{get_users_emails, UserEmailRow},
+    user_info::{get_users_infos, UserInfoRow},
+    user_oauth2_provider::{get_users_oauth2_providers, UserOAuth2ProviderRow},
+    user_phone_number::{get_users_phone_numbers, UserPhoneNumberRow},
   },
 };
 
 use axum::{
-  Router,
   extract::{Query, State},
   response::IntoResponse,
   routing::{get, post},
+  Router,
 };
 use http::StatusCode;
 use utoipa::OpenApi;
 
-use super::{RouterState, token::create_reset_password_token};
+use super::{token::create_reset_password_token, RouterState};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -75,12 +75,20 @@ pub async fn users(
 ) -> impl IntoResponse {
   let limit = query.limit.unwrap_or(DEFAULT_LIMIT);
   let offset = query.offset.unwrap_or(0);
-  let (rows, users_emails, users_phone_numbers, users_oauth2_providers, users_infos) = match tokio::try_join!(
+  let (
+    rows,
+    users_emails,
+    users_phone_numbers,
+    users_oauth2_providers,
+    users_infos,
+    users_mfa_types,
+  ) = match tokio::try_join!(
     get_users(&state.pool, limit, offset),
     get_users_emails(&state.pool, limit, offset),
     get_users_phone_numbers(&state.pool, limit, offset),
     get_users_oauth2_providers(&state.pool, limit, offset),
-    get_users_infos(&state.pool, limit, offset)
+    get_users_infos(&state.pool, limit, offset),
+    get_users_mfa_types(&state.pool, limit, offset)
   ) {
     Ok(results) => results,
     Err(e) => {
@@ -108,7 +116,14 @@ pub async fn users(
         acc.entry(row.user_id).or_default().push(row);
         acc
       });
-  let mut users_infos_by_id: HashMap<i64, Vec<repository::user_info::UserInfoRow>> = users_infos
+  let mut users_infos_by_id: HashMap<i64, Vec<UserInfoRow>> =
+    users_infos
+      .into_iter()
+      .fold(HashMap::new(), |mut acc, row| {
+        acc.entry(row.user_id).or_default().push(row);
+        acc
+      });
+  let mut users_mfa_types_by_id: HashMap<i64, Vec<UserMFATypeRow>> = users_mfa_types
     .into_iter()
     .fold(HashMap::new(), |mut acc, row| {
       acc.entry(row.user_id).or_default().push(row);
@@ -145,6 +160,9 @@ pub async fn users(
       for user_info in users_infos_by_id.remove(&user.id).unwrap_or_default() {
         user.info = user_info.into();
       }
+      for mfa_type in users_mfa_types_by_id.remove(&user.id).unwrap_or_default() {
+        user.mfa_types.push(mfa_type.into());
+      }
       user
     })
     .collect::<Vec<User>>();
@@ -176,11 +194,14 @@ pub async fn create_user(
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
   ValidatedJson(payload): ValidatedJson<CreateUser>,
 ) -> impl IntoResponse {
-  let new_user = match repository::user::create_user(&state.pool, repository::user::CreateUser {
-    username: payload.username,
-    active: payload.active,
-    user_info: Default::default(),
-  })
+  let new_user = match repository::user::create_user(
+    &state.pool,
+    repository::user::CreateUser {
+      username: payload.username,
+      active: payload.active,
+      user_info: Default::default(),
+    },
+  )
   .await
   {
     Ok(user) => user,

@@ -4,8 +4,11 @@ use utoipa::ToSchema;
 use validator::Validate;
 
 use crate::repository::{
-  user::UserRow, user_email::UserEmailRow, user_info::UserInfoRow,
-  user_oauth2_provider::UserOAuth2ProviderRow, user_phone_number::UserPhoneNumberRow,
+  user::{UserMFATypeRow, UserRow},
+  user_email::UserEmailRow,
+  user_info::UserInfoRow,
+  user_oauth2_provider::UserOAuth2ProviderRow,
+  user_phone_number::UserPhoneNumberRow,
 };
 
 use super::register::validate_unique_username;
@@ -22,6 +25,7 @@ pub struct User {
   pub phone_number: Option<UserPhoneNumber>,
   pub phone_numbers: Vec<UserPhoneNumber>,
   pub oauth2_providers: Vec<UserOAuth2Provider>,
+  pub mfa_types: Vec<UserMFAType>,
   pub info: UserInfo,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
@@ -34,10 +38,11 @@ impl From<UserRow> for User {
       username: row.username,
       active: row.active != 0,
       email: None,
-      emails: Vec::default(),
+      emails: Vec::new(),
       phone_number: None,
-      phone_numbers: Vec::default(),
-      oauth2_providers: Vec::default(),
+      phone_numbers: Vec::new(),
+      oauth2_providers: Vec::new(),
+      mfa_types: Vec::new(),
       info: UserInfo::default(),
       created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
@@ -158,6 +163,27 @@ impl From<UserOAuth2ProviderRow> for UserOAuth2Provider {
       email: Some(row.email),
       created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
+    }
+  }
+}
+
+#[derive(Serialize, ToSchema)]
+pub enum UserMFAType {
+  #[serde(rename = "totp")]
+  TOTP,
+  #[serde(rename = "email")]
+  Email,
+  #[serde(rename = "text")]
+  Text,
+}
+
+impl From<UserMFATypeRow> for UserMFAType {
+  fn from(row: UserMFATypeRow) -> Self {
+    match row.kind.as_str() {
+      "totp" => Self::TOTP,
+      "email" => Self::Email,
+      "text" => Self::Text,
+      _ => panic!("Unknown MFA type: {}", row.kind),
     }
   }
 }
