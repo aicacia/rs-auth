@@ -22,6 +22,24 @@ INSERT INTO "tenents"
 	('6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Test', "http://localhost:3000", encode(public.gen_random_bytes(255), 'base64'));
 
 
+CREATE TABLE "tenent_oauth2_providers" (
+	"id" SERIAL PRIMARY KEY,
+	"tenent_id" INT4 NOT NULL,
+  "provider" VARCHAR(255) NOT NULL,
+  "active" BOOLEAN NOT NULL DEFAULT TRUE,
+  "client_id" TEXT NOT NULL,
+  "client_secret" TEXT NOT NULL,
+  "auth_url" TEXT NOT NULL,
+  "token_url" TEXT NOT NULL,
+  "scope" TEXT,
+  "redirect_url" TEXT,
+	"updated_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+	"created_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
+  FOREIGN KEY ("tenent_id") REFERENCES "tenents" ("id") ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX "tenent_oauth2_providers_tenent_id_provider_unique_idx" ON "tenents" ("tenent_id", "provider");
+
+
 CREATE TABLE "service_accounts" (
 	"id" SERIAL PRIMARY KEY,
 	"client_id" BLOB NOT NULL,

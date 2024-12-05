@@ -20,6 +20,25 @@ INSERT INTO "tenents"
 	('6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Test', "http://localhost:3000", hex(randomblob(255)));
 
 
+CREATE TABLE "tenent_oauth2_providers" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "tenent_id" INTEGER NOT NULL,
+  "provider" TEXT NOT NULL,
+  "active" INTEGER NOT NULL DEFAULT TRUE,
+  "client_id" TEXT NOT NULL,
+  "client_secret" TEXT NOT NULL,
+  "auth_url" TEXT NOT NULL,
+  "token_url" TEXT NOT NULL,
+  "scope" TEXT,
+  "redirect_url" TEXT,
+  "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  FOREIGN KEY ("tenent_id") REFERENCES "tenents" ("id") ON DELETE CASCADE
+) STRICT;
+CREATE UNIQUE INDEX "tenent_oauth2_providers_id_unique_idx" ON "tenent_oauth2_providers" ("id");
+CREATE UNIQUE INDEX "tenent_oauth2_providers_tenent_id_provider_unique_idx" ON "tenent_oauth2_providers" ("tenent_id", "provider");
+
+
 CREATE TABLE "service_accounts" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"client_id" TEXT NOT NULL,

@@ -1,5 +1,3 @@
-use uuid::Uuid;
-
 #[derive(sqlx::FromRow)]
 pub struct TenentRow {
   pub id: i64,
@@ -44,7 +42,7 @@ pub async fn get_tenent_by_id(
 
 pub async fn get_tenent_by_client_id(
   pool: &sqlx::AnyPool,
-  tenent_client_id: &Uuid,
+  tenent_client_id: &str,
 ) -> sqlx::Result<Option<TenentRow>> {
   sqlx::query_as(
     r#"SELECT t.*
@@ -52,7 +50,7 @@ pub async fn get_tenent_by_client_id(
     WHERE t.client_id = $1
     LIMIT 1;"#,
   )
-  .bind(tenent_client_id.to_string())
+  .bind(tenent_client_id)
   .fetch_optional(pool)
   .await
 }

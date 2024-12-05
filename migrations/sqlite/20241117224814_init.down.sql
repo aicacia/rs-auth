@@ -8,4 +8,5 @@ DROP TABLE IF EXISTS "users";
 
 DROP TABLE IF EXISTS "service_accounts";
 
+DROP TABLE IF EXISTS "tenent_oauth2_providers";
 DROP TABLE IF EXISTS "tenents";

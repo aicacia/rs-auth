@@ -1,11 +1,12 @@
-DROP TABLE IF EXISTS "user_oauth2_providers" cascade;
-DROP TABLE IF EXISTS "user_phone_numbers" cascade;
-DROP TABLE IF EXISTS "user_emails" cascade;
-DROP TABLE IF EXISTS "user_totps" cascade;
-DROP TABLE IF EXISTS "user_passwords" cascade;
-DROP TABLE IF EXISTS "user_infos" cascade;
-DROP TABLE IF EXISTS "users" cascade;
+DROP TABLE IF EXISTS "user_oauth2_providers" CASCADE;
+DROP TABLE IF EXISTS "user_phone_numbers" CASCADE;
+DROP TABLE IF EXISTS "user_emails" CASCADE;
+DROP TABLE IF EXISTS "user_totps" CASCADE;
+DROP TABLE IF EXISTS "user_passwords" CASCADE;
+DROP TABLE IF EXISTS "user_infos" CASCADE;
+DROP TABLE IF EXISTS "users" CASCADE;
 
-DROP TABLE IF EXISTS "service_accounts" cascade;
+DROP TABLE IF EXISTS "service_accounts" CASCADE;
 
-DROP TABLE IF EXISTS "tenents" cascade;
+DROP TABLE IF EXISTS "tenent_oauth2_providers" CASCADE;
+DROP TABLE IF EXISTS "tenents" CASCADE;

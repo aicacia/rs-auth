@@ -3,6 +3,7 @@ pub mod mfa;
 pub mod oauth2;
 pub mod register;
 pub mod tenent;
+pub mod tenent_oauth2_provider;
 pub mod token;
 pub mod totp;
 pub mod user;
