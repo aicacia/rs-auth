@@ -53,9 +53,6 @@ lazy_static! {
   paths(
     oauth2,
   ),
-  components(
-    schemas()
-  ),
   tags(
     (name = "oauth2", description = "OAuth2 endpoints"),
   )

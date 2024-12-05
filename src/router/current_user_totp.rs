@@ -22,11 +22,6 @@ use super::RouterState;
     create_totp,
     delete_totp,
   ),
-  components(
-    schemas(
-      CreateTOTPRequest
-    )
-  ),
   tags(
     (name = "totp", description = "TOTP endpoints"),
   )
@@ -68,11 +63,7 @@ pub async fn create_totp(
   {
     Ok(totp) => totp,
     Err(e) => {
-      if e
-        .to_string()
-        .to_lowercase()
-        .contains("unique constraint failed")
-      {
+      if e.to_string().to_lowercase().contains("unique constraint") {
         return Errors::from(StatusCode::CONFLICT)
           .with_error("totp", ALREADY_EXISTS_ERROR)
           .into_response();

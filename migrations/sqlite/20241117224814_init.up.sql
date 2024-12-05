@@ -122,6 +122,7 @@ CREATE TABLE "user_emails" (
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 ) STRICT;
 CREATE UNIQUE INDEX "user_emails_id_unique_idx" ON "user_emails" ("id");
+CREATE UNIQUE INDEX "user_emails_email_unique_idx" ON "user_emails" ("email");
 
 
 CREATE TABLE "user_phone_numbers" (

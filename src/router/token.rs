@@ -24,7 +24,7 @@ use crate::{
   repository::{
     service_account::{get_service_account_by_client_id, ServiceAccountRow},
     tenent::TenentRow,
-    user::{get_user_by_id, get_user_by_username, UserRow},
+    user::{get_user_by_id, get_user_by_username_or_primary_email, UserRow},
     user_email::get_user_primary_email,
     user_info::get_user_info_by_user_id,
     user_password::get_user_active_password_by_user_id,
@@ -51,12 +51,6 @@ use super::RouterState;
   paths(
     token_is_valid,
     token,
-  ),
-  components(
-    schemas(
-      Token,
-      TokenRequest,
-    )
   ),
   tags(
     (name = "token", description = "Token endpoints"),
@@ -142,7 +136,7 @@ async fn password_request(
   password: String,
   scope: Option<String>,
 ) -> impl IntoResponse {
-  let user = match get_user_by_username(pool, &username).await {
+  let user = match get_user_by_username_or_primary_email(pool, &username).await {
     Ok(Some(user)) => user,
     Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
     Err(e) => {

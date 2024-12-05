@@ -120,6 +120,7 @@ CREATE TABLE "user_emails" (
 	"created_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
   CONSTRAINT "user_emails_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
 );
+CREATE UNIQUE INDEX "user_emails_email_unique_idx" ON "user_emails" ("email");
 
 
 CREATE TABLE "user_phone_numbers" (

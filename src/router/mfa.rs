@@ -1,4 +1,4 @@
-use axum::{Router, extract::State, response::IntoResponse, routing::post};
+use axum::{extract::State, response::IntoResponse, routing::post, Router};
 use utoipa::OpenApi;
 
 use crate::{
@@ -13,22 +13,17 @@ use crate::{
   },
   model::{
     mfa::MFARequest,
-    token::{TOKEN_ISSUED_TYPE_MFA, Token},
+    token::{Token, TOKEN_ISSUED_TYPE_MFA},
   },
   repository::{tenent::TenentRow, user::get_user_by_id, user_totp::get_user_totp_by_user_id},
 };
 
-use super::{RouterState, token::create_user_token};
+use super::{token::create_user_token, RouterState};
 
 #[derive(OpenApi)]
 #[openapi(
   paths(
     mfa,
-  ),
-  components(
-    schemas(
-      MFARequest
-    )
   ),
   tags(
     (name = "mfa", description = "Multi-factor authentication endpoints"),

@@ -3,16 +3,16 @@ use crate::{
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
     tenent::{CreateTenent, Tenent, UpdateTenent},
-    util::{DEFAULT_LIMIT, OffsetAndLimit, Pagination},
+    util::{OffsetAndLimit, Pagination, DEFAULT_LIMIT},
   },
   repository::{self, tenent::get_tenents},
 };
 
 use axum::{
-  Router,
   extract::{Path, Query, State},
   response::IntoResponse,
   routing::{delete, get, post, put},
+  Router,
 };
 use http::StatusCode;
 use utoipa::OpenApi;
@@ -26,12 +26,6 @@ use super::RouterState;
     create_tenent,
     update_tenent,
     delete_tenent
-  ),
-  components(
-    schemas(
-      CreateTenent,
-      UpdateTenent,
-    )
   ),
   tags(
     (name = "tenent", description = "Tenent endpoints"),
@@ -98,8 +92,9 @@ pub async fn create_tenent(
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
   Json(payload): Json<CreateTenent>,
 ) -> impl IntoResponse {
-  let tenent =
-    match repository::tenent::create_tenent(&state.pool, repository::tenent::CreateTenent {
+  let tenent = match repository::tenent::create_tenent(
+    &state.pool,
+    repository::tenent::CreateTenent {
       client_id: payload
         .client_id
         .unwrap_or_else(uuid::Uuid::new_v4)
@@ -111,15 +106,16 @@ pub async fn create_tenent(
       private_key: payload.private_key,
       expires_in_seconds: payload.expires_in_seconds.unwrap_or(86400),
       refresh_expires_in_seconds: payload.refresh_expires_in_seconds.unwrap_or(604800),
-    })
-    .await
-    {
-      Ok(tenent) => tenent,
-      Err(e) => {
-        log::error!("error creating tenent: {}", e);
-        return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
-      }
-    };
+    },
+  )
+  .await
+  {
+    Ok(tenent) => tenent,
+    Err(e) => {
+      log::error!("error creating tenent: {}", e);
+      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+    }
+  };
   axum::Json(Into::<Tenent>::into(tenent)).into_response()
 }
 

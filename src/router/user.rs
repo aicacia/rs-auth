@@ -23,7 +23,7 @@ use crate::{
 };
 
 use axum::{
-  extract::{Query, State},
+  extract::{Path, Query, State},
   response::IntoResponse,
   routing::{get, post},
   Router,
@@ -40,14 +40,8 @@ use super::{token::create_reset_password_token, RouterState};
     create_user,
     create_user_reset_password_token,
   ),
-  components(
-    schemas(
-      CreateUser,
-      UserResetPassword,
-    )
-  ),
   tags(
-    (name = "user", description = "User endpoints"),
+    (name = "users", description = "User's endpoints"),
   )
 )]
 pub struct ApiDoc;
@@ -55,7 +49,7 @@ pub struct ApiDoc;
 #[utoipa::path(
   get,
   path = "users",
-  tags = ["user"],
+  tags = ["users"],
   params(
     OffsetAndLimit,
   ),
@@ -177,7 +171,7 @@ pub async fn users(
 #[utoipa::path(
   post,
   path = "users",
-  tags = ["user"],
+  tags = ["users"],
   request_body = CreateUser,
   responses(
     (status = 201, content_type = "application/json", body = User),
@@ -215,9 +209,12 @@ pub async fn create_user(
 
 #[utoipa::path(
   post,
-  path = "users/reset-password",
-  tags = ["user"],
+  path = "users/{user_id}/reset-password",
+  tags = ["users"],
   request_body = UserResetPassword,
+  params(
+    ("user_id" = i64, Path, description = "User id"),
+  ),
   responses(
     (status = 201, content_type = "application/json", body = Token),
     (status = 400, content_type = "application/json", body = Errors),
@@ -231,10 +228,11 @@ pub async fn create_user(
 pub async fn create_user_reset_password_token(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  Path(user_id): Path<i64>,
   Json(payload): Json<UserResetPassword>,
 ) -> impl IntoResponse {
   let (user, tenent) = match tokio::try_join!(
-    get_user_by_id(&state.pool, payload.user_id),
+    get_user_by_id(&state.pool, user_id),
     get_tenent_by_id(&state.pool, payload.tenent_id)
   ) {
     Ok((Some(user), Some(tenent))) => (user, tenent),
@@ -264,7 +262,7 @@ pub fn create_router(state: RouterState) -> Router {
     .route("/users", get(users))
     .route("/users", post(create_user))
     .route(
-      "/users/reset-password",
+      "/users/{user_id}/reset-password",
       post(create_user_reset_password_token),
     )
     .with_state(state)

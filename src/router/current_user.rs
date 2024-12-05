@@ -14,9 +14,10 @@ use crate::{
   model::{
     current_user::{ResetPasswordRequest, UpdateUserInfoRequest},
     oauth2::oauth2_authorize_url,
-    user::{User, UserOAuth2Provider},
+    user::{UpdateUsername, User, UserOAuth2Provider},
   },
   repository::{
+    self,
     user::get_user_mfa_types_by_user_id,
     user_email::get_user_emails_by_user_id,
     user_info::{get_user_info_by_user_id, UserInfoUpdate},
@@ -29,7 +30,7 @@ use crate::{
 use axum::{
   extract::{Path, State},
   response::IntoResponse,
-  routing::{get, post, put},
+  routing::{delete, get, post, put},
   Router,
 };
 use chrono::{DateTime, Utc};
@@ -46,13 +47,8 @@ use super::{oauth2::PKCE_CODE_VERIFIERS, RouterState};
     reset_password,
     add_oauth2_provider,
     update_user_info,
-  ),
-  components(
-    schemas(
-      User,
-      ResetPasswordRequest,
-      UpdateUserInfoRequest
-    )
+    update_user,
+    deactivate_user,
   ),
   tags(
     (name = "current-user", description = "Current user endpoints"),
@@ -337,6 +333,48 @@ pub async fn reset_password(
 
 #[utoipa::path(
   put,
+  path = "current-user",
+  tags = ["current-user"],
+  request_body = UpdateUsername,
+  responses(
+    (status = 204),
+    (status = 400, content_type = "application/json", body = Errors),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+pub async fn update_user(
+  State(state): State<RouterState>,
+  UserAuthorization { user, .. }: UserAuthorization,
+  ValidatedJson(payload): ValidatedJson<UpdateUsername>,
+) -> impl IntoResponse {
+  match repository::user::update_user(
+    &state.pool,
+    user.id,
+    repository::user::UpdateUser {
+      username: payload.username,
+      active: None,
+    },
+  )
+  .await
+  {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("Error updating user: {}", e);
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+
+  (StatusCode::NO_CONTENT, ()).into_response()
+}
+
+#[utoipa::path(
+  put,
   path = "current-user/info",
   tags = ["current-user", "openid"],
   request_body = UpdateUserInfoRequest,
@@ -355,7 +393,7 @@ pub async fn update_user_info(
   UserAuthorization { user, .. }: UserAuthorization,
   Json(payload): Json<UpdateUserInfoRequest>,
 ) -> impl IntoResponse {
-  match crate::repository::user_info::update_user_info(
+  match repository::user_info::update_user_info(
     &state.pool,
     user.id,
     UserInfoUpdate {
@@ -387,11 +425,53 @@ pub async fn update_user_info(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
+#[utoipa::path(
+  delete,
+  path = "current-user",
+  tags = ["current-user"],
+  responses(
+    (status = 204),
+    (status = 400, content_type = "application/json", body = Errors),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+pub async fn deactivate_user(
+  State(state): State<RouterState>,
+  UserAuthorization { user, .. }: UserAuthorization,
+) -> impl IntoResponse {
+  match repository::user::update_user(
+    &state.pool,
+    user.id,
+    repository::user::UpdateUser {
+      username: None,
+      active: Some(false),
+    },
+  )
+  .await
+  {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("Error deactivate user: {}", e);
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+
+  (StatusCode::NO_CONTENT, ()).into_response()
+}
+
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
     .route("/current-user/oauth2/{provider}", get(add_oauth2_provider))
     .route("/current-user", get(current_user))
     .route("/current-user/reset-password", post(reset_password))
     .route("/current-user/info", put(update_user_info))
+    .route("/current-user", put(update_user))
+    .route("/current-user", delete(deactivate_user))
     .with_state(state)
 }

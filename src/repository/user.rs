@@ -58,6 +58,22 @@ pub async fn get_user_by_username(
   .await
 }
 
+pub async fn get_user_by_username_or_primary_email(
+  pool: &sqlx::AnyPool,
+  username_or_email: &str,
+) -> sqlx::Result<Option<UserRow>> {
+  sqlx::query_as(
+    r#"SELECT u.*
+    FROM users u
+    JOIN user_emails ue ON ue.user_id = u.id
+    WHERE u.username = $1 OR (ue.email = $1 AND ue."primary" = TRUE)
+    LIMIT 1;"#,
+  )
+  .bind(username_or_email)
+  .fetch_optional(pool)
+  .await
+}
+
 #[derive(sqlx::FromRow)]
 pub struct UserMFATypeRow {
   pub user_id: i64,
@@ -69,7 +85,11 @@ pub async fn get_user_mfa_types_by_user_id(
   user_id: i64,
 ) -> sqlx::Result<Vec<UserMFATypeRow>> {
   sqlx::query_as(
-    r#"SELECT ut.user_id, 'totp' as kind FROM user_totps ut JOIN users u ON u.id = ut.user_id LIMIT 1;"#,
+    r#"SELECT ut.user_id, 'totp' as kind 
+      FROM user_totps ut 
+      JOIN users u ON u.id = ut.user_id 
+      WHERE u.id = $1
+      LIMIT 1;"#,
   )
   .bind(user_id)
   .fetch_all(pool)
@@ -83,7 +103,8 @@ pub async fn get_users_mfa_types(
 ) -> sqlx::Result<Vec<UserMFATypeRow>> {
   sqlx::query_as(
     r#"SELECT ut.user_id, 'totp' as kind 
-    FROM user_totps ut JOIN users u ON u.id = ut.user_id 
+    FROM user_totps ut 
+    JOIN users u ON u.id = ut.user_id 
     WHERE ut.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#,
   )
   .bind(limit as i64)
@@ -267,4 +288,24 @@ async fn username_used(
   .fetch_optional(&mut **transaction)
   .await?;
   Ok(user.is_some())
+}
+
+pub struct UpdateUser {
+  pub username: Option<String>,
+  pub active: Option<bool>,
+}
+
+pub async fn update_user(
+  pool: &sqlx::AnyPool,
+  user_id: i64,
+  params: UpdateUser,
+) -> sqlx::Result<Option<UserRow>> {
+  sqlx::query_as(
+    r#"UPDATE users SET "username" = COALESCE($1, "username"), "active" = COALESCE($2, "active") WHERE id = $3 RETURNING *;"#,
+  )
+  .bind(params.username)
+  .bind(params.active)
+  .bind(user_id)
+  .fetch_optional(pool)
+  .await
 }

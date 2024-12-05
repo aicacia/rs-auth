@@ -189,6 +189,12 @@ impl From<UserMFATypeRow> for UserMFAType {
 }
 
 #[derive(Validate, Deserialize, ToSchema)]
+pub struct UpdateUsername {
+  #[validate(length(min = 1), custom(function = "validate_unique_username"))]
+  pub username: Option<String>,
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
 pub struct CreateUser {
   #[validate(length(min = 1), custom(function = "validate_unique_username"))]
   pub username: String,
@@ -197,7 +203,46 @@ pub struct CreateUser {
 
 #[derive(Validate, Deserialize, ToSchema)]
 pub struct UserResetPassword {
-  pub user_id: i64,
   pub tenent_id: i64,
   pub scope: Option<String>,
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
+pub struct CreateUserEmail {
+  #[validate(email)]
+  pub email: String,
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
+pub struct ServiceAccountCreateUserEmail {
+  #[validate(email)]
+  pub email: String,
+  pub verified: Option<bool>,
+  pub primary: Option<bool>,
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
+pub struct ServiceAccountUpdateUserEmail {
+  pub verified: Option<bool>,
+  pub primary: Option<bool>,
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
+pub struct CreateUserPhoneNumber {
+  #[validate(length(min = 7))]
+  pub phone_number: String,
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
+pub struct ServiceAccountCreateUserPhoneNumber {
+  #[validate(length(min = 7))]
+  pub phone_number: String,
+  pub verified: Option<bool>,
+  pub primary: Option<bool>,
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
+pub struct ServiceAccountUpdateUserPhoneNumber {
+  pub verified: Option<bool>,
+  pub primary: Option<bool>,
 }

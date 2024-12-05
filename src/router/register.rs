@@ -19,12 +19,6 @@ use super::{RouterState, token::create_user_token};
   paths(
     register,
   ),
-  components(
-    schemas(
-      User,
-      RegisterUser,
-    )
-  ),
   tags(
     (name = "register", description = "Register endpoints"),
   )
