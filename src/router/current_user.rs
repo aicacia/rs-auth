@@ -3,11 +3,13 @@ use std::{collections::HashMap, time::Duration};
 use crate::{
   core::{
     config::get_config,
-    error::{Errors, ALREADY_USED_ERROR, INTERNAL_ERROR, INVALID_ERROR},
+    error::{Errors, ALREADY_USED_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
   },
   middleware::{
     json::Json,
-    openid_claims::{has_address_scope, has_email_scope, has_phone_scope, has_profile_scope},
+    openid_claims::{
+      has_address_scope, has_email_scope, has_phone_scope, has_profile_scope, parse_scopes,
+    },
     user_authorization::UserAuthorization,
     validated_json::ValidatedJson,
   },
@@ -18,6 +20,7 @@ use crate::{
   },
   repository::{
     self,
+    tenent_oauth2_provider::get_tenent_oauth2_provider,
     user::get_user_mfa_types_by_user_id,
     user_email::get_user_emails_by_user_id,
     user_info::{get_user_info_by_user_id, UserInfoUpdate},
@@ -201,35 +204,47 @@ pub async fn current_user(
   )
 )]
 pub async fn create_add_oauth2_provider_url(
+  State(state): State<RouterState>,
   Path(provider): Path<String>,
   UserAuthorization { user, tenent, .. }: UserAuthorization,
 ) -> impl IntoResponse {
-  let config = get_config();
-  let (url, oauth2_state_token, pkce_code_verifier) = match match provider.as_str() {
-    "google" => oauth2_authorize_url(
-      &config.oauth2.google,
-      &tenent,
-      &provider,
-      false,
-      Some(user.id),
-    ),
-    "facebook" => oauth2_authorize_url(
-      &config.oauth2.facebook,
-      &tenent,
-      &provider,
-      false,
-      Some(user.id),
-    ),
-    _ => {
-      log::error!("Unknown OAuth2 provider: {}", provider);
+  let tenent_oauth2_provider =
+    match get_tenent_oauth2_provider(&state.pool, tenent.id, &provider).await {
+      Ok(Some(tenent_oauth2_provider)) => tenent_oauth2_provider,
+      Ok(None) => {
+        log::error!("Unknown OAuth2 provider: {}", provider);
+        return Errors::internal_error()
+          .with_error("provider", NOT_FOUND_ERROR)
+          .into_response();
+      }
+      Err(e) => {
+        log::error!("Error getting tenent oauth2 provider: {}", e);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
+  let basic_client = match tenent_oauth2_provider.basic_client() {
+    Ok(client) => client,
+    Err(e) => {
+      log::error!("Error getting basic client: {}", e);
       return Errors::internal_error()
-        .with_application_error(INTERNAL_ERROR)
+        .with_error("oauth2-provider", INVALID_ERROR)
         .into_response();
     }
-  } {
+  };
+  let (url, csrf_token, pkce_code_verifier) = match oauth2_authorize_url(
+    &basic_client,
+    &tenent,
+    false,
+    Some(user.id),
+    parse_scopes(tenent_oauth2_provider.scope.as_ref().map(String::as_ref))
+      .into_iter()
+      .map(oauth2::Scope::new),
+  ) {
     Ok(tuple) => tuple,
     Err(e) => {
-      log::error!("Error parsing OAuth2 config: {}", e);
+      log::error!("Error parsing OAuth2 provider: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -239,9 +254,9 @@ pub async fn create_add_oauth2_provider_url(
   match PKCE_CODE_VERIFIERS.write() {
     Ok(mut map) => {
       map.insert(
-        oauth2_state_token.clone(),
+        csrf_token.secret().to_owned(),
         pkce_code_verifier,
-        Duration::from_secs(config.oauth2.code_timeout_in_seconds),
+        Duration::from_secs(get_config().oauth2.code_timeout_in_seconds),
       );
     }
     Err(e) => {

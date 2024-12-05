@@ -3,7 +3,7 @@ use std::{io, str::FromStr};
 use utoipa::IntoParams;
 
 use crate::{
-  core::config::{get_config, OAuth2Config},
+  core::config::get_config,
   middleware::{claims::tenent_encoding_key, openid_claims::OpenIdProfile},
   repository::tenent::TenentRow,
 };
@@ -17,6 +17,7 @@ pub struct OAuth2Query {
 pub struct OAuth2CallbackQuery {
   pub state: String,
   pub code: String,
+  pub scope: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -50,61 +51,39 @@ impl OAuth2State {
   }
 }
 
-pub fn oauth2_create_basic_client(
-  oauth2_config: &OAuth2Config,
-  provider: &str,
-) -> Result<oauth2::basic::BasicClient, oauth2::url::ParseError> {
-  let client = oauth2::basic::BasicClient::new(
-    oauth2::ClientId::new(oauth2_config.client_id.clone()),
-    Some(oauth2::ClientSecret::new(
-      oauth2_config.client_secret.clone(),
-    )),
-    oauth2::AuthUrl::new(oauth2_config.auth_url.clone())?,
-    Some(oauth2::TokenUrl::new(oauth2_config.token_url.clone())?),
-  )
-  .set_redirect_uri(oauth2::RedirectUrl::new(
-    oauth2_config
-      .redirect_url
-      .clone()
-      .unwrap_or_else(|| format!("{}/oauth2/{provider}/callback", &get_config().server.url)),
-  )?);
-  Ok(client)
-}
-
-pub fn oauth2_authorize_url(
-  oauth2_config: &OAuth2Config,
+pub fn oauth2_authorize_url<I>(
+  client: &oauth2::basic::BasicClient,
   tenent: &TenentRow,
-  provider: &str,
   register: bool,
   user_id: Option<i64>,
-) -> Result<(oauth2::url::Url, String, oauth2::PkceCodeVerifier), io::Error> {
-  let client = match oauth2_create_basic_client(oauth2_config, provider) {
-    Ok(client) => client,
-    Err(err) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err)),
-  };
-
+  scopes: I,
+) -> Result<
+  (
+    oauth2::url::Url,
+    oauth2::CsrfToken,
+    oauth2::PkceCodeVerifier,
+  ),
+  io::Error,
+>
+where
+  I: IntoIterator<Item = oauth2::Scope>,
+{
   let (pkce_code_challenge, pkce_code_verifier) = oauth2::PkceCodeChallenge::new_random_sha256();
 
   let oauth2_state = OAuth2State::new(tenent.id, register, user_id);
   let oauth2_state_token = match oauth2_state.encode(tenent) {
     Ok(t) => t,
-    Err(err) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err)),
+    Err(err) => return Err(io::Error::new(io::ErrorKind::InvalidData, err)),
   };
 
-  let csrf_token = oauth2_state_token.clone();
-  let (url, _) = client
-    .authorize_url(move || oauth2::CsrfToken::new(csrf_token))
-    .add_scopes(
-      oauth2_config
-        .scopes
-        .clone()
-        .into_iter()
-        .map(oauth2::Scope::new),
-    )
+  let oauth2_state_token_csrf_token = oauth2_state_token.clone();
+  let (url, csrf_token) = client
+    .authorize_url(move || oauth2::CsrfToken::new(oauth2_state_token_csrf_token))
+    .add_scopes(scopes)
     .set_pkce_challenge(pkce_code_challenge)
     .url();
 
-  Ok((url, oauth2_state_token, pkce_code_verifier))
+  Ok((url, csrf_token, pkce_code_verifier))
 }
 
 async fn oauth2_google_profile(access_token: &str) -> Result<OpenIdProfile, reqwest::Error> {

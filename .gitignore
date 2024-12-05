@@ -8,3 +8,4 @@
 /auth-dev.*
 /.openapi
 /openapitools.json
+/.sql

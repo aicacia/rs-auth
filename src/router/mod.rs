@@ -44,7 +44,7 @@ unsafe impl Sync for RouterState {}
     (path = "/", api = token::ApiDoc),
     (path = "/", api = user::ApiDoc),
     (path = "/", api = user_email::ApiDoc),
-  (path = "/", api = user_phone_number::ApiDoc),
+    (path = "/", api = user_phone_number::ApiDoc),
     (path = "/", api = util::ApiDoc),
   ),
   modifiers(&SecurityAddon)
@@ -79,15 +79,10 @@ pub fn create_router(state: RouterState) -> Router {
     .layer(
       tower_http::trace::TraceLayer::new_for_http().make_span_with(
         |request: &axum::http::Request<_>| {
-          let matched_path = request
-            .extensions()
-            .get::<axum::extract::MatchedPath>()
-            .map(axum::extract::MatchedPath::as_str);
-
           tracing::info_span!(
             "http",
             method = ?request.method(),
-            path = matched_path,
+            path = ?request.uri(),
           )
         },
       ),

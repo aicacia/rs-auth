@@ -15,7 +15,7 @@ pub struct TenentOAuth2Provider {
   pub auth_url: String,
   pub token_url: String,
   pub scope: Option<String>,
-  pub redirect_uri: Option<String>,
+  pub redirect_url: Option<String>,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
 }
@@ -32,7 +32,7 @@ impl From<TenentOAuth2ProviderRow> for TenentOAuth2Provider {
       auth_url: row.auth_url,
       token_url: row.token_url,
       scope: row.scope,
-      redirect_uri: row.redirect_uri,
+      redirect_url: row.redirect_url,
       created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
     }

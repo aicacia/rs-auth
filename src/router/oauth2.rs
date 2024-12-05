@@ -4,7 +4,8 @@ use crate::{
   core::{
     config::get_config,
     error::{
-      Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR, PARSE_ERROR, REQUIRED_ERROR,
+      Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR, PARSE_ERROR,
+      REQUIRED_ERROR,
     },
   },
   middleware::{
@@ -12,15 +13,15 @@ use crate::{
       parse_jwt, parse_jwt_no_validation, BasicClaims, Claims, TOKEN_SUB_TYPE_USER,
       TOKEN_TYPE_AUTHORIZATION_CODE,
     },
-    openid_claims::{SCOPE_ADDRESS, SCOPE_EMAIL, SCOPE_PHONE, SCOPE_PROFILE},
+    openid_claims::{parse_scopes, SCOPE_ADDRESS, SCOPE_EMAIL, SCOPE_PHONE, SCOPE_PROFILE},
     tenent_id::TenentId,
   },
   model::oauth2::{
-    oauth2_authorize_url, oauth2_create_basic_client, oauth2_profile, OAuth2CallbackQuery,
-    OAuth2Query, OAuth2State,
+    oauth2_authorize_url, oauth2_profile, OAuth2CallbackQuery, OAuth2Query, OAuth2State,
   },
   repository::{
     tenent::get_tenent_by_id,
+    tenent_oauth2_provider::get_tenent_oauth2_provider,
     user::{create_user_with_oauth2, get_user_by_id, CreateUserWithOAuth2},
     user_info::UserInfoUpdate,
     user_oauth2_provider::{
@@ -78,36 +79,48 @@ pub struct ApiDoc;
   )
 )]
 pub async fn create_oauth2_url(
+  State(state): State<RouterState>,
   Path(provider): Path<String>,
   TenentId(tenent): TenentId,
   Query(OAuth2Query { register }): Query<OAuth2Query>,
 ) -> impl IntoResponse {
-  let config = get_config();
-  let (url, oauth2_state_token, pkce_code_verifier) = match match provider.as_str() {
-    "google" => oauth2_authorize_url(
-      &config.oauth2.google,
-      &tenent,
-      &provider,
-      register.unwrap_or_default(),
-      None,
-    ),
-    "facebook" => oauth2_authorize_url(
-      &config.oauth2.facebook,
-      &tenent,
-      &provider,
-      register.unwrap_or_default(),
-      None,
-    ),
-    _ => {
-      log::error!("Unknown OAuth2 provider: {}", provider);
-      return Errors::forbidden()
-        .with_error("provider", NOT_ALLOWED_ERROR)
+  let tenent_oauth2_provider =
+    match get_tenent_oauth2_provider(&state.pool, tenent.id, &provider).await {
+      Ok(Some(tenent_oauth2_provider)) => tenent_oauth2_provider,
+      Ok(None) => {
+        log::error!("Unknown OAuth2 provider: {}", provider);
+        return Errors::internal_error()
+          .with_error("oauth2-provider", NOT_FOUND_ERROR)
+          .into_response();
+      }
+      Err(e) => {
+        log::error!("Error getting tenent oauth2 provider: {}", e);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
+  let basic_client = match tenent_oauth2_provider.basic_client() {
+    Ok(client) => client,
+    Err(e) => {
+      log::error!("Error getting basic client: {}", e);
+      return Errors::internal_error()
+        .with_error("oauth2-provider", INVALID_ERROR)
         .into_response();
     }
-  } {
+  };
+  let (url, csrf_token, pkce_code_verifier) = match oauth2_authorize_url(
+    &basic_client,
+    &tenent,
+    register.unwrap_or(false),
+    None,
+    parse_scopes(tenent_oauth2_provider.scope.as_ref().map(String::as_ref))
+      .into_iter()
+      .map(oauth2::Scope::new),
+  ) {
     Ok(tuple) => tuple,
     Err(e) => {
-      log::error!("Error parsing OAuth2 config: {}", e);
+      log::error!("Error parsing OAuth2 provider: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -117,9 +130,9 @@ pub async fn create_oauth2_url(
   match PKCE_CODE_VERIFIERS.write() {
     Ok(mut map) => {
       map.insert(
-        oauth2_state_token.clone(),
+        csrf_token.secret().to_owned(),
         pkce_code_verifier,
-        Duration::from_secs(config.oauth2.code_timeout_in_seconds),
+        Duration::from_secs(get_config().oauth2.code_timeout_in_seconds),
       );
     }
     Err(e) => {
@@ -144,6 +157,7 @@ pub async fn create_oauth2_url(
   responses(
     (status = 302),
     (status = 401, content_type = "application/json", body = Errors),
+    (status = 403, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
   )
 )]
@@ -153,32 +167,86 @@ pub async fn oauth2_callback(
   Query(OAuth2CallbackQuery {
     state: oauth2_state_token_string,
     code,
+    ..
   }): Query<OAuth2CallbackQuery>,
 ) -> impl IntoResponse {
-  let config = get_config();
-  let mut errors = Errors::bad_request();
-  let mut redirect_url = match Url::parse(&config.oauth2.redirect_url) {
-    Ok(url) => url,
-    Err(e) => {
-      log::error!("Error parsing redirect URL: {}", e);
+  let maybe_invalid_oauth2_state_token =
+    match parse_jwt_no_validation::<OAuth2State>(&oauth2_state_token_string) {
+      Ok(token) => token,
+      Err(e) => {
+        log::error!("Error parsing OAuth2 state: {}", e);
+        return Errors::internal_error()
+          .with_error("oauth2-state-token", INVALID_ERROR)
+          .into_response();
+      }
+    };
+  let tenent_id = match maybe_invalid_oauth2_state_token
+    .header
+    .kid
+    .as_ref()
+    .map(String::as_str)
+    .map(str::parse::<i64>)
+  {
+    Some(Ok(tenent_id)) => tenent_id,
+    Some(Err(e)) => {
+      log::error!("Error parsing tenent id: {}", e);
       return Errors::internal_error()
-        .with_error("redirect-url", INVALID_ERROR)
+        .with_error("oauth2-state-token", PARSE_ERROR)
+        .into_response();
+    }
+    None => {
+      log::error!("No tenent id found in OAuth2 state");
+      return Errors::internal_error()
+        .with_error("oauth2-state-token", INVALID_ERROR)
         .into_response();
     }
   };
-  let client = match match provider.as_str() {
-    "google" => oauth2_create_basic_client(&config.oauth2.google, &provider),
-    "facebook" => oauth2_create_basic_client(&config.oauth2.facebook, &provider),
-    _ => {
-      log::error!("Unknown OAuth2 provider: {}", provider);
-      errors.error("provider", PARSE_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
-    }
-  } {
+
+  let tenent_oauth2_provider =
+    match get_tenent_oauth2_provider(&state.pool, tenent_id, &provider).await {
+      Ok(Some(tenent_oauth2_provider)) => tenent_oauth2_provider,
+      Ok(None) => {
+        log::error!("Unknown OAuth2 provider: {}", provider);
+        return Errors::internal_error()
+          .with_error("provider", NOT_FOUND_ERROR)
+          .into_response();
+      }
+      Err(e) => {
+        log::error!("Error getting tenent oauth2 provider: {}", e);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
+
+  let basic_client = match tenent_oauth2_provider.basic_client() {
     Ok(client) => client,
     Err(e) => {
-      log::error!("Error parsing OAuth2 config: {}", e);
-      errors.error("provider", INTERNAL_ERROR);
+      log::error!("Error getting basic client: {}", e);
+      return Errors::internal_error()
+        .with_error("oauth2-provider", INVALID_ERROR)
+        .into_response();
+    }
+  };
+  let mut errors = Errors::bad_request();
+  let mut redirect_url = match basic_client.redirect_url().map(oauth2::RedirectUrl::url) {
+    Some(url) => url.to_owned(),
+    None => {
+      return Errors::not_found()
+        .with_error("redirect-url", NOT_FOUND_ERROR)
+        .into_response();
+    }
+  };
+  let tenent = match get_tenent_by_id(&state.pool, tenent_id).await {
+    Ok(Some(tenent)) => tenent,
+    Ok(None) => {
+      log::error!("Tenent not found");
+      errors.error("oauth2-state-token", INVALID_ERROR);
+      return redirect_with_error(redirect_url, errors).into_response();
+    }
+    Err(e) => {
+      log::error!("Error getting tenent from OAuth2 state: {}", e);
+      errors.error("oauth2-state-token", INVALID_ERROR);
       return redirect_with_error(redirect_url, errors).into_response();
     }
   };
@@ -199,48 +267,6 @@ pub async fn oauth2_callback(
     }
   };
 
-  let maybe_invalid_oauth2_state_token =
-    match parse_jwt_no_validation::<OAuth2State>(&oauth2_state_token_string) {
-      Ok(token) => token,
-      Err(e) => {
-        log::error!("Error parsing OAuth2 state: {}", e);
-        errors.error("oauth2-state-token", INVALID_ERROR);
-        return redirect_with_error(redirect_url, errors).into_response();
-      }
-    };
-  let tenent_id = match maybe_invalid_oauth2_state_token
-    .header
-    .kid
-    .as_ref()
-    .map(String::as_str)
-    .map(str::parse::<i64>)
-  {
-    Some(Ok(tenent_id)) => tenent_id,
-    Some(Err(e)) => {
-      log::error!("Error parsing tenent id: {}", e);
-      errors.error("oauth2-state-token", PARSE_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
-    }
-    None => {
-      log::error!("No tenent id found in OAuth2 state");
-      errors.error("oauth2-state-token", INVALID_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
-    }
-  };
-  let tenent = match get_tenent_by_id(&state.pool, tenent_id).await {
-    Ok(Some(tenent)) => tenent,
-    Ok(None) => {
-      log::error!("Tenent not found");
-      errors.error("oauth2-state-token", INVALID_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
-    }
-    Err(e) => {
-      log::error!("Error getting tenent from OAuth2 state: {}", e);
-      errors.error("oauth2-state-token", INVALID_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
-    }
-  };
-
   let oauth2_state_token: jsonwebtoken::TokenData<OAuth2State> =
     match parse_jwt::<OAuth2State>(&oauth2_state_token_string, &tenent) {
       Ok(token) => token,
@@ -251,7 +277,7 @@ pub async fn oauth2_callback(
       }
     };
 
-  let token_response = match client
+  let token_response = match basic_client
     .exchange_code(oauth2::AuthorizationCode::new(code))
     .set_pkce_verifier(pkce_code_verifier)
     .request_async(oauth2::reqwest::async_http_client)
