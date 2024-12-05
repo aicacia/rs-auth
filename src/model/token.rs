@@ -42,5 +42,5 @@ pub enum TokenRequest {
     secret: uuid::Uuid,
   },
   #[serde(rename = "authorization-code")]
-  AuthorizationCode { code: String },
+  AuthorizationCode { code: String, scope: Option<String> },
 }

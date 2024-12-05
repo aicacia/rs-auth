@@ -114,8 +114,8 @@ pub async fn token(
         .await
         .into_response()
     }
-    TokenRequest::AuthorizationCode { code } => {
-      authorization_code_request(&state.pool, tenent, code)
+    TokenRequest::AuthorizationCode { code, scope } => {
+      authorization_code_request(&state.pool, tenent, code, scope)
         .await
         .into_response()
     }
@@ -248,6 +248,7 @@ async fn authorization_code_request(
   pool: &AnyPool,
   tenent: TenentRow,
   code: String,
+  scope: Option<String>,
 ) -> impl IntoResponse {
   let jwt = match parse_jwt::<BasicClaims>(&code, &tenent) {
     Ok(claims) => claims,
@@ -280,7 +281,7 @@ async fn authorization_code_request(
         .into_response();
     }
   };
-  let scope = jwt.claims.scopes.join(" ");
+  let scope = scope.unwrap_or_else(|| jwt.claims.scopes.join(" "));
   create_user_token(
     pool,
     tenent,

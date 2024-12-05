@@ -32,7 +32,7 @@ use crate::{
 use axum::{
   extract::{Path, Query, State},
   response::IntoResponse,
-  routing::get,
+  routing::{get, post},
   Router,
 };
 use chrono::DateTime;
@@ -51,7 +51,8 @@ lazy_static! {
 #[derive(OpenApi)]
 #[openapi(
   paths(
-    oauth2,
+    create_oauth2_url,
+    oauth2_callback,
   ),
   tags(
     (name = "oauth2", description = "OAuth2 endpoints"),
@@ -60,7 +61,7 @@ lazy_static! {
 pub struct ApiDoc;
 
 #[utoipa::path(
-  get,
+  post,
   path = "oauth2/{provider}",
   tags = ["oauth2"],
   params(
@@ -76,7 +77,7 @@ pub struct ApiDoc;
     ("TenentUUID" = [])
   )
 )]
-pub async fn oauth2(
+pub async fn create_oauth2_url(
   Path(provider): Path<String>,
   TenentId(tenent): TenentId,
   Query(OAuth2Query { register }): Query<OAuth2Query>,
@@ -396,7 +397,7 @@ pub async fn oauth2_callback(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/oauth2/{provider}", get(oauth2))
+    .route("/oauth2/{provider}", post(create_oauth2_url))
     .route("/oauth2/{provider}/callback", get(oauth2_callback))
     .with_state(state)
 }

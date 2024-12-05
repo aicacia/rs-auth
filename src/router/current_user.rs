@@ -45,7 +45,7 @@ use super::{oauth2::PKCE_CODE_VERIFIERS, RouterState};
   paths(
     current_user,
     reset_password,
-    add_oauth2_provider,
+    create_add_oauth2_provider_url,
     update_user_info,
     update_user,
     deactivate_user,
@@ -185,7 +185,7 @@ pub async fn current_user(
 }
 
 #[utoipa::path(
-  get,
+  post,
   path = "current-user/oauth2/{provider}",
   tags = ["current-user", "oauth2"],
   params(
@@ -200,7 +200,7 @@ pub async fn current_user(
     ("Authorization" = [])
   )
 )]
-pub async fn add_oauth2_provider(
+pub async fn create_add_oauth2_provider_url(
   Path(provider): Path<String>,
   UserAuthorization { user, tenent, .. }: UserAuthorization,
 ) -> impl IntoResponse {
@@ -467,7 +467,10 @@ pub async fn deactivate_user(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/current-user/oauth2/{provider}", get(add_oauth2_provider))
+    .route(
+      "/current-user/oauth2/{provider}",
+      post(create_add_oauth2_provider_url),
+    )
     .route("/current-user", get(current_user))
     .route("/current-user/reset-password", post(reset_password))
     .route("/current-user/info", put(update_user_info))
