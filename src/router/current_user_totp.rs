@@ -17,21 +17,13 @@ use crate::{
 use super::RouterState;
 
 #[derive(OpenApi)]
-#[openapi(
-  paths(
-    create_totp,
-    delete_totp,
-  ),
-  tags(
-    (name = "totp", description = "TOTP endpoints"),
-  )
-)]
+#[openapi(paths(create_current_user_totp, delete_current_user_totp))]
 pub struct ApiDoc;
 
 #[utoipa::path(
   post,
   path = "current-user/totp",
-  tags = ["current-user", "totp"],
+  tags = ["current-user"],
   request_body = CreateTOTPRequest,
   responses(
     (status = 201, content_type = "application/json", body = UserTOTP),
@@ -44,7 +36,7 @@ pub struct ApiDoc;
     ("Authorization" = [])
   )
 )]
-pub async fn create_totp(
+pub async fn create_current_user_totp(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   Json(payload): Json<CreateTOTPRequest>,
@@ -81,7 +73,7 @@ pub async fn create_totp(
 #[utoipa::path(
   delete,
   path = "current-user/totp",
-  tags = ["current-user", "totp"],
+  tags = ["current-user"],
   responses(
     (status = 204),
     (status = 401, content_type = "application/json", body = Errors),
@@ -92,7 +84,7 @@ pub async fn create_totp(
     ("Authorization" = [])
   )
 )]
-pub async fn delete_totp(
+pub async fn delete_current_user_totp(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
 ) -> impl IntoResponse {
@@ -116,7 +108,7 @@ pub async fn delete_totp(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/current-user/totp", post(create_totp))
-    .route("/current-user/totp", delete(delete_totp))
+    .route("/current-user/totp", post(create_current_user_totp))
+    .route("/current-user/totp", delete(delete_current_user_totp))
     .with_state(state)
 }

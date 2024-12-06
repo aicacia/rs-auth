@@ -17,7 +17,7 @@ use super::{token::create_user_token, RouterState};
 #[derive(OpenApi)]
 #[openapi(
   paths(
-    register,
+    register_user,
   ),
   tags(
     (name = "register", description = "Register endpoints"),
@@ -40,7 +40,7 @@ pub struct ApiDoc;
     ("TenentUUID" = [])
   )
 )]
-pub async fn register(
+pub async fn register_user(
   State(state): State<RouterState>,
   TenentId(tenent): TenentId,
   ValidatedJson(payload): ValidatedJson<RegisterUser>,
@@ -81,6 +81,6 @@ pub async fn register(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/register", post(register))
+    .route("/register", post(register_user))
     .with_state(state)
 }

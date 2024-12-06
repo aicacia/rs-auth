@@ -22,22 +22,17 @@ use crate::{
 use super::RouterState;
 
 #[derive(OpenApi)]
-#[openapi(
-  paths(
-    create_phone_number,
-    set_phone_number_as_primary,
-    delete_phone_number,
-  ),
-  tags(
-    (name = "phone-number", description = "Phone Number endpoints"),
-  )
-)]
+#[openapi(paths(
+  create_current_user_phone_number,
+  set_current_user_phone_number_as_primary,
+  delete_current_user_phone_number
+))]
 pub struct ApiDoc;
 
 #[utoipa::path(
   post,
   path = "current-user/phone-numbers",
-  tags = ["current-user", "phone-number"],
+  tags = ["current-user"],
   request_body = CreateUserPhoneNumber,
   responses(
     (status = 201, content_type = "application/json", body = UserPhoneNumber),
@@ -50,7 +45,7 @@ pub struct ApiDoc;
     ("Authorization" = [])
   )
 )]
-pub async fn create_phone_number(
+pub async fn create_current_user_phone_number(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   ValidatedJson(payload): ValidatedJson<CreateUserPhoneNumber>,
@@ -89,7 +84,7 @@ pub async fn create_phone_number(
 #[utoipa::path(
   put,
   path = "current-user/phone-numbers/{phone_number_id}/set-as-primary",
-  tags = ["current-user", "phone-number"],
+  tags = ["current-user"],
   params(
     ("phone_number_id" = i64, Path, description = "PhoneNumber ID to set as primary"),
   ),
@@ -104,7 +99,7 @@ pub async fn create_phone_number(
     ("Authorization" = [])
   )
 )]
-pub async fn set_phone_number_as_primary(
+pub async fn set_current_user_phone_number_as_primary(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   Path(phone_number_id): Path<i64>,
@@ -129,7 +124,7 @@ pub async fn set_phone_number_as_primary(
 #[utoipa::path(
   delete,
   path = "current-user/phone-numbers/{phone_number_id}",
-  tags = ["current-user", "phone-number"],
+  tags = ["current-user"],
   params(
     ("phone_number_id" = i64, Path, description = "PhoneNumber ID to delete"),
   ),
@@ -144,7 +139,7 @@ pub async fn set_phone_number_as_primary(
     ("Authorization" = [])
   )
 )]
-pub async fn delete_phone_number(
+pub async fn delete_current_user_phone_number(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   Path(phone_number_id): Path<i64>,
@@ -163,14 +158,17 @@ pub async fn delete_phone_number(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/current-user/phone-numbers", post(create_phone_number))
+    .route(
+      "/current-user/phone-numbers",
+      post(create_current_user_phone_number),
+    )
     .route(
       "/current-user/phone-numbers/{phone_number_id}/set-as-primary",
-      put(set_phone_number_as_primary),
+      put(set_current_user_phone_number_as_primary),
     )
     .route(
       "/current-user/phone-numbers/{phone_number_id}",
-      delete(delete_phone_number),
+      delete(delete_current_user_phone_number),
     )
     .with_state(state)
 }

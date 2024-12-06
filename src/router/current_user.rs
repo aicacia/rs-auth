@@ -20,7 +20,7 @@ use crate::{
   },
   repository::{
     self,
-    tenent_oauth2_provider::get_tenent_oauth2_provider,
+    tenent_oauth2_provider::get_active_tenent_oauth2_provider,
     user::get_user_mfa_types_by_user_id,
     user_email::get_user_emails_by_user_id,
     user_info::{get_user_info_by_user_id, UserInfoUpdate},
@@ -46,12 +46,12 @@ use super::{oauth2::PKCE_CODE_VERIFIERS, RouterState};
 #[derive(OpenApi)]
 #[openapi(
   paths(
-    current_user,
-    reset_password,
-    create_add_oauth2_provider_url,
-    update_user_info,
-    update_user,
-    deactivate_user,
+    get_current_user,
+    reset_current_user_password,
+    create_current_user_add_oauth2_provider_url,
+    update_current_user_info,
+    update_current_user,
+    deactivate_current_user,
   ),
   tags(
     (name = "current-user", description = "Current user endpoints"),
@@ -72,7 +72,7 @@ pub struct ApiDoc;
     ("Authorization" = [])
   )
 )]
-pub async fn current_user(
+pub async fn get_current_user(
   State(state): State<RouterState>,
   UserAuthorization { user, scopes, .. }: UserAuthorization,
 ) -> impl IntoResponse {
@@ -203,13 +203,13 @@ pub async fn current_user(
     ("Authorization" = [])
   )
 )]
-pub async fn create_add_oauth2_provider_url(
+pub async fn create_current_user_add_oauth2_provider_url(
   State(state): State<RouterState>,
   Path(provider): Path<String>,
   UserAuthorization { user, tenent, .. }: UserAuthorization,
 ) -> impl IntoResponse {
   let tenent_oauth2_provider =
-    match get_tenent_oauth2_provider(&state.pool, tenent.id, &provider).await {
+    match get_active_tenent_oauth2_provider(&state.pool, tenent.id, &provider).await {
       Ok(Some(tenent_oauth2_provider)) => tenent_oauth2_provider,
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
@@ -285,7 +285,7 @@ pub async fn create_add_oauth2_provider_url(
     ("Authorization" = [])
   )
 )]
-pub async fn reset_password(
+pub async fn reset_current_user_password(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   ValidatedJson(payload): ValidatedJson<ResetPasswordRequest>,
@@ -361,7 +361,7 @@ pub async fn reset_password(
     ("Authorization" = [])
   )
 )]
-pub async fn update_user(
+pub async fn update_current_user(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   ValidatedJson(payload): ValidatedJson<UpdateUsername>,
@@ -403,7 +403,7 @@ pub async fn update_user(
     ("Authorization" = [])
   )
 )]
-pub async fn update_user_info(
+pub async fn update_current_user_info(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   Json(payload): Json<UpdateUserInfoRequest>,
@@ -454,7 +454,7 @@ pub async fn update_user_info(
     ("Authorization" = [])
   )
 )]
-pub async fn deactivate_user(
+pub async fn deactivate_current_user(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
 ) -> impl IntoResponse {
@@ -484,12 +484,15 @@ pub fn create_router(state: RouterState) -> Router {
   Router::new()
     .route(
       "/current-user/oauth2/{provider}",
-      post(create_add_oauth2_provider_url),
+      post(create_current_user_add_oauth2_provider_url),
     )
-    .route("/current-user", get(current_user))
-    .route("/current-user/reset-password", post(reset_password))
-    .route("/current-user/info", put(update_user_info))
-    .route("/current-user", put(update_user))
-    .route("/current-user", delete(deactivate_user))
+    .route("/current-user", get(get_current_user))
+    .route(
+      "/current-user/reset-password",
+      post(reset_current_user_password),
+    )
+    .route("/current-user/info", put(update_current_user_info))
+    .route("/current-user", put(update_current_user))
+    .route("/current-user", delete(deactivate_current_user))
     .with_state(state)
 }

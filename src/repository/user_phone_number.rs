@@ -9,8 +9,8 @@ pub struct UserPhoneNumberRow {
   pub primary: i32,
   pub verified: i32,
   pub phone_number: String,
-  pub created_at: i64,
   pub updated_at: i64,
+  pub created_at: i64,
 }
 
 impl UserPhoneNumberRow {

@@ -21,22 +21,17 @@ use crate::{
 use super::RouterState;
 
 #[derive(OpenApi)]
-#[openapi(
-  paths(
-    create_user_phone_number,
-    update_user_phone_number,
-    delete_user_phone_number
-  ),
-  tags(
-    (name = "phone-number", description = "PhoneNumber endpoints"),
-  )
-)]
+#[openapi(paths(
+  create_user_phone_number,
+  update_user_phone_number,
+  delete_user_phone_number
+))]
 pub struct ApiDoc;
 
 #[utoipa::path(
   post,
   path = "users/{user_id}/phone_numbers",
-  tags = ["users", "phone-number"],
+  tags = ["users"],
   request_body = ServiceAccountCreateUserPhoneNumber,
   params(
     ("user_id" = i64, Path, description = "User id")
@@ -92,7 +87,7 @@ pub async fn create_user_phone_number(
 #[utoipa::path(
   put,
   path = "users/{user_id}/phone-numbers/{phone_number_id}",
-  tags = ["users", "phone-number"],
+  tags = ["users"],
   request_body = ServiceAccountUpdateUserPhoneNumber,
   params(
     ("user_id" = i64, Path, description = "User id"),
@@ -144,7 +139,7 @@ pub async fn update_user_phone_number(
 #[utoipa::path(
   delete,
   path = "users/{user_id}/phone-numbers/{phone_number_id}",
-  tags = ["users", "phone-number"],
+  tags = ["users"],
   params(
     ("user_id" = i64, Path, description = "User id"),
     ("phone_number_id" = i64, Path, description = "PhoneNumber id"),

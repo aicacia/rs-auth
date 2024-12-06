@@ -1,6 +1,6 @@
 use crate::model::util::{Health, Version};
 
-use axum::{Router, extract::State, http::StatusCode, response::IntoResponse, routing::get};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Router};
 use utoipa::OpenApi;
 
 use super::RouterState;
@@ -10,12 +10,6 @@ use super::RouterState;
   paths(
     health,
     version,
-  ),
-  components(
-    schemas(
-      Version,
-      Health,
-    )
   ),
   tags(
     (name = "util", description = "Utility endpoints"),

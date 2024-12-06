@@ -4,7 +4,7 @@ use utoipa::{openapi::OpenApi as OpenApiSpec, OpenApi};
 #[derive(OpenApi)]
 #[openapi(
   paths(
-    openapi,
+    get_openapi,
   ),
   tags(
     (name = "openapi", description = "OpenApi endpoints"),
@@ -20,12 +20,12 @@ pub struct ApiDoc;
     (status = 200, description = "OpenApi documenation"),
   )
 )]
-pub async fn openapi(State(openapi): State<OpenApiSpec>) -> axum::Json<OpenApiSpec> {
+pub async fn get_openapi(State(openapi): State<OpenApiSpec>) -> axum::Json<OpenApiSpec> {
   axum::Json(openapi)
 }
 
 pub fn create_router(openapi_spec: OpenApiSpec) -> Router {
   Router::new()
-    .route("/openapi.json", get(openapi))
+    .route("/openapi.json", get(get_openapi))
     .with_state(openapi_spec)
 }

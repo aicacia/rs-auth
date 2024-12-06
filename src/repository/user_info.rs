@@ -13,8 +13,8 @@ pub struct UserInfoRow {
   pub zone_info: Option<String>,
   pub locale: Option<String>,
   pub address: Option<String>,
-  pub created_at: i64,
   pub updated_at: i64,
+  pub created_at: i64,
 }
 
 pub async fn get_users_infos(

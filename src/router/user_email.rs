@@ -19,22 +19,13 @@ use crate::{
 use super::RouterState;
 
 #[derive(OpenApi)]
-#[openapi(
-  paths(
-    create_user_email,
-    update_user_email,
-    delete_user_email
-  ),
-  tags(
-    (name = "email", description = "Email endpoints"),
-  )
-)]
+#[openapi(paths(create_user_email, update_user_email, delete_user_email))]
 pub struct ApiDoc;
 
 #[utoipa::path(
   post,
   path = "users/{user_id}/emails",
-  tags = ["users", "email"],
+  tags = ["users"],
   request_body = ServiceAccountCreateUserEmail,
   params(
     ("user_id" = i64, Path, description = "User id")
@@ -86,7 +77,7 @@ pub async fn create_user_email(
 #[utoipa::path(
   put,
   path = "users/{user_id}/emails/{email_id}",
-  tags = ["users", "email"],
+  tags = ["users"],
   request_body = ServiceAccountUpdateUserEmail,
   params(
     ("user_id" = i64, Path, description = "User id"),
@@ -138,7 +129,7 @@ pub async fn update_user_email(
 #[utoipa::path(
   delete,
   path = "users/{user_id}/emails/{email_id}",
-  tags = ["users", "email"],
+  tags = ["users"],
   params(
     ("user_id" = i64, Path, description = "User id"),
     ("email_id" = i64, Path, description = "Email id"),

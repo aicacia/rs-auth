@@ -1,13 +1,5 @@
 {
   "user": {
     "register_enabled": true
-  },
-  "oauth2": {
-    "redirect_url": "http://localhost:5173/oauth2/calllback",
-    "google": {
-      "enabled": true,
-      "client_id": "XXXXXXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com",
-      "client_secret": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    }
   }
 }

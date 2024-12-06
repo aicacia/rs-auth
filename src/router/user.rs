@@ -14,11 +14,15 @@ use crate::{
   repository::{
     self,
     tenent::get_tenent_by_id,
-    user::{get_user_by_id, get_users, get_users_mfa_types, UserMFATypeRow},
-    user_email::{get_users_emails, UserEmailRow},
-    user_info::{get_users_infos, UserInfoRow},
-    user_oauth2_provider::{get_users_oauth2_providers, UserOAuth2ProviderRow},
-    user_phone_number::{get_users_phone_numbers, UserPhoneNumberRow},
+    user::{get_user_mfa_types_by_user_id, get_users, get_users_mfa_types, UserMFATypeRow},
+    user_email::{get_user_emails_by_user_id, get_users_emails, UserEmailRow},
+    user_info::{get_user_info_by_user_id, get_users_infos, UserInfoRow},
+    user_oauth2_provider::{
+      get_user_oauth2_providers_by_user_id, get_users_oauth2_providers, UserOAuth2ProviderRow,
+    },
+    user_phone_number::{
+      get_user_phone_numbers_by_user_id, get_users_phone_numbers, UserPhoneNumberRow,
+    },
   },
 };
 
@@ -31,12 +35,13 @@ use axum::{
 use http::StatusCode;
 use utoipa::OpenApi;
 
-use super::{token::create_reset_password_token, RouterState};
+use super::{token, RouterState};
 
 #[derive(OpenApi)]
 #[openapi(
   paths(
-    users,
+    all_users,
+    get_user_by_id,
     create_user,
     create_user_reset_password_token,
   ),
@@ -62,7 +67,7 @@ pub struct ApiDoc;
     ("Authorization" = [])
   )
 )]
-pub async fn users(
+pub async fn all_users(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
   Query(query): Query<OffsetAndLimit>,
@@ -171,6 +176,88 @@ pub async fn users(
 }
 
 #[utoipa::path(
+  get,
+  path = "users/{user_id}",
+  tags = ["users"],
+  params(
+    ("user_id" = i64, Path, description = "User id"),
+  ),
+  responses(
+    (status = 200, content_type = "application/json", body = Pagination<User>),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 404, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+pub async fn get_user_by_id(
+  State(state): State<RouterState>,
+  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  Path(user_id): Path<i64>,
+) -> impl IntoResponse {
+  let (
+    row_optional,
+    user_emails,
+    user_phone_numbers,
+    user_oauth2_providers,
+    user_info_row_optional,
+    user_mfa_types,
+  ) = match tokio::try_join!(
+    repository::user::get_user_by_id(&state.pool, user_id),
+    get_user_emails_by_user_id(&state.pool, user_id),
+    get_user_phone_numbers_by_user_id(&state.pool, user_id),
+    get_user_oauth2_providers_by_user_id(&state.pool, user_id),
+    get_user_info_by_user_id(&state.pool, user_id),
+    get_user_mfa_types_by_user_id(&state.pool, user_id)
+  ) {
+    Ok(results) => results,
+    Err(e) => {
+      log::error!("error getting users: {}", e);
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
+  let row = match row_optional {
+    Some(row) => row,
+    None => {
+      return Errors::not_found()
+        .with_error("tenent", NOT_FOUND_ERROR)
+        .into_response()
+    }
+  };
+
+  let mut user = User::from(row);
+  for email in user_emails {
+    if email.is_primary() {
+      user.email = Some(email.into());
+    } else {
+      user.emails.push(email.into());
+    }
+  }
+  for phone_number in user_phone_numbers {
+    if phone_number.is_primary() {
+      user.phone_number = Some(phone_number.into());
+    } else {
+      user.phone_numbers.push(phone_number.into());
+    }
+  }
+  for oauth2_provider in user_oauth2_providers {
+    user.oauth2_providers.push(oauth2_provider.into());
+  }
+  if let Some(user_info_row) = user_info_row_optional {
+    user.info = user_info_row.into();
+  }
+  for mfa_type in user_mfa_types {
+    user.mfa_types.push(mfa_type.into());
+  }
+
+  axum::Json(user).into_response()
+}
+
+#[utoipa::path(
   post,
   path = "users",
   tags = ["users"],
@@ -236,7 +323,7 @@ pub async fn create_user_reset_password_token(
   Json(payload): Json<UserResetPassword>,
 ) -> impl IntoResponse {
   let (user, tenent) = match tokio::try_join!(
-    get_user_by_id(&state.pool, user_id),
+    repository::user::get_user_by_id(&state.pool, user_id),
     get_tenent_by_id(&state.pool, payload.tenent_id)
   ) {
     Ok((Some(user), Some(tenent))) => (user, tenent),
@@ -258,14 +345,15 @@ pub async fn create_user_reset_password_token(
     }
   };
 
-  create_reset_password_token(&state.pool, tenent, user, payload.scope, None)
+  token::create_reset_password_token(&state.pool, tenent, user, payload.scope, None)
     .await
     .into_response()
 }
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/users", get(users))
+    .route("/users", get(all_users))
+    .route("/users/{user_id}", get(get_user_by_id))
     .route("/users", post(create_user))
     .route(
       "/users/{user_id}/reset-password",

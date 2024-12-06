@@ -9,8 +9,8 @@ pub struct UserRow {
   pub id: i64,
   pub username: String,
   pub active: i32,
-  pub created_at: i64,
   pub updated_at: i64,
+  pub created_at: i64,
 }
 
 impl UserRow {
@@ -206,7 +206,7 @@ pub async fn create_user_with_password(
 
 pub struct CreateUserWithOAuth2 {
   pub active: bool,
-  pub provider: String,
+  pub tenent_oauth2_provider_id: i64,
   pub email: String,
   pub email_verified: bool,
   pub phone_number: Option<String>,
@@ -240,10 +240,10 @@ pub async fn create_user_with_oauth2(
       .await?;
 
       sqlx::query(
-        r#"INSERT INTO user_oauth2_providers ("user_id", "provider", "email") VALUES ($1, $2, $3);"#,
+        r#"INSERT INTO user_oauth2_providers ("user_id", "tenent_oauth2_provider_id", "email") VALUES ($1, $2, $3);"#,
       )
       .bind(user.id)
-      .bind(&params.provider)
+      .bind(&params.tenent_oauth2_provider_id)
       .bind(&params.email)
       .execute(&mut **transaction)
       .await?;

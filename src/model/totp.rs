@@ -11,8 +11,8 @@ pub struct UserTOTP {
   pub step: i64,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub secret: Option<String>,
-  pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
+  pub created_at: DateTime<Utc>,
 }
 
 impl From<UserTOTPRow> for UserTOTP {
@@ -22,8 +22,8 @@ impl From<UserTOTPRow> for UserTOTP {
       digits: row.digits,
       step: row.step,
       secret: Some(row.secret),
-      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
+      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
     }
   }
 }

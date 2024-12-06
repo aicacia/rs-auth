@@ -27,8 +27,8 @@ pub struct User {
   pub oauth2_providers: Vec<UserOAuth2Provider>,
   pub mfa_types: Vec<UserMFAType>,
   pub info: UserInfo,
-  pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
+  pub created_at: DateTime<Utc>,
 }
 
 impl From<UserRow> for User {
@@ -44,8 +44,8 @@ impl From<UserRow> for User {
       oauth2_providers: Vec::new(),
       mfa_types: Vec::new(),
       info: UserInfo::default(),
-      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
+      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
     }
   }
 }
@@ -105,8 +105,8 @@ pub struct UserEmail {
   pub primary: bool,
   pub verified: bool,
   pub email: String,
-  pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
+  pub created_at: DateTime<Utc>,
 }
 
 impl From<UserEmailRow> for UserEmail {
@@ -116,8 +116,8 @@ impl From<UserEmailRow> for UserEmail {
       primary: row.primary != 0,
       verified: row.verified != 0,
       email: row.email,
-      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
+      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
     }
   }
 }
@@ -128,8 +128,8 @@ pub struct UserPhoneNumber {
   pub primary: bool,
   pub verified: bool,
   pub phone_number: String,
-  pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
+  pub created_at: DateTime<Utc>,
 }
 
 impl From<UserPhoneNumberRow> for UserPhoneNumber {
@@ -139,8 +139,8 @@ impl From<UserPhoneNumberRow> for UserPhoneNumber {
       primary: row.primary != 0,
       verified: row.verified != 0,
       phone_number: row.phone_number,
-      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
+      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
     }
   }
 }
@@ -148,21 +148,21 @@ impl From<UserPhoneNumberRow> for UserPhoneNumber {
 #[derive(Serialize, ToSchema)]
 pub struct UserOAuth2Provider {
   pub id: i64,
-  pub provider: String,
+  pub tenent_oauth2_provider_id: i64,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub email: Option<String>,
-  pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
+  pub created_at: DateTime<Utc>,
 }
 
 impl From<UserOAuth2ProviderRow> for UserOAuth2Provider {
   fn from(row: UserOAuth2ProviderRow) -> Self {
     Self {
       id: row.id,
-      provider: row.provider,
+      tenent_oauth2_provider_id: row.tenent_oauth2_provider_id,
       email: Some(row.email),
-      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
+      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
     }
   }
 }

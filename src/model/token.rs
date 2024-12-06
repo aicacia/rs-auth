@@ -30,8 +30,11 @@ pub struct Token {
 pub enum TokenRequest {
   #[serde(rename = "password")]
   Password {
+    #[schema(example = "username")]
     username: String,
+    #[schema(example = "password")]
     password: String,
+    #[schema(example = "openid")]
     scope: Option<String>,
   },
   #[serde(rename = "refresh-token")]
@@ -42,5 +45,9 @@ pub enum TokenRequest {
     secret: uuid::Uuid,
   },
   #[serde(rename = "authorization-code")]
-  AuthorizationCode { code: String, scope: Option<String> },
+  AuthorizationCode {
+    code: String,
+    #[schema(example = "openid")]
+    scope: Option<String>,
+  },
 }

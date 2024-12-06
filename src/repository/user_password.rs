@@ -10,8 +10,8 @@ pub struct UserPasswordRow {
   pub user_id: i64,
   pub active: i32,
   pub encrypted_password: String,
-  pub created_at: i64,
   pub updated_at: i64,
+  pub created_at: i64,
 }
 
 impl UserPasswordRow {

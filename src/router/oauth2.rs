@@ -21,7 +21,7 @@ use crate::{
   },
   repository::{
     tenent::get_tenent_by_id,
-    tenent_oauth2_provider::get_tenent_oauth2_provider,
+    tenent_oauth2_provider::get_active_tenent_oauth2_provider,
     user::{create_user_with_oauth2, get_user_by_id, CreateUserWithOAuth2},
     user_info::UserInfoUpdate,
     user_oauth2_provider::{
@@ -85,7 +85,7 @@ pub async fn create_oauth2_url(
   Query(OAuth2Query { register }): Query<OAuth2Query>,
 ) -> impl IntoResponse {
   let tenent_oauth2_provider =
-    match get_tenent_oauth2_provider(&state.pool, tenent.id, &provider).await {
+    match get_active_tenent_oauth2_provider(&state.pool, tenent.id, &provider).await {
       Ok(Some(tenent_oauth2_provider)) => tenent_oauth2_provider,
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
@@ -203,7 +203,7 @@ pub async fn oauth2_callback(
   };
 
   let tenent_oauth2_provider =
-    match get_tenent_oauth2_provider(&state.pool, tenent_id, &provider).await {
+    match get_active_tenent_oauth2_provider(&state.pool, tenent_id, &provider).await {
       Ok(Some(tenent_oauth2_provider)) => tenent_oauth2_provider,
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
@@ -334,7 +334,7 @@ pub async fn oauth2_callback(
       &state.pool,
       CreateUserWithOAuth2 {
         active: true,
-        provider: provider,
+        tenent_oauth2_provider_id: tenent_oauth2_provider.id,
         email: email,
         email_verified: openid_profile.email_verified.unwrap_or(false),
         phone_number: openid_profile.phone_number,
@@ -384,7 +384,14 @@ pub async fn oauth2_callback(
       }
     };
 
-    match create_user_oauth2_provider_and_email(&state.pool, user.id, &provider, &email).await {
+    match create_user_oauth2_provider_and_email(
+      &state.pool,
+      user.id,
+      tenent_oauth2_provider.id,
+      &email,
+    )
+    .await
+    {
       Ok(_) => {}
       Err(e) => {
         log::error!("Error creating user OAuth2 provider: {}", e);
@@ -396,7 +403,9 @@ pub async fn oauth2_callback(
 
     user
   } else {
-    match get_user_by_oauth2_provider_and_email(&state.pool, &provider, &email).await {
+    match get_user_by_oauth2_provider_and_email(&state.pool, tenent_oauth2_provider.id, &email)
+      .await
+    {
       Ok(Some(user)) => user,
       Ok(None) => {
         errors.status(StatusCode::NOT_FOUND);

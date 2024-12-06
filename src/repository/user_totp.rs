@@ -10,8 +10,8 @@ pub struct UserTOTPRow {
   pub digits: i64,
   pub step: i64,
   pub secret: String,
-  pub created_at: i64,
   pub updated_at: i64,
+  pub created_at: i64,
 }
 
 impl UserTOTPRow {

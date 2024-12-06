@@ -9,8 +9,8 @@ pub struct TenentRow {
   pub private_key: String,
   pub expires_in_seconds: i64,
   pub refresh_expires_in_seconds: i64,
-  pub created_at: i64,
   pub updated_at: i64,
+  pub created_at: i64,
 }
 
 pub async fn get_tenents(

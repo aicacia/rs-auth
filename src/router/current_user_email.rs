@@ -20,22 +20,17 @@ use crate::{
 use super::RouterState;
 
 #[derive(OpenApi)]
-#[openapi(
-  paths(
-    create_email,
-    set_email_as_primary,
-    delete_email,
-  ),
-  tags(
-    (name = "email", description = "Email endpoints"),
-  )
-)]
+#[openapi(paths(
+  create_current_user_email,
+  set_current_user_email_as_primary,
+  delete_current_user_email
+))]
 pub struct ApiDoc;
 
 #[utoipa::path(
   post,
   path = "current-user/emails",
-  tags = ["current-user", "email"],
+  tags = ["current-user"],
   request_body = CreateUserEmail,
   responses(
     (status = 201, content_type = "application/json", body = UserEmail),
@@ -48,7 +43,7 @@ pub struct ApiDoc;
     ("Authorization" = [])
   )
 )]
-pub async fn create_email(
+pub async fn create_current_user_email(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   ValidatedJson(payload): ValidatedJson<CreateUserEmail>,
@@ -83,7 +78,7 @@ pub async fn create_email(
 #[utoipa::path(
   put,
   path = "current-user/emails/{email_id}/set-as-primary",
-  tags = ["current-user", "email"],
+  tags = ["current-user"],
   params(
     ("email_id" = i64, Path, description = "Email ID to set as primary"),
   ),
@@ -98,7 +93,7 @@ pub async fn create_email(
     ("Authorization" = [])
   )
 )]
-pub async fn set_email_as_primary(
+pub async fn set_current_user_email_as_primary(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   Path(email_id): Path<i64>,
@@ -123,7 +118,7 @@ pub async fn set_email_as_primary(
 #[utoipa::path(
   delete,
   path = "current-user/emails/{email_id}",
-  tags = ["current-user", "email"],
+  tags = ["current-user"],
   params(
     ("email_id" = i64, Path, description = "Email ID to delete"),
   ),
@@ -138,7 +133,7 @@ pub async fn set_email_as_primary(
     ("Authorization" = [])
   )
 )]
-pub async fn delete_email(
+pub async fn delete_current_user_email(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
   Path(email_id): Path<i64>,
@@ -157,11 +152,14 @@ pub async fn delete_email(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/current-user/emails", post(create_email))
+    .route("/current-user/emails", post(create_current_user_email))
     .route(
       "/current-user/emails/{email_id}/set-as-primary",
-      put(set_email_as_primary),
+      put(set_current_user_email_as_primary),
     )
-    .route("/current-user/emails/{email_id}", delete(delete_email))
+    .route(
+      "/current-user/emails/{email_id}",
+      delete(delete_current_user_email),
+    )
     .with_state(state)
 }

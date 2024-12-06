@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR},
+  core::error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
     tenent::{CreateTenent, Tenent, UpdateTenent},
@@ -11,7 +11,9 @@ use crate::{
   repository::{
     self,
     tenent::get_tenents,
-    tenent_oauth2_provider::{get_tenents_oauth2_providers, TenentOAuth2ProviderRow},
+    tenent_oauth2_provider::{
+      get_tenent_oauth2_providers, get_tenents_oauth2_providers, TenentOAuth2ProviderRow,
+    },
   },
 };
 
@@ -29,7 +31,8 @@ use super::RouterState;
 #[derive(OpenApi)]
 #[openapi(
   paths(
-    tenents,
+    all_tenents,
+    get_tenent_by_id,
     create_tenent,
     update_tenent,
     delete_tenent
@@ -56,7 +59,7 @@ pub struct ApiDoc;
     ("Authorization" = [])
   )
 )]
-pub async fn tenents(
+pub async fn all_tenents(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
   Query(query): Query<OffsetAndLimit>,
@@ -102,6 +105,55 @@ pub async fn tenents(
     items: tenents,
   })
   .into_response()
+}
+
+#[utoipa::path(
+  get,
+  path = "tenents/{tenent_id}",
+  tags = ["tenent"],
+  params(
+    ("tenent_id" = i64, Path, description = "Tenent ID"),
+  ),
+  responses(
+    (status = 200, content_type = "application/json", body = Tenent),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 404, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+pub async fn get_tenent_by_id(
+  State(state): State<RouterState>,
+  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  Path(tenent_id): Path<i64>,
+) -> impl IntoResponse {
+  let (row_optional, oauth2_providers) = match tokio::try_join!(
+    repository::tenent::get_tenent_by_id(&state.pool, tenent_id),
+    get_tenent_oauth2_providers(&state.pool, tenent_id),
+  ) {
+    Ok(results) => results,
+    Err(e) => {
+      log::error!("error getting tenents: {}", e);
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
+  let row = match row_optional {
+    Some(row) => row,
+    None => {
+      return Errors::not_found()
+        .with_error("tenent", NOT_FOUND_ERROR)
+        .into_response()
+    }
+  };
+  let mut tenent = Tenent::from(row);
+  for oauth2_provider in oauth2_providers {
+    tenent.oauth2_providers.push(oauth2_provider.into());
+  }
+  axum::Json(tenent).into_response()
 }
 
 #[utoipa::path(
@@ -242,7 +294,8 @@ pub async fn delete_tenent(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/tenents", get(tenents))
+    .route("/tenents", get(all_tenents))
+    .route("/tenents/{tenent_id}", get(get_tenent_by_id))
     .route("/tenents", post(create_tenent))
     .route("/tenents/{tenent_id}", put(update_tenent))
     .route("/tenents/{tenent_id}", delete(update_tenent))

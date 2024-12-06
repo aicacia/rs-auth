@@ -9,8 +9,8 @@ pub struct UserEmailRow {
   pub primary: i32,
   pub verified: i32,
   pub email: String,
-  pub created_at: i64,
   pub updated_at: i64,
+  pub created_at: i64,
 }
 
 impl UserEmailRow {

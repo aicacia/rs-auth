@@ -31,6 +31,7 @@ CREATE TABLE "tenent_oauth2_providers" (
   "client_secret" TEXT NOT NULL,
   "auth_url" TEXT NOT NULL,
   "token_url" TEXT NOT NULL,
+  "callback_url" TEXT,
   "redirect_url" TEXT NOT NULL,
   "scope" TEXT NOT NULL,
 	"updated_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
@@ -156,10 +157,11 @@ CREATE TABLE "user_phone_numbers" (
 CREATE TABLE "user_oauth2_providers" (
 	"id" SERIAL PRIMARY KEY,
   "user_id" INTEGER NOT NULL,
+  "tenent_oauth2_provider_id" INTEGER NOT NULL,
   "email" VARCHAR(255) NOT NULL,
-  "provider" VARCHAR(255) NOT NULL,
 	"updated_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
 	"created_at" TIMESTAMP NOT NULL DEFAULT (now() at time zone 'utc'),
-  CONSTRAINT "user_oauth2_providers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+  CONSTRAINT "user_oauth2_providers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE,
+  CONSTRAINT "user_oauth2_providers_tenent_oauth2_provider_id_fk" FOREIGN KEY("tenent_oauth2_provider_id") REFERENCES "tenent_oauth2_providers"("id") ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX "user_oauth2_providers_user_id_provider_email_unique_idx" ON "user_oauth2_providers" ("provider", "email");
+CREATE UNIQUE INDEX "user_oauth2_providers_tenent_oauth2_provider_id_email_unique_idx" ON "user_oauth2_providers" ("tenent_oauth2_provider_id", "email");

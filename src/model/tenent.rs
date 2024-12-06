@@ -20,8 +20,8 @@ pub struct Tenent {
   pub expires_in_seconds: i64,
   pub refresh_expires_in_seconds: i64,
   pub oauth2_providers: Vec<TenentOAuth2Provider>,
-  pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
+  pub created_at: DateTime<Utc>,
 }
 
 impl From<TenentRow> for Tenent {
@@ -37,8 +37,8 @@ impl From<TenentRow> for Tenent {
       expires_in_seconds: row.expires_in_seconds,
       refresh_expires_in_seconds: row.refresh_expires_in_seconds,
       oauth2_providers: Vec::new(),
-      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
+      created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
     }
   }
 }
