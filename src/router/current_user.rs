@@ -214,13 +214,13 @@ pub async fn create_add_oauth2_provider_url(
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
         return Errors::internal_error()
-          .with_error("provider", NOT_FOUND_ERROR)
+          .with_error("oauth2-provider", NOT_FOUND_ERROR)
           .into_response();
       }
       Err(e) => {
         log::error!("Error getting tenent oauth2 provider: {}", e);
         return Errors::internal_error()
-          .with_application_error(INTERNAL_ERROR)
+          .with_error("oauth2-provider", INTERNAL_ERROR)
           .into_response();
       }
     };
@@ -238,7 +238,7 @@ pub async fn create_add_oauth2_provider_url(
     &tenent,
     false,
     Some(user.id),
-    parse_scopes(tenent_oauth2_provider.scope.as_ref().map(String::as_ref))
+    parse_scopes(Some(tenent_oauth2_provider.scope.as_str()))
       .into_iter()
       .map(oauth2::Scope::new),
   ) {

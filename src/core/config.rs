@@ -56,25 +56,8 @@ pub struct UserConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct OAuth2Config {
-  pub enabled: bool,
-  pub client_id: String,
-  pub client_secret: String,
-  pub auth_url: String,
-  pub token_url: String,
-  pub scopes: Vec<String>,
-  pub redirect_url: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct OAuth2 {
-  pub redirect_url: String,
   pub code_timeout_in_seconds: u64,
-  pub google: OAuth2Config,
-  pub microsoft: OAuth2Config,
-  pub facebook: OAuth2Config,
-  pub x: OAuth2Config,
-  pub github: OAuth2Config,
 }
 
 #[derive(Debug, Deserialize)]
@@ -118,75 +101,6 @@ impl Config {
       .set_default("user.allow_passwords", true)?
       // OAuth2 Defaults
       .set_default("oauth2.code_timeout_in_seconds", 60 * 5)?
-      .set_default("oauth2.google.enabled", false)?
-      // OAuth2 Google Defaults
-      .set_default("oauth2.google.enabled", false)?
-      .set_default("oauth2.google.client_id", "")?
-      .set_default("oauth2.google.client_secret", "")?
-      .set_default(
-        "oauth2.google.auth_url",
-        "https://accounts.google.com/o/oauth2/v2/auth",
-      )?
-      .set_default(
-        "oauth2.google.token_url",
-        "https://www.googleapis.com/oauth2/v3/token",
-      )?
-      .set_default(
-        "oauth2.google.scopes",
-        vec![
-          "https://www.googleapis.com/auth/userinfo.email",
-          "https://www.googleapis.com/auth/userinfo.profile",
-        ],
-      )?
-      // OAuth2 Facebook Defaults
-      .set_default("oauth2.facebook.enabled", false)?
-      .set_default("oauth2.facebook.client_id", "")?
-      .set_default("oauth2.facebook.client_secret", "")?
-      .set_default(
-        "oauth2.facebook.auth_url",
-        "https://www.facebook.com/v21.0/dialog/oauth",
-      )?
-      .set_default(
-        "oauth2.facebook.token_url",
-        "https://graph.facebook.com/v21.0/oauth/access_token",
-      )?
-      .set_default("oauth2.facebook.scopes", vec!["public_profile", "email"])?
-      // OAuth2 Github Defaults
-      .set_default("oauth2.github.enabled", false)?
-      .set_default("oauth2.github.client_id", "")?
-      .set_default("oauth2.github.client_secret", "")?
-      .set_default(
-        "oauth2.github.auth_url",
-        "https://github.com/login/oauth/authorize",
-      )?
-      .set_default(
-        "oauth2.github.token_url",
-        "https://github.com/login/oauth/access_token",
-      )?
-      .set_default("oauth2.github.scopes", vec!["public_repo", "user:email"])?
-      // OAuth2 Microsoft Defaults
-      .set_default("oauth2.microsoft.enabled", false)?
-      .set_default("oauth2.microsoft.client_id", "")?
-      .set_default("oauth2.microsoft.client_secret", "")?
-      .set_default(
-        "oauth2.microsoft.auth_url",
-        "https://microsoft.com/login/oauth/authorize",
-      )?
-      .set_default(
-        "oauth2.microsoft.token_url",
-        "https://microsoft.com/login/oauth/access_token",
-      )?
-      .set_default("oauth2.microsoft.scopes", vec!["public_profile", "email"])?
-      // OAuth2 X Defaults
-      .set_default("oauth2.x.enabled", false)?
-      .set_default("oauth2.x.client_id", "")?
-      .set_default("oauth2.x.client_secret", "")?
-      .set_default("oauth2.x.auth_url", "https://x.com/login/oauth/authorize")?
-      .set_default(
-        "oauth2.x.token_url",
-        "https://x.com/login/oauth/access_token",
-      )?
-      .set_default("oauth2.x.scopes", vec!["public_profile", "email"])?
       // Defaults
       .set_default("log_level", "debug")?
       .add_source(config::File::with_name("./config.json"))

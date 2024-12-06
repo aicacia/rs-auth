@@ -29,8 +29,8 @@ CREATE TABLE "tenent_oauth2_providers" (
   "client_secret" TEXT NOT NULL,
   "auth_url" TEXT NOT NULL,
   "token_url" TEXT NOT NULL,
-  "scope" TEXT,
-  "redirect_url" TEXT,
+  "redirect_url" TEXT NOT NULL,
+  "scope" TEXT NOT NULL,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("tenent_id") REFERENCES "tenents" ("id") ON DELETE CASCADE

@@ -6,6 +6,8 @@ use utoipa::ToSchema;
 
 use crate::repository::tenent::TenentRow;
 
+use super::tenent_oauth2_provider::TenentOAuth2Provider;
+
 #[derive(Serialize, ToSchema)]
 pub struct Tenent {
   pub id: i64,
@@ -17,6 +19,7 @@ pub struct Tenent {
   pub private_key: String,
   pub expires_in_seconds: i64,
   pub refresh_expires_in_seconds: i64,
+  pub oauth2_providers: Vec<TenentOAuth2Provider>,
   pub created_at: DateTime<Utc>,
   pub updated_at: DateTime<Utc>,
 }
@@ -33,6 +36,7 @@ impl From<TenentRow> for Tenent {
       private_key: row.private_key,
       expires_in_seconds: row.expires_in_seconds,
       refresh_expires_in_seconds: row.refresh_expires_in_seconds,
+      oauth2_providers: Vec::new(),
       created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
     }

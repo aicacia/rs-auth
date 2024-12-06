@@ -1,11 +1,18 @@
+use std::collections::HashMap;
+
 use crate::{
-  core::error::Errors,
+  core::error::{Errors, INTERNAL_ERROR},
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
     tenent::{CreateTenent, Tenent, UpdateTenent},
+    tenent_oauth2_provider::TenentOAuth2Provider,
     util::{OffsetAndLimit, Pagination, DEFAULT_LIMIT},
   },
-  repository::{self, tenent::get_tenents},
+  repository::{
+    self,
+    tenent::get_tenents,
+    tenent_oauth2_provider::{get_tenents_oauth2_providers, TenentOAuth2ProviderRow},
+  },
 };
 
 use axum::{
@@ -56,14 +63,39 @@ pub async fn tenents(
 ) -> impl IntoResponse {
   let limit = query.limit.unwrap_or(DEFAULT_LIMIT);
   let offset = query.offset.unwrap_or(0);
-  let rows = match get_tenents(&state.pool, limit, offset).await {
+  let (rows, oauth2_providers) = match tokio::try_join!(
+    get_tenents(&state.pool, limit, offset),
+    get_tenents_oauth2_providers(&state.pool, limit, offset),
+  ) {
     Ok(results) => results,
     Err(e) => {
       log::error!("error getting tenents: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
-  let tenents = rows.into_iter().map(Into::into).collect::<Vec<Tenent>>();
+  let mut oauth2_providers_by_id: HashMap<i64, Vec<TenentOAuth2ProviderRow>> = oauth2_providers
+    .into_iter()
+    .fold(HashMap::new(), |mut acc, row| {
+      acc.entry(row.tenent_id).or_default().push(row);
+      acc
+    });
+  let tenents = rows
+    .into_iter()
+    .map(|row| {
+      let mut tenent = Tenent::from(row);
+      for oauth2_provider in oauth2_providers_by_id
+        .remove(&tenent.id)
+        .unwrap_or_default()
+      {
+        tenent
+          .oauth2_providers
+          .push(TenentOAuth2Provider::from(oauth2_provider));
+      }
+      tenent
+    })
+    .collect::<Vec<_>>();
 
   axum::Json(Pagination {
     has_more: tenents.len() == limit,
@@ -113,7 +145,9 @@ pub async fn create_tenent(
     Ok(tenent) => tenent,
     Err(e) => {
       log::error!("error creating tenent: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   axum::Json(Into::<Tenent>::into(tenent)).into_response()
@@ -163,7 +197,9 @@ pub async fn update_tenent(
     Ok(None) => return Errors::from(StatusCode::NOT_FOUND).into_response(),
     Err(e) => {
       log::error!("error creating tenent: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   axum::Json(Into::<Tenent>::into(tenent)).into_response()
@@ -196,7 +232,9 @@ pub async fn delete_tenent(
     Ok(None) => return Errors::from(StatusCode::NOT_FOUND).into_response(),
     Err(e) => {
       log::error!("error creating tenent: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   }
   (StatusCode::NO_CONTENT, ()).into_response()

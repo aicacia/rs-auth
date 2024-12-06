@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-  core::error::{Errors, NOT_FOUND_ERROR},
+  core::error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{
     json::Json, service_account_authorization::ServiceAccountAuthorization,
     validated_json::ValidatedJson,
@@ -87,7 +87,9 @@ pub async fn users(
     Ok(results) => results,
     Err(e) => {
       log::error!("error getting users: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   let mut users_emails_by_id: HashMap<i64, Vec<UserEmailRow>> =
@@ -201,7 +203,9 @@ pub async fn create_user(
     Ok(user) => user,
     Err(e) => {
       log::error!("error creating user: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
   (StatusCode::CREATED, axum::Json(User::from(new_user))).into_response()
@@ -248,7 +252,9 @@ pub async fn create_user_reset_password_token(
     }
     Err(e) => {
       log::error!("error getting user/tenent: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR).into_response();
+      return Errors::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
     }
   };
 

@@ -4,8 +4,8 @@ use crate::{
   core::{
     config::get_config,
     error::{
-      Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR, PARSE_ERROR,
-      REQUIRED_ERROR,
+      Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR,
+      NOT_FOUND_ERROR, PARSE_ERROR, REQUIRED_ERROR,
     },
   },
   middleware::{
@@ -114,7 +114,7 @@ pub async fn create_oauth2_url(
     &tenent,
     register.unwrap_or(false),
     None,
-    parse_scopes(tenent_oauth2_provider.scope.as_ref().map(String::as_ref))
+    parse_scopes(Some(tenent_oauth2_provider.scope.as_str()))
       .into_iter()
       .map(oauth2::Scope::new),
   ) {
@@ -208,33 +208,36 @@ pub async fn oauth2_callback(
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
         return Errors::internal_error()
-          .with_error("provider", NOT_FOUND_ERROR)
+          .with_error("oauth2-provider", NOT_FOUND_ERROR)
           .into_response();
       }
       Err(e) => {
         log::error!("Error getting tenent oauth2 provider: {}", e);
         return Errors::internal_error()
-          .with_application_error(INTERNAL_ERROR)
+          .with_error("oauth2-provider", INTERNAL_ERROR)
           .into_response();
       }
     };
+  let mut errors = Errors::bad_request();
+  let mut redirect_url = match Url::parse(&tenent_oauth2_provider.redirect_url) {
+    Ok(url) => url.to_owned(),
+    Err(e) => {
+      log::error!(
+        "Error parsing redirect url from tenent oauth2 provider: {}",
+        e
+      );
+      return Errors::internal_error()
+        .with_error("redirect-url", PARSE_ERROR)
+        .into_response();
+    }
+  };
 
   let basic_client = match tenent_oauth2_provider.basic_client() {
     Ok(client) => client,
     Err(e) => {
       log::error!("Error getting basic client: {}", e);
-      return Errors::internal_error()
-        .with_error("oauth2-provider", INVALID_ERROR)
-        .into_response();
-    }
-  };
-  let mut errors = Errors::bad_request();
-  let mut redirect_url = match basic_client.redirect_url().map(oauth2::RedirectUrl::url) {
-    Some(url) => url.to_owned(),
-    None => {
-      return Errors::not_found()
-        .with_error("redirect-url", NOT_FOUND_ERROR)
-        .into_response();
+      errors.error("oauth2-provider", INVALID_ERROR);
+      return redirect_with_error(redirect_url, errors).into_response();
     }
   };
   let tenent = match get_tenent_by_id(&state.pool, tenent_id).await {
@@ -256,12 +259,14 @@ pub async fn oauth2_callback(
       Some((_, pkce_code_verifier)) => pkce_code_verifier,
       None => {
         log::error!("No PKCE code verifier found for CSRF token");
+        errors.status(StatusCode::INTERNAL_SERVER_ERROR);
         errors.error("pkce-code-verifier", INTERNAL_ERROR);
         return redirect_with_error(redirect_url, errors).into_response();
       }
     },
     Err(e) => {
       log::error!("Error aquiring PKCE verifier map: {}", e);
+      errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("pkce-code-verifier", INTERNAL_ERROR);
       return redirect_with_error(redirect_url, errors).into_response();
     }
@@ -272,6 +277,7 @@ pub async fn oauth2_callback(
       Ok(token) => token,
       Err(e) => {
         log::error!("Error parsing OAuth2 state: {}", e);
+        errors.status(StatusCode::INTERNAL_SERVER_ERROR);
         errors.error("oauth2-state-token", PARSE_ERROR);
         return redirect_with_error(redirect_url, errors).into_response();
       }
@@ -286,6 +292,7 @@ pub async fn oauth2_callback(
     Ok(token_response) => token_response,
     Err(e) => {
       log::error!("Error exchanging code for token: {}", e);
+      errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("oauth2-code-exchange", INTERNAL_ERROR);
       return redirect_with_error(redirect_url, errors).into_response();
     }
@@ -295,6 +302,7 @@ pub async fn oauth2_callback(
     Ok(p) => p,
     Err(e) => {
       log::error!("Error getting OAuth2 profile: {}", e);
+      errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("oauth2-provider-profile", INVALID_ERROR);
       return redirect_with_error(redirect_url, errors).into_response();
     }
@@ -352,6 +360,7 @@ pub async fn oauth2_callback(
       Ok(user) => user,
       Err(e) => {
         log::error!("Error creating user with OAuth2 provider: {}", e);
+        errors.status(StatusCode::INTERNAL_SERVER_ERROR);
         errors.error("oauth2-provider", INTERNAL_ERROR);
         return redirect_with_error(redirect_url, errors).into_response();
       }
@@ -359,8 +368,16 @@ pub async fn oauth2_callback(
   } else if let Some(user_id) = oauth2_state_token.claims.user_id {
     let user = match get_user_by_id(&state.pool, user_id).await {
       Ok(Some(user)) => user,
-      Ok(None) => return Errors::unauthorized().into_response(),
+      Ok(None) => {
+        errors.error("user", NOT_FOUND_ERROR);
+        return redirect_with_error(redirect_url, errors).into_response();
+      }
       Err(e) => {
+        if e.to_string().to_lowercase().contains("unique constraint") {
+          return Errors::from(StatusCode::CONFLICT)
+            .with_error("oauth2-provider", ALREADY_EXISTS_ERROR)
+            .into_response();
+        }
         log::error!("Error fetching user by ID: {}", e);
         errors.error("oauth2-provider", REQUIRED_ERROR);
         return redirect_with_error(redirect_url, errors).into_response();
@@ -371,6 +388,7 @@ pub async fn oauth2_callback(
       Ok(_) => {}
       Err(e) => {
         log::error!("Error creating user OAuth2 provider: {}", e);
+        errors.status(StatusCode::INTERNAL_SERVER_ERROR);
         errors.error("oauth2-provider", INTERNAL_ERROR);
         return redirect_with_error(redirect_url, errors).into_response();
       }
@@ -381,8 +399,8 @@ pub async fn oauth2_callback(
     match get_user_by_oauth2_provider_and_email(&state.pool, &provider, &email).await {
       Ok(Some(user)) => user,
       Ok(None) => {
-        errors.status(StatusCode::FORBIDDEN);
-        errors.error("oauth2-provider", NOT_ALLOWED_ERROR);
+        errors.status(StatusCode::NOT_FOUND);
+        errors.error("oauth2-provider", NOT_FOUND_ERROR);
         return redirect_with_error(redirect_url, errors).into_response();
       }
       Err(e) => {
@@ -412,6 +430,7 @@ pub async fn oauth2_callback(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
+      errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("authorization-code", PARSE_ERROR);
       return redirect_with_error(redirect_url, errors).into_response();
     }
