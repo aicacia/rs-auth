@@ -230,7 +230,11 @@ pub async fn update_service_account(
   .await
   {
     Ok(Some(row)) => row,
-    Ok(None) => return Errors::from(StatusCode::NOT_FOUND).into_response(),
+    Ok(None) => {
+      return Errors::not_found()
+        .with_error("service-account", NOT_FOUND_ERROR)
+        .into_response()
+    }
     Err(e) => {
       log::error!("error creating service_account: {}", e);
       return Errors::internal_error()
@@ -269,7 +273,11 @@ pub async fn delete_service_account(
 ) -> impl IntoResponse {
   match repository::service_account::delete_service_account(&state.pool, service_account_id).await {
     Ok(Some(_)) => {}
-    Ok(None) => return Errors::from(StatusCode::NOT_FOUND).into_response(),
+    Ok(None) => {
+      return Errors::not_found()
+        .with_error("service-account", NOT_FOUND_ERROR)
+        .into_response()
+    }
     Err(e) => {
       log::error!("error creating service_account: {}", e);
       return Errors::internal_error()

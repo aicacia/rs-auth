@@ -246,7 +246,11 @@ pub async fn update_tenent(
   .await
   {
     Ok(Some(tenent)) => tenent,
-    Ok(None) => return Errors::from(StatusCode::NOT_FOUND).into_response(),
+    Ok(None) => {
+      return Errors::not_found()
+        .with_error("tenent", NOT_FOUND_ERROR)
+        .into_response()
+    }
     Err(e) => {
       log::error!("error creating tenent: {}", e);
       return Errors::internal_error()
@@ -281,7 +285,11 @@ pub async fn delete_tenent(
 ) -> impl IntoResponse {
   match repository::tenent::delete_tenent(&state.pool, tenent_id).await {
     Ok(Some(_)) => {}
-    Ok(None) => return Errors::from(StatusCode::NOT_FOUND).into_response(),
+    Ok(None) => {
+      return Errors::not_found()
+        .with_error("tenent", NOT_FOUND_ERROR)
+        .into_response()
+    }
     Err(e) => {
       log::error!("error creating tenent: {}", e);
       return Errors::internal_error()
