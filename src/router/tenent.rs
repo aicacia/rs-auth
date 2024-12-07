@@ -265,7 +265,7 @@ pub async fn update_tenent(
     ("tenent_id" = i64, Path, description = "Tenent ID")
   ),
   responses(
-    (status = 201, content_type = "application/json", body = Tenent),
+    (status = 204),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 404, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -298,6 +298,6 @@ pub fn create_router(state: RouterState) -> Router {
     .route("/tenents/{tenent_id}", get(get_tenent_by_id))
     .route("/tenents", post(create_tenent))
     .route("/tenents/{tenent_id}", put(update_tenent))
-    .route("/tenents/{tenent_id}", delete(update_tenent))
+    .route("/tenents/{tenent_id}", delete(delete_tenent))
     .with_state(state)
 }

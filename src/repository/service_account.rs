@@ -90,6 +90,7 @@ pub async fn create_service_account(
   .await
 }
 
+#[derive(Default)]
 pub struct UpdateServiceAccount {
   pub client_id: Option<String>,
   pub encrypted_client_secret: Option<String>,
