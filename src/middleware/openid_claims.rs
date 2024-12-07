@@ -73,8 +73,8 @@ impl Claims for OpenIdClaims {
   fn iss(&self) -> &String {
     &self.claims.iss
   }
-  fn aud(&self) -> &String {
-    &self.claims.aud
+  fn aud(&self) -> Option<&String> {
+    self.claims.aud.as_ref()
   }
   fn sub_kind(&self) -> &String {
     &self.claims.sub_kind

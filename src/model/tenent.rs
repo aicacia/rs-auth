@@ -13,7 +13,7 @@ pub struct Tenent {
   pub id: i64,
   pub client_id: uuid::Uuid,
   pub issuer: String,
-  pub audience: String,
+  pub audience: Option<String>,
   pub algorithm: String,
   pub public_key: Option<String>,
   pub private_key: String,

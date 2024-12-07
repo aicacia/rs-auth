@@ -109,11 +109,12 @@ pub async fn token(
         .await
         .into_response()
     }
-    TokenRequest::ServiceAccount { client_id, secret } => {
-      service_account_request(&state.pool, tenent, client_id, secret)
-        .await
-        .into_response()
-    }
+    TokenRequest::ServiceAccount {
+      client_id,
+      client_secret,
+    } => service_account_request(&state.pool, tenent, client_id, client_secret)
+      .await
+      .into_response(),
     TokenRequest::AuthorizationCode { code, scope } => {
       authorization_code_request(&state.pool, tenent, code, scope)
         .await
@@ -298,7 +299,7 @@ async fn service_account_request(
   pool: &AnyPool,
   tenent: TenentRow,
   client_id: uuid::Uuid,
-  secret: uuid::Uuid,
+  client_secret: uuid::Uuid,
 ) -> impl IntoResponse {
   let service_account = match get_service_account_by_client_id(pool, &client_id.to_string()).await {
     Ok(Some(service_account)) => service_account,
@@ -308,7 +309,7 @@ async fn service_account_request(
       return Errors::from(StatusCode::UNAUTHORIZED).into_response();
     }
   };
-  match service_account.verify(&secret.to_string()) {
+  match service_account.verify(&client_secret.to_string()) {
     Ok(true) => create_service_token_token(
       pool,
       tenent,

@@ -42,7 +42,7 @@ pub enum TokenRequest {
   #[serde(rename = "service-account")]
   ServiceAccount {
     client_id: uuid::Uuid,
-    secret: uuid::Uuid,
+    client_secret: uuid::Uuid,
   },
   #[serde(rename = "authorization-code")]
   AuthorizationCode {

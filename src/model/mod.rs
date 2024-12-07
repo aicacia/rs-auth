@@ -2,6 +2,7 @@ pub mod current_user;
 pub mod mfa;
 pub mod oauth2;
 pub mod register;
+pub mod service_account;
 pub mod tenent;
 pub mod tenent_oauth2_provider;
 pub mod token;

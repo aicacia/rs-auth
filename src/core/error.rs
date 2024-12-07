@@ -1,8 +1,4 @@
-use std::{
-  collections::HashMap,
-  fmt::{self},
-  io,
-};
+use std::{collections::HashMap, fmt, io};
 
 use axum::{
   http::{header, StatusCode},
@@ -21,6 +17,7 @@ pub const NOT_FOUND_ERROR: &str = "not-found";
 pub const INVALID_ERROR: &str = "invalid";
 pub const PARSE_ERROR: &str = "parse";
 pub const INTERNAL_ERROR: &str = "internal";
+pub const DATEBASE_ERROR: &str = "database";
 pub const NOT_ALLOWED_ERROR: &str = "not-allowed";
 pub const ALREADY_USED_ERROR: &str = "already-used";
 pub const ALREADY_EXISTS_ERROR: &str = "already-exists";

@@ -2,7 +2,7 @@ CREATE TABLE "tenents" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"client_id" TEXT NOT NULL,
   "issuer" TEXT NOT NULL,
-  "audience" TEXT NOT NULL,
+  "audience" TEXT,
 	"algorithm" TEXT NOT NULL DEFAULT 'HS256',
 	"public_key" TEXT,
 	"private_key" TEXT NOT NULL,
@@ -17,7 +17,7 @@ CREATE UNIQUE INDEX "tenents_client_id_unique_idx" ON "tenents" ("client_id");
 INSERT INTO "tenents"
   ("client_id", "issuer", "audience", "private_key")
   VALUES
-	('6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Test', "http://localhost:3000", hex(randomblob(255)));
+	('6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Admin', null, hex(randomblob(255)));
 
 
 CREATE TABLE "tenent_oauth2_providers" (
@@ -44,7 +44,7 @@ CREATE INDEX "tenent_oauth2_providers_tenent_id_idx" ON "tenent_oauth2_providers
 CREATE TABLE "service_accounts" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"client_id" TEXT NOT NULL,
-  "encrypted_secret" TEXT NOT NULL,
+  "encrypted_client_secret" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "active" INTEGER NOT NULL DEFAULT TRUE,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
@@ -53,11 +53,6 @@ CREATE TABLE "service_accounts" (
 CREATE UNIQUE INDEX "service_accounts_id_unique_idx" ON "service_accounts" ("id");
 CREATE UNIQUE INDEX "service_accounts_client_id_unique_idx" ON "service_accounts" ("client_id");
 CREATE UNIQUE INDEX "service_accounts_name_unique_idx" ON "service_accounts" ("name");
-
-INSERT INTO "service_accounts" 
-	("name", "client_id", "encrypted_secret") 
-	VALUES 
-	('test', 'dba9fb13-f2d0-498e-aaf2-65c435ffe797', '$argon2id$v=19$m=19456,t=2,p=1$ZU1WNU9Cc21rWFhOdkhpaw$pfGvO5zldmhSpS8kyx9PyzYMtzi6jpY9kkLyjmL+AD4');
 
 
 CREATE TABLE "users" (
@@ -69,10 +64,6 @@ CREATE TABLE "users" (
 ) STRICT;
 CREATE UNIQUE INDEX "users_id_unique_idx" ON "users" ("id");
 CREATE UNIQUE INDEX "users_username_unique_idx" ON "users" ("username");
-
-INSERT INTO "users" ("username") 
-	VALUES 
-	("test");
 
 
 CREATE TABLE "user_infos"(
@@ -95,11 +86,6 @@ CREATE TABLE "user_infos"(
 ) STRICT;
 CREATE UNIQUE INDEX "user_infos_user_id_unique_idx" ON "user_infos" ("user_id");
 
-INSERT INTO "user_infos" 
-	("user_id")
-	VALUES 
-	((SELECT id FROM "users" WHERE username='test' LIMIT 1));
-
 
 CREATE TABLE "user_passwords" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -112,11 +98,6 @@ CREATE TABLE "user_passwords" (
 ) STRICT;
 CREATE UNIQUE INDEX "user_passwords_id_unique_idx" ON "user_passwords" ("id");
 CREATE INDEX "user_passwords_user_id_idx" ON "user_passwords" ("user_id");
-
-INSERT INTO "user_passwords" 
-	("user_id", "encrypted_password")
-	VALUES 
-	((SELECT id FROM "users" WHERE username='test' LIMIT 1), '$argon2id$v=19$m=19456,t=2,p=1$SmhvV0Y1WUZTU2YyS1MxVA$x0HaVNrXTCZSJa7zJzT3v59PQedgZquZlWYnp848cpE');
 
 
 CREATE TABLE "user_totps"(

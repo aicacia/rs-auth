@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::repository::tenent::TenentRow;
 
@@ -20,7 +20,7 @@ pub trait Claims: Serialize + DeserializeOwned {
   fn iat(&self) -> i64;
   fn nbf(&self) -> i64;
   fn iss(&self) -> &String;
-  fn aud(&self) -> &String;
+  fn aud(&self) -> Option<&String>;
   fn sub_kind(&self) -> &String;
   fn sub(&self) -> i64;
   fn app(&self) -> i64;
@@ -46,7 +46,8 @@ pub struct BasicClaims {
   pub iat: i64,
   pub nbf: i64,
   pub iss: String,
-  pub aud: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub aud: Option<String>,
   #[serde(rename = "sub_type")]
   pub sub_kind: String,
   pub sub: i64,
@@ -71,8 +72,8 @@ impl Claims for BasicClaims {
   fn iss(&self) -> &String {
     &self.iss
   }
-  fn aud(&self) -> &String {
-    &self.aud
+  fn aud(&self) -> Option<&String> {
+    self.aud.as_ref()
   }
   fn sub_kind(&self) -> &String {
     &self.sub_kind
@@ -100,7 +101,9 @@ where
   let mut validation = jsonwebtoken::Validation::new(algorithm);
   validation.validate_nbf = true;
   validation.set_issuer(&[&tenent.issuer]);
-  validation.set_audience(&[&tenent.audience]);
+  if let Some(audience) = &tenent.audience {
+    validation.set_audience(&[audience]);
+  }
 
   let key = tenent_decoding_key(tenent, algorithm)?;
 
