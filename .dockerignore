@@ -1,7 +1,9 @@
-/.cargo
-/.github
 /.vscode
 /target
+/.cargo
 /.env*
+/config.json
+/!config.json.example
 /auth-dev.*
+/auth-admin-service-account.json
 /docker-compose.yaml

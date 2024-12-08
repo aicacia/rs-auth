@@ -6,6 +6,4 @@
 /config.json
 /!config.json.example
 /auth-dev.*
-/.openapi
-/openapitools.json
 /auth-admin-service-account.json

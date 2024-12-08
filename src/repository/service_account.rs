@@ -95,7 +95,7 @@ pub struct UpdateServiceAccount {
   pub client_id: Option<String>,
   pub encrypted_client_secret: Option<String>,
   pub name: Option<String>,
-  pub active: Option<i32>,
+  pub active: Option<bool>,
 }
 
 pub async fn update_service_account(

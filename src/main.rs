@@ -7,10 +7,10 @@ use auth::{
     encryption,
     error::{Errors, DATEBASE_ERROR, INTERNAL_ERROR},
   },
+  model::service_account::ServiceAccount,
   repository::{self, service_account::get_service_accounts},
   router::{create_router, RouterState},
 };
-use chrono::{DateTime, Utc};
 use sqlx::Executor;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -91,7 +91,7 @@ async fn init_service_account(pool: &sqlx::AnyPool) -> Result<(), Errors> {
       return Err(Errors::internal_error().with_application_error(DATEBASE_ERROR));
     }
   };
-  let service_account = match repository::service_account::create_service_account(
+  let service_account_row = match repository::service_account::create_service_account(
     pool,
     repository::service_account::CreateServiceAccount {
       client_id: client_id.to_string(),
@@ -101,22 +101,15 @@ async fn init_service_account(pool: &sqlx::AnyPool) -> Result<(), Errors> {
   )
   .await
   {
-    Ok(service_account) => service_account,
+    Ok(row) => row,
     Err(e) => {
       log::error!("Error creating service account: {}", e);
       return Err(Errors::internal_error().with_application_error(DATEBASE_ERROR));
     }
   };
-  let service_account_json = serde_json::json!({
-    "id": service_account.id,
-    "client_id": service_account.client_id.to_string(),
-    "client_secret": client_secret.to_string(),
-    "name": service_account.name,
-    "active": service_account.is_active(),
-    "updated_at": DateTime::<Utc>::from_timestamp(service_account.updated_at, 0).unwrap_or_default(),
-    "created_at": DateTime::<Utc>::from_timestamp(service_account.created_at, 0).unwrap_or_default(),
-  });
-  let service_account_json_string = match serde_json::to_string_pretty(&service_account_json) {
+  let mut service_account = ServiceAccount::from(service_account_row);
+  service_account.client_secret = Some(client_secret.clone());
+  let service_account_json_string = match serde_json::to_string_pretty(&service_account) {
     Ok(json) => json,
     Err(e) => {
       log::error!("Error serializing service account: {}", e);
