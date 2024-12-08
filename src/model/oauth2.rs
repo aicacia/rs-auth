@@ -5,7 +5,7 @@ use utoipa::IntoParams;
 use crate::{
   core::config::get_config,
   middleware::{claims::tenent_encoding_key, openid_claims::OpenIdProfile},
-  repository::tenent::TenentRow,
+  repository::{tenent::TenentRow, tenent_oauth2_provider::TenentOAuth2ProviderRow},
 };
 
 #[derive(Deserialize, IntoParams)]
@@ -86,6 +86,27 @@ where
   Ok((url, csrf_token, pkce_code_verifier))
 }
 
+pub async fn oauth2_profile<TR, TT>(
+  tenent_oauth2_provider: &TenentOAuth2ProviderRow,
+  token_response: TR,
+) -> Result<OpenIdProfile, io::Error>
+where
+  TR: oauth2::TokenResponse<TT>,
+  TT: oauth2::TokenType,
+{
+  match tenent_oauth2_provider.provider.as_str() {
+    "google" => oauth2_google_profile(token_response.access_token().secret()).await,
+    "facebook" => oauth2_facebook_profile(token_response.access_token().secret()).await,
+    _ => {
+      return Err(io::Error::new(
+        io::ErrorKind::InvalidInput,
+        "Unknown provider",
+      ));
+    }
+  }
+  .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
+}
+
 async fn oauth2_google_profile(access_token: &str) -> Result<OpenIdProfile, reqwest::Error> {
   reqwest::Client::new()
     .get("https://www.googleapis.com/oauth2/v3/userinfo")
@@ -105,25 +126,4 @@ async fn oauth2_facebook_profile(access_token: &str) -> Result<OpenIdProfile, re
     .await?
     .json::<OpenIdProfile>()
     .await
-}
-
-pub async fn oauth2_profile<TR, TT>(
-  provider: &str,
-  token_response: TR,
-) -> Result<OpenIdProfile, io::Error>
-where
-  TR: oauth2::TokenResponse<TT>,
-  TT: oauth2::TokenType,
-{
-  match provider {
-    "google" => oauth2_google_profile(token_response.access_token().secret()).await,
-    "facebook" => oauth2_facebook_profile(token_response.access_token().secret()).await,
-    _ => {
-      return Err(io::Error::new(
-        io::ErrorKind::InvalidInput,
-        "Unknown provider",
-      ));
-    }
-  }
-  .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }

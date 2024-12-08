@@ -298,7 +298,7 @@ pub async fn oauth2_callback(
     }
   };
 
-  let openid_profile = match oauth2_profile(&provider, token_response).await {
+  let openid_profile = match oauth2_profile(&tenent_oauth2_provider, token_response).await {
     Ok(p) => p,
     Err(e) => {
       log::error!("Error getting OAuth2 profile: {}", e);

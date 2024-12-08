@@ -391,7 +391,7 @@ pub async fn update_current_user(
 #[utoipa::path(
   put,
   path = "current-user/info",
-  tags = ["current-user", "openid"],
+  tags = ["current-user"],
   request_body = UpdateUserInfoRequest,
   responses(
     (status = 204),

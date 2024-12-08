@@ -6,4 +6,6 @@ use utoipa::ToSchema;
 pub enum MFARequest {
   #[serde(rename = "totp")]
   TOTP { code: String },
+  #[serde(rename = "service-account")]
+  ServiceAccount { code: String },
 }

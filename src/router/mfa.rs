@@ -7,15 +7,19 @@ use crate::{
     openapi::AUTHORIZATION_HEADER,
   },
   middleware::{
-    authorization::Authorization,
-    claims::{BasicClaims, TOKEN_TYPE_MFA_TOTP},
+    authorization::{parse_authorization, Authorization},
+    claims::{BasicClaims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_TYPE_BEARER, TOKEN_TYPE_MFA_TOTP},
     json::Json,
   },
   model::{
     mfa::MFARequest,
     token::{Token, TOKEN_ISSUED_TYPE_MFA},
   },
-  repository::{tenent::TenentRow, user::get_user_by_id, user_totp::get_user_totp_by_user_id},
+  repository::{
+    tenent::TenentRow,
+    user::{get_user_by_id, UserRow},
+    user_totp::get_user_totp_by_user_id,
+  },
 };
 
 use super::{token::create_user_token, RouterState};
@@ -51,25 +55,12 @@ pub async fn mfa(
   Authorization { claims, tenent, .. }: Authorization,
   Json(payload): Json<MFARequest>,
 ) -> impl IntoResponse {
-  match payload {
-    MFARequest::TOTP { code } => totp_request(&state.pool, claims, tenent, code)
-      .await
-      .into_response(),
-  }
-}
-
-async fn totp_request(
-  pool: &sqlx::Pool<sqlx::Any>,
-  claims: BasicClaims,
-  tenent: TenentRow,
-  code: String,
-) -> impl IntoResponse {
   if claims.kind != TOKEN_TYPE_MFA_TOTP {
     return Errors::unauthorized()
       .with_error(AUTHORIZATION_HEADER, "invalid-token-type")
       .into_response();
   }
-  let user = match get_user_by_id(pool, claims.sub).await {
+  let user = match get_user_by_id(&state.pool, claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => {
       return Errors::not_found()
@@ -83,7 +74,25 @@ async fn totp_request(
         .into_response();
     }
   };
+  match payload {
+    MFARequest::TOTP { code } => totp_request(&state.pool, user, claims, tenent, code)
+      .await
+      .into_response(),
+    MFARequest::ServiceAccount { code } => {
+      service_account_request(&state.pool, user, claims, tenent, code)
+        .await
+        .into_response()
+    }
+  }
+}
 
+async fn totp_request(
+  pool: &sqlx::AnyPool,
+  user: UserRow,
+  claims: BasicClaims,
+  tenent: TenentRow,
+  code: String,
+) -> impl IntoResponse {
   let totp = match get_user_totp_by_user_id(pool, user.id).await {
     Ok(Some(totp)) => totp,
     Ok(None) => {
@@ -114,6 +123,38 @@ async fn totp_request(
     }
   }
 
+  create_user_token(
+    pool,
+    tenent,
+    user,
+    Some(claims.scopes.join(" ")),
+    Some(TOKEN_ISSUED_TYPE_MFA.to_owned()),
+    true,
+  )
+  .await
+  .into_response()
+}
+
+async fn service_account_request(
+  pool: &sqlx::AnyPool,
+  user: UserRow,
+  claims: BasicClaims,
+  tenent: TenentRow,
+  service_account_token: String,
+) -> impl IntoResponse {
+  let service_account_claims = match parse_authorization(pool, &service_account_token).await {
+    Ok((_, claims)) => claims,
+    Err(e) => {
+      return e.into_response();
+    }
+  };
+  if service_account_claims.claims.kind != TOKEN_TYPE_BEARER
+    || service_account_claims.claims.sub_kind != TOKEN_SUB_TYPE_SERVICE_ACCOUNT
+  {
+    return Errors::unauthorized()
+      .with_error("token", "invalid-token-sub-type")
+      .into_response();
+  }
   create_user_token(
     pool,
     tenent,
