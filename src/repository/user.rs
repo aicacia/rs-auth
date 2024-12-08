@@ -66,50 +66,11 @@ pub async fn get_user_by_username_or_primary_email(
     r#"SELECT u.*
     FROM users u
     JOIN user_emails ue ON ue.user_id = u.id
-    WHERE u.username = $1 OR (ue.email = $1 AND ue."primary" = TRUE)
+    WHERE u.username = $1 OR (ue.email = $1 AND ue."primary" = 1)
     LIMIT 1;"#,
   )
   .bind(username_or_email)
   .fetch_optional(pool)
-  .await
-}
-
-#[derive(sqlx::FromRow)]
-pub struct UserMFATypeRow {
-  pub user_id: i64,
-  pub kind: String,
-}
-
-pub async fn get_user_mfa_types_by_user_id(
-  pool: &sqlx::AnyPool,
-  user_id: i64,
-) -> sqlx::Result<Vec<UserMFATypeRow>> {
-  sqlx::query_as(
-    r#"SELECT ut.user_id, 'totp' as kind 
-      FROM user_totps ut 
-      JOIN users u ON u.id = ut.user_id 
-      WHERE u.id = $1
-      LIMIT 1;"#,
-  )
-  .bind(user_id)
-  .fetch_all(pool)
-  .await
-}
-
-pub async fn get_users_mfa_types(
-  pool: &sqlx::AnyPool,
-  limit: usize,
-  offset: usize,
-) -> sqlx::Result<Vec<UserMFATypeRow>> {
-  sqlx::query_as(
-    r#"SELECT ut.user_id, 'totp' as kind 
-    FROM user_totps ut 
-    JOIN users u ON u.id = ut.user_id 
-    WHERE ut.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#,
-  )
-  .bind(limit as i64)
-  .bind(offset as i64)
-  .fetch_all(pool)
   .await
 }
 
@@ -136,6 +97,17 @@ async fn create_user_internal(
       .bind(true as i32)
       .fetch_one(&mut **transaction)
       .await?;
+
+  sqlx::query(
+    r#"INSERT INTO user_configs 
+      ("user_id")
+      VALUES 
+      ($1)
+      RETURNING *;"#,
+  )
+  .bind(user.id)
+  .execute(&mut **transaction)
+  .await?;
 
   sqlx::query(r#"INSERT INTO user_infos 
       ("user_id", "name", "given_name", "family_name", "middle_name", "nickname", "profile_picture", "website", "gender", "birthdate", "zone_info", "locale", "address")
@@ -249,7 +221,7 @@ pub async fn create_user_with_oauth2(
       .await?;
 
       sqlx::query(
-        r#"INSERT INTO user_emails ("user_id", "email", "verified", "primary") VALUES ($1, $2, $3, TRUE);"#,
+        r#"INSERT INTO user_emails ("user_id", "email", "verified", "primary") VALUES ($1, $2, $3, 1);"#,
       )
       .bind(user.id)
       .bind(&params.email)
@@ -259,7 +231,7 @@ pub async fn create_user_with_oauth2(
 
       if let Some(phone_number) = params.phone_number.as_ref() {
         sqlx::query(
-          r#"INSERT INTO user_phone_numbers ("user_id", "phone_number", "verified", "primary") VALUES ($1, $2, $3, TRUE);"#,
+          r#"INSERT INTO user_phone_numbers ("user_id", "phone_number", "verified", "primary") VALUES ($1, $2, $3, 1);"#,
         )
         .bind(user.id)
         .bind(phone_number)
@@ -292,7 +264,7 @@ async fn username_used(
 
 pub struct UpdateUser {
   pub username: Option<String>,
-  pub active: Option<bool>,
+  pub active: Option<i64>,
 }
 
 pub async fn update_user(

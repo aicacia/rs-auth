@@ -9,7 +9,7 @@ use serde_json::Value;
 use utoipa::ToSchema;
 use validator::{ValidationError, ValidationErrors, ValidationErrorsKind};
 
-pub const APPLICATION_KEY: &str = "application";
+pub const APPLICATION: &str = "application";
 pub const REQUEST_BODY: &str = "request-body";
 
 pub const REQUIRED_ERROR: &str = "required";
@@ -211,11 +211,11 @@ impl Errors {
   }
 
   pub fn application_error(&mut self, msg: impl Into<ErrorMessage>) -> &mut Self {
-    self.error(APPLICATION_KEY, msg)
+    self.error(APPLICATION, msg)
   }
 
   pub fn with_application_error(self, msg: impl Into<ErrorMessage>) -> Self {
-    self.with_error(APPLICATION_KEY, msg)
+    self.with_error(APPLICATION, msg)
   }
 }
 

@@ -53,7 +53,7 @@ pub async fn get_user_primary_email(
   sqlx::query_as(
     r#"SELECT ue.*
     FROM user_emails ue
-    WHERE ue.user_id = $1 AND ue."primary" = TRUE 
+    WHERE ue.user_id = $1 AND ue."primary" = 1 
     LIMIT 1;"#,
   )
   .bind(user_id)
@@ -102,11 +102,17 @@ pub async fn create_user_email(
       .await?;
 
       if email.is_primary() {
-        sqlx::query(r#"UPDATE user_emails SET "primary" = FALSE WHERE user_id=$1 AND id != $2;"#)
-          .bind(user_id)
-          .bind(email.id)
-          .execute(&mut **transaction)
-          .await?;
+        sqlx::query(
+          r#"UPDATE user_emails SET 
+            "primary" = 0,
+            "updated_at" = $3
+            WHERE user_id=$1 AND id != $2;"#,
+        )
+        .bind(user_id)
+        .bind(email.id)
+        .bind(chrono::Utc::now().timestamp())
+        .execute(&mut **transaction)
+        .await?;
       }
 
       Ok(email)
@@ -129,10 +135,12 @@ pub async fn update_user_email(
 ) -> sqlx::Result<Option<UserEmailRow>> {
   run_transaction(pool, |transaction| {
     Box::pin(async move {
+      let now = chrono::Utc::now().timestamp();
       let email: Option<UserEmailRow> = sqlx::query_as(
         r#"UPDATE user_emails SET 
           "primary" = COALESCE($3, "primary"),
-          "verified" = COALESCE($4, "verified")
+          "verified" = COALESCE($4, "verified"),
+          "updated_at" = $5
         WHERE user_id = $1 AND id = $2
         RETURNING *;"#,
       )
@@ -140,6 +148,7 @@ pub async fn update_user_email(
       .bind(email_id)
       .bind(params.primary)
       .bind(params.verified)
+      .bind(now)
       .fetch_optional(&mut **transaction)
       .await?;
 
@@ -148,11 +157,17 @@ pub async fn update_user_email(
         .map(UserEmailRow::is_primary)
         .unwrap_or(false)
       {
-        sqlx::query(r#"UPDATE user_emails SET "primary" = FALSE WHERE user_id=$1 AND id != $2;"#)
-          .bind(user_id)
-          .bind(email_id)
-          .execute(&mut **transaction)
-          .await?;
+        sqlx::query(
+          r#"UPDATE user_emails SET 
+          "primary" = 0, 
+          "updated_at" = $3 
+          WHERE user_id=$1 AND id != $2;"#,
+        )
+        .bind(user_id)
+        .bind(email_id)
+        .bind(now)
+        .execute(&mut **transaction)
+        .await?;
       }
 
       Ok(email)
@@ -168,18 +183,31 @@ pub async fn set_user_email_as_primary(
 ) -> sqlx::Result<UserEmailRow> {
   run_transaction(pool, |transaction| {
     Box::pin(async move {
-      let email: UserEmailRow =
-        sqlx::query_as(r#"UPDATE user_emails SET "primary" = TRUE WHERE "verified" = TRUE AND user_id=$1 AND id = $2 RETURNING *;"#)
-          .bind(user_id)
-          .bind(email_id)
-          .fetch_one(&mut **transaction)
-          .await?;
+      let now = chrono::Utc::now().timestamp();
+      let email: UserEmailRow = sqlx::query_as(
+        r#"UPDATE user_emails SET 
+        "primary" = 1,
+        "updated_at" = $3 
+        WHERE "verified" = 1 AND user_id=$1 AND id = $2 
+        RETURNING *;"#,
+      )
+      .bind(user_id)
+      .bind(email_id)
+      .bind(now)
+      .fetch_one(&mut **transaction)
+      .await?;
 
-      sqlx::query(r#"UPDATE user_emails SET "primary" = FALSE WHERE user_id=$1 AND id != $2;"#)
-        .bind(user_id)
-        .bind(email_id)
-        .execute(&mut **transaction)
-        .await?;
+      sqlx::query(
+        r#"UPDATE user_emails SET
+        "primary" = 0,
+        "updated_at" = $3 
+        WHERE user_id=$1 AND id != $2;"#,
+      )
+      .bind(user_id)
+      .bind(email_id)
+      .bind(now)
+      .execute(&mut **transaction)
+      .await?;
 
       Ok(email)
     })

@@ -56,7 +56,7 @@ pub async fn get_user_primary_phone_number(
   sqlx::query_as(
     r#"SELECT ue.*
     FROM user_phone_numbers ue
-    WHERE ue.user_id = $1 AND ue."primary" = TRUE 
+    WHERE ue.user_id = $1 AND ue."primary" = 1 
     LIMIT 1;"#,
   )
   .bind(user_id)
@@ -106,10 +106,14 @@ pub async fn create_user_phone_number(
 
       if phone_number.is_primary() {
         sqlx::query(
-          r#"UPDATE user_phone_numbers SET "primary" = FALSE WHERE user_id=$1 AND id != $2;"#,
+          r#"UPDATE user_phone_numbers SET 
+            "primary" = 0,
+            "updated_at" = $3
+            WHERE user_id=$1 AND id != $2;"#,
         )
         .bind(user_id)
         .bind(phone_number.id)
+        .bind(chrono::Utc::now().timestamp())
         .execute(&mut **transaction)
         .await?;
       }
@@ -134,10 +138,12 @@ pub async fn update_user_phone_number(
 ) -> sqlx::Result<Option<UserPhoneNumberRow>> {
   run_transaction(pool, |transaction| {
     Box::pin(async move {
+      let now = chrono::Utc::now().timestamp();
       let phone_number: Option<UserPhoneNumberRow> = sqlx::query_as(
         r#"UPDATE user_phone_numbers SET 
           "primary" = COALESCE($3, "primary"),
-          "verified" = COALESCE($4, "verified")
+          "verified" = COALESCE($4, "verified"),
+          "updated_at" = $5
         WHERE user_id = $1 AND id = $2
         RETURNING *;"#,
       )
@@ -145,6 +151,7 @@ pub async fn update_user_phone_number(
       .bind(phone_number_id)
       .bind(params.primary)
       .bind(params.verified)
+      .bind(now)
       .fetch_optional(&mut **transaction)
       .await?;
 
@@ -154,10 +161,14 @@ pub async fn update_user_phone_number(
         .unwrap_or(false)
       {
         sqlx::query(
-          r#"UPDATE user_phone_numbers SET "primary" = FALSE WHERE user_id=$1 AND id != $2;"#,
+          r#"UPDATE user_phone_numbers SET 
+          "primary" = 0, 
+          "updated_at" = $3 
+          WHERE user_id=$1 AND id != $2;"#,
         )
         .bind(user_id)
         .bind(phone_number_id)
+        .bind(now)
         .execute(&mut **transaction)
         .await?;
       }
@@ -175,18 +186,31 @@ pub async fn set_user_phone_number_as_primary(
 ) -> sqlx::Result<UserPhoneNumberRow> {
   run_transaction(pool, |transaction| {
     Box::pin(async move {
-      let phone_number: UserPhoneNumberRow =
-        sqlx::query_as(r#"UPDATE user_phone_numbers SET "primary" = TRUE WHERE "verified" = TRUE AND user_id=$1 AND id = $2 RETURNING *;"#)
-          .bind(user_id)
-          .bind(phone_number_id)
-          .fetch_one(&mut **transaction)
-          .await?;
+      let now = chrono::Utc::now().timestamp();
+      let phone_number: UserPhoneNumberRow = sqlx::query_as(
+        r#"UPDATE user_phone_numbers SET 
+        "primary" = 1,
+        "updated_at" = $3 
+        WHERE "verified" = 1 AND user_id=$1 AND id = $2 
+        RETURNING *;"#,
+      )
+      .bind(user_id)
+      .bind(phone_number_id)
+      .bind(now)
+      .fetch_one(&mut **transaction)
+      .await?;
 
-      sqlx::query(r#"UPDATE user_phone_numbers SET "primary" = FALSE WHERE user_id=$1 AND id != $2;"#)
-        .bind(user_id)
-        .bind(phone_number_id)
-        .execute(&mut **transaction)
-        .await?;
+      sqlx::query(
+        r#"UPDATE user_phone_numbers SET
+        "primary" = 0,
+        "updated_at" = $3 
+        WHERE user_id=$1 AND id != $2;"#,
+      )
+      .bind(user_id)
+      .bind(phone_number_id)
+      .bind(now)
+      .execute(&mut **transaction)
+      .await?;
 
       Ok(phone_number)
     })

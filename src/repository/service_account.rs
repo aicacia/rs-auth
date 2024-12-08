@@ -25,10 +25,7 @@ pub async fn get_service_accounts(
   limit: Option<usize>,
   offset: Option<usize>,
 ) -> sqlx::Result<Vec<ServiceAccountRow>> {
-  let mut qb = sqlx::QueryBuilder::new(
-    r#"SELECT sa.*
-    FROM service_accounts sa"#,
-  );
+  let mut qb = sqlx::QueryBuilder::new("SELECT sa.* FROM service_accounts sa");
   if let Some(limit) = limit {
     qb.push(" LIMIT ").push_bind(limit as i64);
   }
@@ -95,7 +92,7 @@ pub struct UpdateServiceAccount {
   pub client_id: Option<String>,
   pub encrypted_client_secret: Option<String>,
   pub name: Option<String>,
-  pub active: Option<bool>,
+  pub active: Option<i64>,
 }
 
 pub async fn update_service_account(
@@ -108,7 +105,8 @@ pub async fn update_service_account(
     SET client_id = COALESCE($1, client_id),
         encrypted_client_secret = COALESCE($2, encrypted_client_secret),
         name = COALESCE($3, name),
-        active = COALESCE($4, active)
+        active = COALESCE($4, active),
+        updated_at = $5
     WHERE id = $5
     RETURNING *;"#,
   )
@@ -117,6 +115,7 @@ pub async fn update_service_account(
   .bind(service_account.name)
   .bind(service_account.active)
   .bind(service_account_id)
+  .bind(chrono::Utc::now().timestamp())
   .fetch_optional(pool)
   .await
 }

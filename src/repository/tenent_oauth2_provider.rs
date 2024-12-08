@@ -52,7 +52,7 @@ pub async fn get_active_tenent_oauth2_provider(
   sqlx::query_as(
     r#"SELECT toap.* 
     FROM tenent_oauth2_providers toap 
-    WHERE toap.active = TRUE AND toap.tenent_id = $1 AND toap.provider = $2 
+    WHERE toap.active = 1 AND toap.tenent_id = $1 AND toap.provider = $2 
     LIMIT 1;"#,
   )
   .bind(tenent_id)
@@ -190,7 +190,7 @@ pub async fn create_tenent_oauth2_provider(
 pub struct UpdateTenentOAuth2Provider {
   pub client_id: Option<String>,
   pub client_secret: Option<String>,
-  pub active: Option<bool>,
+  pub active: Option<i64>,
   pub auth_url: Option<String>,
   pub token_url: Option<String>,
   pub redirect_url: Option<String>,

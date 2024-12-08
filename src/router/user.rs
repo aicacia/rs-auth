@@ -14,9 +14,11 @@ use crate::{
   repository::{
     self,
     tenent::get_tenent_by_id,
-    user::{get_user_mfa_types_by_user_id, get_users, get_users_mfa_types, UserMFATypeRow},
+    user::get_users,
+    user_config::{get_users_configs, UserConfigRow},
     user_email::{get_user_emails_by_user_id, get_users_emails, UserEmailRow},
     user_info::{get_user_info_by_user_id, get_users_infos, UserInfoRow},
+    user_mfa::{get_user_mfa_types_by_user_id, get_users_mfa_types, UserMFATypeRow},
     user_oauth2_provider::{
       get_user_oauth2_providers_by_user_id, get_users_oauth2_providers, UserOAuth2ProviderRow,
     },
@@ -79,6 +81,7 @@ pub async fn all_users(
     users_emails,
     users_phone_numbers,
     users_oauth2_providers,
+    users_configs,
     users_infos,
     users_mfa_types,
   ) = match tokio::try_join!(
@@ -86,6 +89,7 @@ pub async fn all_users(
     get_users_emails(&state.pool, limit, offset),
     get_users_phone_numbers(&state.pool, limit, offset),
     get_users_oauth2_providers(&state.pool, limit, offset),
+    get_users_configs(&state.pool, limit, offset),
     get_users_infos(&state.pool, limit, offset),
     get_users_mfa_types(&state.pool, limit, offset)
   ) {
@@ -117,11 +121,18 @@ pub async fn all_users(
         acc.entry(row.user_id).or_default().push(row);
         acc
       });
-  let mut users_infos_by_id: HashMap<i64, Vec<UserInfoRow>> =
+  let mut users_configs_by_id: HashMap<i64, UserConfigRow> =
+    users_configs
+      .into_iter()
+      .fold(HashMap::new(), |mut acc, row| {
+        acc.insert(row.user_id, row);
+        acc
+      });
+  let mut users_infos_by_id: HashMap<i64, UserInfoRow> =
     users_infos
       .into_iter()
       .fold(HashMap::new(), |mut acc, row| {
-        acc.entry(row.user_id).or_default().push(row);
+        acc.insert(row.user_id, row);
         acc
       });
   let mut users_mfa_types_by_id: HashMap<i64, Vec<UserMFATypeRow>> = users_mfa_types
@@ -158,7 +169,10 @@ pub async fn all_users(
       {
         user.oauth2_providers.push(oauth2_provider.into());
       }
-      for user_info in users_infos_by_id.remove(&user.id).unwrap_or_default() {
+      if let Some(user_config) = users_configs_by_id.remove(&user.id) {
+        user.config = Some(user_config.into());
+      }
+      if let Some(user_info) = users_infos_by_id.remove(&user.id) {
         user.info = user_info.into();
       }
       for mfa_type in users_mfa_types_by_id.remove(&user.id).unwrap_or_default() {

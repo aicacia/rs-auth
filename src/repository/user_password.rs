@@ -73,7 +73,7 @@ pub async fn create_user_password(
       }
 
       sqlx::query(
-        r#"UPDATE user_passwords SET "active" = FALSE WHERE "user_id" = $1 AND "active" = TRUE;"#,
+        r#"UPDATE user_passwords SET "active" = 0 WHERE "user_id" = $1 AND "active" = 1;"#,
       )
       .bind(user_id)
       .execute(&mut **transaction)

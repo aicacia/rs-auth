@@ -133,7 +133,7 @@ pub async fn update_tenent_oauth2_provider(
     repository::tenent_oauth2_provider::UpdateTenentOAuth2Provider {
       client_id: payload.client_id,
       client_secret: payload.client_secret,
-      active: payload.active,
+      active: payload.active.map(Into::into),
       auth_url: payload.auth_url,
       token_url: payload.token_url,
       callback_url: payload.callback_url,

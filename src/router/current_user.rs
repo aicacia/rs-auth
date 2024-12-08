@@ -21,9 +21,9 @@ use crate::{
   repository::{
     self,
     tenent_oauth2_provider::get_active_tenent_oauth2_provider,
-    user::get_user_mfa_types_by_user_id,
     user_email::get_user_emails_by_user_id,
     user_info::{get_user_info_by_user_id, UserInfoUpdate},
+    user_mfa::get_user_mfa_types_by_user_id,
     user_oauth2_provider::get_user_oauth2_providers_by_user_id,
     user_password::{create_user_password, get_user_active_password_by_user_id},
     user_phone_number::get_user_phone_numbers_by_user_id,
@@ -463,7 +463,7 @@ pub async fn deactivate_current_user(
     user.id,
     repository::user::UpdateUser {
       username: None,
-      active: Some(false),
+      active: Some(0),
     },
   )
   .await

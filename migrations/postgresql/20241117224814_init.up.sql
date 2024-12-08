@@ -64,6 +64,16 @@ CREATE TABLE "users"(
 CREATE UNIQUE INDEX "users_username_unique_idx" ON "users" ("username");
 
 
+CREATE TABLE "user_configs" (
+	"user_id" BIGINT NOT NULL PRIMARY KEY,
+  "mfa_type" TEXT,
+	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
+	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
+  CONSTRAINT "user_configs_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+) STRICT;
+CREATE UNIQUE INDEX "user_configs_user_id_unique_idx" ON "user_configs" ("user_id");
+
+
 CREATE TABLE "user_infos"(
 	"user_id" BIGINT NOT NULL PRIMARY KEY,
 	"name" TEXT,
@@ -80,7 +90,7 @@ CREATE TABLE "user_infos"(
 	"address" TEXT,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-  CONSTRAINT "user_infos_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+  CONSTRAINT "user_infos_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX "user_infos_user_id_unique_idx" ON "user_infos" ("user_id");
 
@@ -92,7 +102,7 @@ CREATE TABLE "user_passwords"(
 	"encrypted_password" TEXT NOT NULL,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-	CONSTRAINT "user_passwords_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+	CONSTRAINT "user_passwords_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
 
 
@@ -105,7 +115,7 @@ CREATE TABLE "user_totps"(
   "secret" TEXT NOT NULL,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-  CONSTRAINT "user_totps_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+  CONSTRAINT "user_totps_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX "user_totps_user_id_unique_idx" ON "user_totps" ("user_id");
 
@@ -118,7 +128,7 @@ CREATE TABLE "user_emails" (
   "primary" SMALLINT NOT NULL DEFAULT 0,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-  CONSTRAINT "user_emails_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+  CONSTRAINT "user_emails_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX "user_emails_email_unique_idx" ON "user_emails" ("email");
 
@@ -131,7 +141,7 @@ CREATE TABLE "user_phone_numbers" (
   "primary" SMALLINT NOT NULL DEFAULT 0,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-  CONSTRAINT "user_phone_numbers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE
+  CONSTRAINT "user_phone_numbers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
 );
 
 
@@ -142,7 +152,7 @@ CREATE TABLE "user_oauth2_providers" (
   "email" TEXT NOT NULL,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-  CONSTRAINT "user_oauth2_providers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users"("id") ON DELETE CASCADE,
-  CONSTRAINT "user_oauth2_providers_tenent_oauth2_provider_id_fk" FOREIGN KEY("tenent_oauth2_provider_id") REFERENCES "tenent_oauth2_providers"("id") ON DELETE CASCADE
+  CONSTRAINT "user_oauth2_providers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users" ("id") ON DELETE CASCADE,
+  CONSTRAINT "user_oauth2_providers_tenent_oauth2_provider_id_fk" FOREIGN KEY("tenent_oauth2_provider_id") REFERENCES "tenent_oauth2_providers" ("id") ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX "user_oauth2_providers_tenent_oauth2_provider_id_email_unique_idx" ON "user_oauth2_providers" ("tenent_oauth2_provider_id", "email");

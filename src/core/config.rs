@@ -53,6 +53,9 @@ pub struct PasswordConfig {
 pub struct UserConfig {
   pub register_enabled: bool,
   pub allow_passwords: bool,
+  pub allow_mfa_totp: bool,
+  pub allow_mfa_text: bool,
+  pub allow_mfa_email: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -99,6 +102,9 @@ impl Config {
       // User Defaults
       .set_default("user.register_enabled", false)?
       .set_default("user.allow_passwords", true)?
+      .set_default("user.allow_mfa_totp", true)?
+      .set_default("user.allow_mfa_email", true)?
+      .set_default("user.allow_mfa_text", true)?
       // OAuth2 Defaults
       .set_default("oauth2.code_timeout_in_seconds", 60 * 5)?
       // Defaults

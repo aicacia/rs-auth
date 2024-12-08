@@ -58,7 +58,7 @@ pub async fn get_user_totp_by_user_id(
   sqlx::query_as(
     r#"SELECT ut.*
     FROM user_totps ut
-    WHERE ut.user_id = $1 AND ut.active = TRUE 
+    WHERE ut.user_id = $1 AND ut.active = 1 
     LIMIT 1;"#,
   )
   .bind(user_id)

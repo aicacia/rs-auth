@@ -48,7 +48,11 @@ async fn main() -> Result<(), Errors> {
   )))
   .await?;
   log::info!("Listening on {}", listener.local_addr()?);
-  axum::serve(listener, router).await?;
+  axum::serve(
+    listener,
+    router.into_make_service_with_connect_info::<SocketAddr>(),
+  )
+  .await?;
 
   // TODO: make this run on shutdown
   match pool.acquire().await {

@@ -24,7 +24,7 @@ CREATE TABLE "tenent_oauth2_providers" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "tenent_id" INTEGER NOT NULL,
   "provider" TEXT NOT NULL,
-  "active" INTEGER NOT NULL DEFAULT TRUE,
+  "active" INTEGER NOT NULL DEFAULT 1,
   "client_id" TEXT NOT NULL,
   "client_secret" TEXT NOT NULL,
   "auth_url" TEXT NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE "service_accounts" (
 	"client_id" TEXT NOT NULL,
   "encrypted_client_secret" TEXT NOT NULL,
   "name" TEXT NOT NULL,
-  "active" INTEGER NOT NULL DEFAULT TRUE,
+  "active" INTEGER NOT NULL DEFAULT 1,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 ) STRICT;
@@ -58,12 +58,22 @@ CREATE UNIQUE INDEX "service_accounts_name_unique_idx" ON "service_accounts" ("n
 CREATE TABLE "users" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "username" TEXT NOT NULL,
-  "active" INTEGER NOT NULL DEFAULT TRUE,
+  "active" INTEGER NOT NULL DEFAULT 1,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 ) STRICT;
 CREATE UNIQUE INDEX "users_id_unique_idx" ON "users" ("id");
 CREATE UNIQUE INDEX "users_username_unique_idx" ON "users" ("username");
+
+
+CREATE TABLE "user_configs" (
+	"user_id" INTEGER NOT NULL PRIMARY KEY,
+  "mfa_type" TEXT,
+  "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+) STRICT;
+CREATE UNIQUE INDEX "user_configs_user_id_unique_idx" ON "user_configs" ("user_id");
 
 
 CREATE TABLE "user_infos"(
@@ -90,7 +100,7 @@ CREATE UNIQUE INDEX "user_infos_user_id_unique_idx" ON "user_infos" ("user_id");
 CREATE TABLE "user_passwords" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
-  "active" INTEGER NOT NULL DEFAULT TRUE,
+  "active" INTEGER NOT NULL DEFAULT 1,
   "encrypted_password" TEXT NOT NULL,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
@@ -102,7 +112,7 @@ CREATE INDEX "user_passwords_user_id_idx" ON "user_passwords" ("user_id");
 
 CREATE TABLE "user_totps"(
 	"user_id" INTEGER NOT NULL PRIMARY KEY,
-  "active" INTEGER NOT NULL DEFAULT TRUE,
+  "active" INTEGER NOT NULL DEFAULT 1,
 	"algorithm" TEXT NOT NULL DEFAULT 'SHA1',
   "digits" INTEGER NOT NULL DEFAULT 6,
   "step" INTEGER NOT NULL DEFAULT 30,
@@ -118,8 +128,8 @@ CREATE TABLE "user_emails" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
   "email" TEXT NOT NULL,
-  "verified" INTEGER NOT NULL DEFAULT FALSE,
-  "primary" INTEGER NOT NULL DEFAULT FALSE,
+  "verified" INTEGER NOT NULL DEFAULT 0,
+  "primary" INTEGER NOT NULL DEFAULT 0,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
@@ -133,8 +143,8 @@ CREATE TABLE "user_phone_numbers" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
   "phone_number" TEXT NOT NULL,
-  "verified" INTEGER NOT NULL DEFAULT FALSE,
-  "primary" INTEGER NOT NULL DEFAULT FALSE,
+  "verified" INTEGER NOT NULL DEFAULT 0,
+  "primary" INTEGER NOT NULL DEFAULT 0,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE

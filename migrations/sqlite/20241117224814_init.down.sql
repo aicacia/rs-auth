@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS "user_emails";
 DROP TABLE IF EXISTS "user_totps";
 DROP TABLE IF EXISTS "user_passwords";
 DROP TABLE IF EXISTS "user_infos";
+DROP TABLE IF EXISTS "user_configs";
 DROP TABLE IF EXISTS "users";
 
 DROP TABLE IF EXISTS "service_accounts";
