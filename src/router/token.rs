@@ -7,7 +7,7 @@ use crate::{
     authorization::Authorization,
     claims::{
       parse_jwt, BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
-      TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_MFA_TOTP,
+      TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_MFA_TOTP_PREFIX,
       TOKEN_TYPE_REFRESH, TOKEN_TYPE_RESET_PASSWORD,
     },
     json::Json,
@@ -25,11 +25,11 @@ use crate::{
     service_account::{get_service_account_by_client_id, ServiceAccountRow},
     tenent::TenentRow,
     user::{get_user_by_id, get_user_by_username_or_primary_email, UserRow},
-    user_email::get_user_primary_email,
+    user_config::get_user_config_by_user_id,
+    user_email::get_user_emails_by_user_id,
     user_info::get_user_info_by_user_id,
     user_password::get_user_active_password_by_user_id,
-    user_phone_number::get_user_primary_phone_number,
-    user_totp::get_user_totp_by_user_id,
+    user_phone_number::get_user_phone_numbers_by_user_id,
   },
 };
 
@@ -397,18 +397,22 @@ pub(crate) async fn create_user_token(
   mfa_validated: bool,
 ) -> impl IntoResponse {
   if !mfa_validated {
-    match get_user_totp_by_user_id(pool, user.id).await {
-      Ok(Some(_)) => {
-        return create_mfa_token(
-          pool,
-          tenent,
-          user,
-          scope,
-          issued_token_type,
-          TOKEN_TYPE_MFA_TOTP.to_owned(),
-        )
-        .await
-        .into_response();
+    match get_user_config_by_user_id(pool, user.id).await {
+      Ok(Some(config)) => {
+        if let Some(mfa_type) = config.mfa_type.as_ref() {
+          if mfa_type != "none" {
+            return create_mfa_token(
+              pool,
+              tenent,
+              user,
+              scope,
+              issued_token_type,
+              format!("{TOKEN_TYPE_MFA_TOTP_PREFIX}{mfa_type}"),
+            )
+            .await
+            .into_response();
+          }
+        }
       }
       Ok(None) => {}
       Err(e) => {
@@ -505,12 +509,19 @@ pub(crate) async fn create_user_token(
       }
     }
     if show_email {
-      match get_user_primary_email(pool, user.id).await {
-        Ok(Some(email)) => {
-          id_claims.profile.email_verified = Some(email.is_verified());
-          id_claims.profile.email = Some(email.email);
+      match get_user_emails_by_user_id(pool, user.id).await {
+        Ok(emails) => {
+          if let Some(email) = emails.iter().find(|email| email.is_primary()) {
+            id_claims.profile.email_verified = Some(email.is_verified());
+            id_claims.profile.email = Some(email.email.clone());
+          } else if let Some(email) = emails.iter().find(|email| email.is_verified()) {
+            id_claims.profile.email_verified = Some(email.is_verified());
+            id_claims.profile.email = Some(email.email.clone());
+          } else if let Some(email) = emails.first() {
+            id_claims.profile.email_verified = Some(email.is_verified());
+            id_claims.profile.email = Some(email.email.clone());
+          }
         }
-        Ok(None) => {}
         Err(e) => {
           log::error!("Error getting user primary email: {}", e);
           return Errors::internal_error()
@@ -520,12 +531,25 @@ pub(crate) async fn create_user_token(
       }
     }
     if show_phone {
-      match get_user_primary_phone_number(pool, user.id).await {
-        Ok(Some(phone_number)) => {
-          id_claims.profile.phone_number_verified = Some(phone_number.is_verified());
-          id_claims.profile.phone_number = Some(phone_number.phone_number);
+      match get_user_phone_numbers_by_user_id(pool, user.id).await {
+        Ok(phone_numbers) => {
+          if let Some(phone_number) = phone_numbers
+            .iter()
+            .find(|phone_number| phone_number.is_primary())
+          {
+            id_claims.profile.phone_number_verified = Some(phone_number.is_verified());
+            id_claims.profile.phone_number = Some(phone_number.phone_number.clone());
+          } else if let Some(phone_number) = phone_numbers
+            .iter()
+            .find(|phone_number| phone_number.is_verified())
+          {
+            id_claims.profile.phone_number_verified = Some(phone_number.is_verified());
+            id_claims.profile.phone_number = Some(phone_number.phone_number.clone());
+          } else if let Some(phone_number) = phone_numbers.first() {
+            id_claims.profile.phone_number_verified = Some(phone_number.is_verified());
+            id_claims.profile.phone_number = Some(phone_number.phone_number.clone());
+          }
         }
-        Ok(None) => {}
         Err(e) => {
           log::error!("Error getting user primary phone number: {}", e);
           return Errors::internal_error()

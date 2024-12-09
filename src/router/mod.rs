@@ -1,4 +1,5 @@
 pub mod current_user;
+pub mod current_user_config;
 pub mod current_user_email;
 pub mod current_user_phone_number;
 pub mod current_user_totp;
@@ -35,6 +36,7 @@ unsafe impl Sync for RouterState {}
   info(license(name = "MIT OR Apache-2.0", identifier = "https://spdx.org/licenses/MIT.html")),
   nest(
     (path = "/", api = current_user::ApiDoc),
+    (path = "/", api = current_user_config::ApiDoc),
     (path = "/", api = current_user_email::ApiDoc),
     (path = "/", api = current_user_phone_number::ApiDoc),
     (path = "/", api = current_user_totp::ApiDoc),
@@ -66,6 +68,7 @@ pub fn create_router(state: RouterState) -> Router {
 
   Router::new()
     .merge(current_user::create_router(state.clone()))
+    .merge(current_user_config::create_router(state.clone()))
     .merge(current_user_email::create_router(state.clone()))
     .merge(current_user_phone_number::create_router(state.clone()))
     .merge(current_user_totp::create_router(state.clone()))

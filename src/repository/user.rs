@@ -66,7 +66,7 @@ pub async fn get_user_by_username_or_primary_email(
     r#"SELECT u.*
     FROM users u
     JOIN user_emails ue ON ue.user_id = u.id
-    WHERE u.username = $1 OR (ue.email = $1 AND ue."primary" = 1)
+    WHERE u.username = $1 OR ue.email = $1
     LIMIT 1;"#,
   )
   .bind(username_or_email)

@@ -21,6 +21,7 @@ use crate::{
   repository::{
     self,
     tenent_oauth2_provider::get_active_tenent_oauth2_provider,
+    user_config::get_user_config_by_user_id,
     user_email::get_user_emails_by_user_id,
     user_info::{get_user_info_by_user_id, UserInfoUpdate},
     user_mfa::get_user_mfa_types_by_user_id,
@@ -182,6 +183,25 @@ pub async fn get_current_user(
         current_user.info.locale = user_info.locale;
       }
     }
+  }
+
+  if show_profile {
+    let user_config = match get_user_config_by_user_id(&state.pool, current_user.id).await {
+      Ok(Some(user_config)) => user_config,
+      Ok(None) => {
+        log::error!("User config not found for {}", current_user.id);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+      Err(e) => {
+        log::error!("Error getting user config: {}", e);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
+    current_user.config = Some(user_config.into());
   }
 
   axum::Json(current_user).into_response()

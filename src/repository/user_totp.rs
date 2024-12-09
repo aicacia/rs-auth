@@ -2,6 +2,8 @@ use std::io;
 
 use totp_rs::Secret;
 
+use crate::core::database::run_transaction;
+
 #[derive(sqlx::FromRow)]
 pub struct UserTOTPRow {
   pub user_id: i64,
@@ -128,12 +130,29 @@ pub async fn delete_user_totp(
   pool: &sqlx::AnyPool,
   user_id: i64,
 ) -> sqlx::Result<Option<UserTOTPRow>> {
-  sqlx::query_as(
-    r#"DELETE FROM user_totps
-    WHERE user_id = $1
-    RETURNING *;"#,
-  )
-  .bind(user_id)
-  .fetch_optional(pool)
+  run_transaction(pool, |transaction| {
+    Box::pin(async move {
+      sqlx::query(
+        r#"UPDATE user_configs SET
+        mfa_type = NULL,
+        updated_at = $2
+        WHERE user_id = $1 AND mfa_type = 'totp'
+        RETURNING *;"#,
+      )
+      .bind(user_id)
+      .bind(chrono::Utc::now().timestamp())
+      .execute(&mut **transaction)
+      .await?;
+
+      sqlx::query_as(
+        r#"DELETE FROM user_totps
+        WHERE user_id = $1
+        RETURNING *;"#,
+      )
+      .bind(user_id)
+      .fetch_optional(&mut **transaction)
+      .await
+    })
+  })
   .await
 }

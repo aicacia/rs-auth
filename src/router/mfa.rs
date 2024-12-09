@@ -8,7 +8,9 @@ use crate::{
   },
   middleware::{
     authorization::{parse_authorization, Authorization},
-    claims::{BasicClaims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_TYPE_BEARER, TOKEN_TYPE_MFA_TOTP},
+    claims::{
+      BasicClaims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_TYPE_BEARER, TOKEN_TYPE_MFA_TOTP_PREFIX,
+    },
     json::Json,
   },
   model::{
@@ -55,11 +57,13 @@ pub async fn mfa(
   Authorization { claims, tenent, .. }: Authorization,
   Json(payload): Json<MFARequest>,
 ) -> impl IntoResponse {
-  if claims.kind != TOKEN_TYPE_MFA_TOTP {
+  if !claims.kind.starts_with(TOKEN_TYPE_MFA_TOTP_PREFIX) {
     return Errors::unauthorized()
       .with_error(AUTHORIZATION_HEADER, "invalid-token-type")
       .into_response();
   }
+  let mfa_type = &claims.kind[(TOKEN_TYPE_MFA_TOTP_PREFIX.len())..];
+  log::debug!("MFA type: {}", mfa_type);
   let user = match get_user_by_id(&state.pool, claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => {

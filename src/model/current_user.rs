@@ -3,6 +3,8 @@ use serde::Deserialize;
 use utoipa::ToSchema;
 use validator::Validate;
 
+use super::user::UserMFAType;
+
 #[derive(Validate, Deserialize, ToSchema)]
 pub struct ResetPasswordRequest {
   pub current_password: String,
@@ -26,4 +28,9 @@ pub struct UpdateUserInfoRequest {
   pub zone_info: Option<String>,
   pub locale: Option<String>,
   pub address: Option<String>,
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct UpdateUserConfigRequest {
+  pub mfa_type: Option<UserMFAType>,
 }

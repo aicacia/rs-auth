@@ -1,3 +1,5 @@
+use std::fmt;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
@@ -46,7 +48,6 @@ impl From<UserRow> for User {
 
 #[derive(Serialize, ToSchema, Default)]
 pub struct UserConfig {
-  #[serde(skip_serializing_if = "Option::is_none")]
   pub mfa_type: Option<String>,
 }
 
@@ -175,14 +176,27 @@ impl From<UserOAuth2ProviderRow> for UserOAuth2Provider {
   }
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Deserialize, Serialize, ToSchema)]
 pub enum UserMFAType {
+  #[serde(rename = "none")]
+  None,
   #[serde(rename = "totp")]
   TOTP,
   #[serde(rename = "email")]
   Email,
   #[serde(rename = "text")]
   Text,
+}
+
+impl fmt::Display for UserMFAType {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    match self {
+      Self::None => write!(f, "none"),
+      Self::TOTP => write!(f, "totp"),
+      Self::Email => write!(f, "email"),
+      Self::Text => write!(f, "text"),
+    }
+  }
 }
 
 impl From<UserMFATypeRow> for UserMFAType {

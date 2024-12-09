@@ -46,21 +46,6 @@ pub async fn get_user_by_email(pool: &sqlx::AnyPool, email: &str) -> sqlx::Resul
   .await
 }
 
-pub async fn get_user_primary_email(
-  pool: &sqlx::AnyPool,
-  user_id: i64,
-) -> sqlx::Result<Option<UserEmailRow>> {
-  sqlx::query_as(
-    r#"SELECT ue.*
-    FROM user_emails ue
-    WHERE ue.user_id = $1 AND ue."primary" = 1 
-    LIMIT 1;"#,
-  )
-  .bind(user_id)
-  .fetch_optional(pool)
-  .await
-}
-
 pub async fn get_user_emails_by_user_id(
   pool: &sqlx::AnyPool,
   user_id: i64,
@@ -152,20 +137,34 @@ pub async fn update_user_email(
       .fetch_optional(&mut **transaction)
       .await?;
 
-      if email
-        .as_ref()
-        .map(UserEmailRow::is_primary)
-        .unwrap_or(false)
-      {
-        sqlx::query(
-          r#"UPDATE user_emails SET 
+      if let Some(email) = email.as_ref() {
+        if email.is_primary() {
+          sqlx::query(
+            r#"UPDATE user_emails SET 
           "primary" = 0, 
           "updated_at" = $3 
-          WHERE user_id=$1 AND id != $2;"#,
+          WHERE user_id = $1 AND id != $2;"#,
+          )
+          .bind(user_id)
+          .bind(email_id)
+          .bind(now)
+          .execute(&mut **transaction)
+          .await?;
+        }
+        sqlx::query(
+          r#"UPDATE user_configs SET
+        mfa_type = NULL,
+        updated_at = $2
+        WHERE user_id = $1 AND mfa_type = 'email' AND NOT EXISTS(
+          SELECT ue.id 
+          FROM user_emails ue 
+          JOIN users u ON u.id = ue.user_id
+          WHERE u.user_id = $1 AND ue.verified = 1
+        )
+        RETURNING *;"#,
         )
         .bind(user_id)
-        .bind(email_id)
-        .bind(now)
+        .bind(chrono::Utc::now().timestamp())
         .execute(&mut **transaction)
         .await?;
       }
@@ -220,13 +219,36 @@ pub async fn delete_user_email(
   user_id: i64,
   email_id: i64,
 ) -> sqlx::Result<Option<UserEmailRow>> {
-  sqlx::query_as(
-    r#"DELETE FROM user_emails
-    WHERE user_id = $1 AND id = $2 
-    RETURNING *;"#,
-  )
-  .bind(user_id)
-  .bind(email_id)
-  .fetch_optional(pool)
+  run_transaction(pool, |transaction| {
+    Box::pin(async move {
+      let email: Option<UserEmailRow> = sqlx::query_as(
+        r#"DELETE FROM user_emails
+        WHERE user_id = $1 AND id = $2
+        RETURNING *;"#,
+      )
+      .bind(user_id)
+      .bind(email_id)
+      .fetch_optional(&mut **transaction)
+      .await?;
+
+      if let Some(email) = email.as_ref() {
+        if email.is_primary() && email.is_verified() {
+          sqlx::query(
+            r#"UPDATE user_configs SET
+            mfa_type = NULL,
+            updated_at = $2
+            WHERE user_id = $1 AND mfa_type = 'email'
+            RETURNING *;"#,
+          )
+          .bind(user_id)
+          .bind(chrono::Utc::now().timestamp())
+          .execute(&mut **transaction)
+          .await?;
+        }
+      }
+
+      Ok(email)
+    })
+  })
   .await
 }

@@ -49,21 +49,6 @@ pub async fn get_user_by_phone_number(
   .await
 }
 
-pub async fn get_user_primary_phone_number(
-  pool: &sqlx::AnyPool,
-  user_id: i64,
-) -> sqlx::Result<Option<UserPhoneNumberRow>> {
-  sqlx::query_as(
-    r#"SELECT ue.*
-    FROM user_phone_numbers ue
-    WHERE ue.user_id = $1 AND ue."primary" = 1 
-    LIMIT 1;"#,
-  )
-  .bind(user_id)
-  .fetch_optional(pool)
-  .await
-}
-
 pub async fn get_user_phone_numbers_by_user_id(
   pool: &sqlx::AnyPool,
   user_id: i64,
@@ -155,20 +140,34 @@ pub async fn update_user_phone_number(
       .fetch_optional(&mut **transaction)
       .await?;
 
-      if phone_number
-        .as_ref()
-        .map(UserPhoneNumberRow::is_primary)
-        .unwrap_or(false)
-      {
+      if let Some(phone_number) = phone_number.as_ref() {
+        if phone_number.is_primary() {
+          sqlx::query(
+            r#"UPDATE user_phone_numbers SET 
+            "primary" = 0, 
+            "updated_at" = $3 
+            WHERE user_id = $1 AND id != $2;"#,
+          )
+          .bind(user_id)
+          .bind(phone_number_id)
+          .bind(now)
+          .execute(&mut **transaction)
+          .await?;
+        }
         sqlx::query(
-          r#"UPDATE user_phone_numbers SET 
-          "primary" = 0, 
-          "updated_at" = $3 
-          WHERE user_id=$1 AND id != $2;"#,
+          r#"UPDATE user_configs SET
+          mfa_type = NULL,
+          updated_at = $2
+          WHERE user_id = $1 AND mfa_type = 'text' AND NOT EXISTS(
+            SELECT upn.id 
+            FROM user_phone_numbers upn 
+            JOIN users u ON u.id = upn.user_id
+            WHERE u.user_id = $1 AND upn.verified = 1
+          )
+          RETURNING *;"#,
         )
         .bind(user_id)
-        .bind(phone_number_id)
-        .bind(now)
+        .bind(chrono::Utc::now().timestamp())
         .execute(&mut **transaction)
         .await?;
       }
@@ -223,13 +222,36 @@ pub async fn delete_user_phone_number(
   user_id: i64,
   phone_number_id: i64,
 ) -> sqlx::Result<Option<UserPhoneNumberRow>> {
-  sqlx::query_as(
-    r#"DELETE FROM user_phone_numbers
-    WHERE user_id = $1 AND id = $2 
-    RETURNING *;"#,
-  )
-  .bind(user_id)
-  .bind(phone_number_id)
-  .fetch_optional(pool)
+  run_transaction(pool, |transaction| {
+    Box::pin(async move {
+      let phone_number: Option<UserPhoneNumberRow> = sqlx::query_as(
+        r#"DELETE FROM user_phone_numbers
+        WHERE user_id = $1 AND id = $2
+        RETURNING *;"#,
+      )
+      .bind(user_id)
+      .bind(phone_number_id)
+      .fetch_optional(&mut **transaction)
+      .await?;
+
+      if let Some(phone_number) = phone_number.as_ref() {
+        if phone_number.is_primary() && phone_number.is_verified() {
+          sqlx::query(
+            r#"UPDATE user_configs SET
+            mfa_type = NULL,
+            updated_at = $2
+            WHERE user_id = $1 AND mfa_type = 'text'
+            RETURNING *;"#,
+          )
+          .bind(user_id)
+          .bind(chrono::Utc::now().timestamp())
+          .execute(&mut **transaction)
+          .await?;
+        }
+      }
+
+      Ok(phone_number)
+    })
+  })
   .await
 }
