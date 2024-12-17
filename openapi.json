@@ -1,0 +1,3046 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "auth",
+    "description": "auth",
+    "contact": { "name": "nathanfaucett@gmail.com" },
+    "license": {
+      "name": "MIT OR Apache-2.0",
+      "identifier": "https://spdx.org/licenses/MIT.html"
+    },
+    "version": "0.1.0"
+  },
+  "servers": [{ "url": "http://localhost:3000" }],
+  "paths": {
+    "/current-user": {
+      "get": {
+        "tags": ["current-user"],
+        "operationId": "get_current_user",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "put": {
+        "tags": ["current-user"],
+        "operationId": "update_current_user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateUsername" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "delete": {
+        "tags": ["current-user"],
+        "operationId": "deactivate_current_user",
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/config": {
+      "put": {
+        "tags": ["current-user"],
+        "operationId": "update_current_user_config",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserConfigRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/emails": {
+      "post": {
+        "tags": ["current-user"],
+        "operationId": "create_current_user_email",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUserEmail" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserEmail" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/emails/{email_id}": {
+      "delete": {
+        "tags": ["current-user"],
+        "operationId": "delete_current_user_email",
+        "parameters": [
+          {
+            "name": "email_id",
+            "in": "path",
+            "description": "Email ID to delete",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/emails/{email_id}/set-as-primary": {
+      "put": {
+        "tags": ["current-user"],
+        "operationId": "set_current_user_email_as_primary",
+        "parameters": [
+          {
+            "name": "email_id",
+            "in": "path",
+            "description": "Email ID to set as primary",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/info": {
+      "put": {
+        "tags": ["current-user"],
+        "operationId": "update_current_user_info",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateUserInfoRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/oauth2/{provider}": {
+      "post": {
+        "tags": ["current-user", "oauth2"],
+        "operationId": "create_current_user_add_oauth2_provider_url",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "description": "OAuth2 provider",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "google"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": { "schema": { "type": "string" } } }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/phone-numbers": {
+      "post": {
+        "tags": ["current-user"],
+        "operationId": "create_current_user_phone_number",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUserPhoneNumber" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserPhoneNumber" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/phone-numbers/{phone_number_id}": {
+      "delete": {
+        "tags": ["current-user"],
+        "operationId": "delete_current_user_phone_number",
+        "parameters": [
+          {
+            "name": "phone_number_id",
+            "in": "path",
+            "description": "PhoneNumber ID to delete",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/phone-numbers/{phone_number_id}/set-as-primary": {
+      "put": {
+        "tags": ["current-user"],
+        "operationId": "set_current_user_phone_number_as_primary",
+        "parameters": [
+          {
+            "name": "phone_number_id",
+            "in": "path",
+            "description": "PhoneNumber ID to set as primary",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/reset-password": {
+      "post": {
+        "tags": ["current-user"],
+        "operationId": "reset_current_user_password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ResetPasswordRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/current-user/totp": {
+      "post": {
+        "tags": ["current-user"],
+        "operationId": "create_current_user_totp",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTOTPRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserTOTP" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "delete": {
+        "tags": ["current-user"],
+        "operationId": "delete_current_user_totp",
+        "responses": {
+          "204": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["util"],
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Health check response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Health" }
+              }
+            }
+          },
+          "500": {
+            "description": "Health check response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Health" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mfa": {
+      "post": {
+        "tags": ["mfa"],
+        "operationId": "mfa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MFARequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Token" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/oauth2/{provider}": {
+      "post": {
+        "tags": ["oauth2"],
+        "operationId": "create_oauth2_url",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "description": "OAuth2 provider",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "google"
+          },
+          {
+            "name": "register",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["boolean", "null"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "text/plain": { "schema": { "type": "string" } } }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "TenentUUID": [] }]
+      }
+    },
+    "/oauth2/{provider}/callback": {
+      "get": {
+        "tags": ["oauth2"],
+        "operationId": "oauth2_callback",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "description": "OAuth2 provider",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "google"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["string", "null"] }
+          }
+        ],
+        "responses": {
+          "302": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "tags": ["openapi"],
+        "operationId": "get_openapi",
+        "responses": { "200": { "description": "OpenApi documenation" } }
+      }
+    },
+    "/register": {
+      "post": {
+        "tags": ["register"],
+        "operationId": "register_user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterUser" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "TenentUUID": [] }]
+      }
+    },
+    "/service-accounts": {
+      "get": {
+        "tags": ["service-account"],
+        "operationId": "all_service_accounts",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pagination_ServiceAccount"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "post": {
+        "tags": ["service-account"],
+        "operationId": "create_service_account",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateServiceAccount" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ServiceAccount" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/service-accounts/{service_account_id}": {
+      "get": {
+        "tags": ["service-account"],
+        "operationId": "get_service_account_by_id",
+        "parameters": [
+          {
+            "name": "service_account_id",
+            "in": "path",
+            "description": "ServiceAccount ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ServiceAccount" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "put": {
+        "tags": ["service-account"],
+        "operationId": "update_service_account",
+        "parameters": [
+          {
+            "name": "service_account_id",
+            "in": "path",
+            "description": "ServiceAccount ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateServiceAccount" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ServiceAccount" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "delete": {
+        "tags": ["service-account"],
+        "operationId": "delete_service_account",
+        "parameters": [
+          {
+            "name": "service_account_id",
+            "in": "path",
+            "description": "ServiceAccount ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/tenents": {
+      "get": {
+        "tags": ["tenent"],
+        "operationId": "all_tenents",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Pagination_Tenent" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "post": {
+        "tags": ["tenent"],
+        "operationId": "create_tenent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTenent" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenent" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/tenents/{tenent_id}": {
+      "get": {
+        "tags": ["tenent"],
+        "operationId": "get_tenent_by_id",
+        "parameters": [
+          {
+            "name": "tenent_id",
+            "in": "path",
+            "description": "Tenent ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenent" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "put": {
+        "tags": ["tenent"],
+        "operationId": "update_tenent",
+        "parameters": [
+          {
+            "name": "tenent_id",
+            "in": "path",
+            "description": "Tenent ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTenent" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenent" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "delete": {
+        "tags": ["tenent"],
+        "operationId": "delete_tenent",
+        "parameters": [
+          {
+            "name": "tenent_id",
+            "in": "path",
+            "description": "Tenent ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/tenents/{tenent_id}/oauth2-providers": {
+      "post": {
+        "tags": ["oauth2-provider"],
+        "operationId": "create_tenent_oauth2_provider",
+        "parameters": [
+          {
+            "name": "tenent_id",
+            "in": "path",
+            "description": "Tenent ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTenentOAuth2Provider"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenentOAuth2Provider"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "501": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/tenents/{tenent_id}/oauth2-providers/{tenent_oauht2_provider_id}": {
+      "put": {
+        "tags": ["oauth2-provider"],
+        "operationId": "update_tenent_oauth2_provider",
+        "parameters": [
+          {
+            "name": "tenent_id",
+            "in": "path",
+            "description": "Tenent ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "tenent_oauht2_provider_id",
+            "in": "path",
+            "description": "OAuth2 Provider ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenentOAuth2Provider"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "delete": {
+        "tags": ["oauth2-provider"],
+        "operationId": "delete_tenent_oauth2_provider",
+        "parameters": [
+          {
+            "name": "tenent_id",
+            "in": "path",
+            "description": "Tenent ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "tenent_oauht2_provider_id",
+            "in": "path",
+            "description": "OAuth2 Provider ID",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/token": {
+      "get": {
+        "tags": ["token"],
+        "operationId": "token_is_valid",
+        "responses": {
+          "204": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "post": {
+        "tags": ["token"],
+        "operationId": "token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TokenRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Token" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "TenentUUID": [] }]
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["users"],
+        "operationId": "all_users",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Pagination_User" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "post": {
+        "tags": ["users"],
+        "operationId": "create_user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUser" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/users/{user_id}": {
+      "get": {
+        "tags": ["users"],
+        "operationId": "get_user_by_id",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Pagination_User" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/users/{user_id}/emails": {
+      "post": {
+        "tags": ["users"],
+        "operationId": "create_user_email",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceAccountCreateUserEmail"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserEmail" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/users/{user_id}/emails/{email_id}": {
+      "put": {
+        "tags": ["users"],
+        "operationId": "update_user_email",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "email_id",
+            "in": "path",
+            "description": "Email id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceAccountUpdateUserEmail"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "delete": {
+        "tags": ["users"],
+        "operationId": "delete_user_email",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "email_id",
+            "in": "path",
+            "description": "Email id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/users/{user_id}/phone-numbers/{phone_number_id}": {
+      "put": {
+        "tags": ["users"],
+        "operationId": "update_user_phone_number",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "phone_number_id",
+            "in": "path",
+            "description": "PhoneNumber id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceAccountUpdateUserPhoneNumber"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "delete": {
+        "tags": ["users"],
+        "operationId": "delete_user_phone_number",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "phone_number_id",
+            "in": "path",
+            "description": "PhoneNumber id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/users/{user_id}/phone_numbers": {
+      "post": {
+        "tags": ["users"],
+        "operationId": "create_user_phone_number",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceAccountCreateUserPhoneNumber"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserPhoneNumber" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/users/{user_id}/reset-password": {
+      "post": {
+        "tags": ["users"],
+        "operationId": "create_user_reset_password_token",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "User id",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserResetPassword" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Token" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
+    "/version": {
+      "get": {
+        "tags": ["util"],
+        "operationId": "version",
+        "responses": {
+          "200": {
+            "description": "Version response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Version" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Algorithm": {
+        "type": "string",
+        "description": "jsonwebtoken::Algorithm",
+        "enum": [
+          "HS256",
+          "HS384",
+          "HS512",
+          "ES256",
+          "ES384",
+          "RS256",
+          "RS384",
+          "RS512",
+          "PS256",
+          "PS384",
+          "PS512",
+          "EdDSA"
+        ]
+      },
+      "CreateServiceAccount": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "client_id": { "type": ["string", "null"], "format": "uuid" },
+          "client_secret": { "type": ["string", "null"], "format": "uuid" },
+          "name": { "type": "string" }
+        }
+      },
+      "CreateTOTPRequest": {
+        "type": "object",
+        "properties": {
+          "algorithm": { "type": ["string", "null"], "example": "SHA1" },
+          "digits": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "example": "6"
+          },
+          "step": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "example": "30"
+          }
+        }
+      },
+      "CreateTenent": {
+        "type": "object",
+        "required": ["issuer", "audience", "private_key"],
+        "properties": {
+          "algorithm": {
+            "oneOf": [
+              { "type": "null" },
+              { "$ref": "#/components/schemas/Algorithm" }
+            ]
+          },
+          "audience": { "type": "string", "example": "example.com" },
+          "client_id": { "type": ["string", "null"], "format": "uuid" },
+          "expires_in_seconds": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "example": "86400"
+          },
+          "issuer": { "type": "string", "example": "Example" },
+          "private_key": { "type": "string" },
+          "public_key": { "type": ["string", "null"] },
+          "refresh_expires_in_seconds": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "example": "604800"
+          }
+        }
+      },
+      "CreateTenentOAuth2Provider": {
+        "type": "object",
+        "required": ["provider", "client_id", "client_secret", "redirect_url"],
+        "properties": {
+          "auth_url": { "type": ["string", "null"] },
+          "callback_url": { "type": ["string", "null"] },
+          "client_id": { "type": "string" },
+          "client_secret": { "type": "string" },
+          "provider": { "type": "string" },
+          "redirect_url": { "type": "string" },
+          "scope": { "type": ["string", "null"] },
+          "token_url": { "type": ["string", "null"] }
+        }
+      },
+      "CreateUser": {
+        "type": "object",
+        "required": ["username", "active"],
+        "properties": {
+          "active": { "type": "boolean" },
+          "username": { "type": "string" }
+        }
+      },
+      "CreateUserEmail": {
+        "type": "object",
+        "required": ["email"],
+        "properties": { "email": { "type": "string" } }
+      },
+      "CreateUserPhoneNumber": {
+        "type": "object",
+        "required": ["phone_number"],
+        "properties": { "phone_number": { "type": "string" } }
+      },
+      "ErrorMessage": {
+        "type": "object",
+        "required": ["code", "parameters"],
+        "properties": {
+          "code": { "type": "string" },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": { "type": "string" }
+          }
+        }
+      },
+      "ErrorMessages": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/ErrorMessage" }
+      },
+      "Errors": {
+        "type": "object",
+        "required": ["status_code", "messages"],
+        "properties": {
+          "messages": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ErrorMessages"
+            },
+            "propertyNames": { "type": "string" }
+          },
+          "status_code": { "type": "integer", "format": "int32", "minimum": 0 }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "required": ["db"],
+        "properties": { "db": { "type": "boolean" } }
+      },
+      "MFARequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["code", "type"],
+            "properties": {
+              "code": { "type": "string" },
+              "type": { "type": "string", "enum": ["totp"] }
+            }
+          },
+          {
+            "type": "object",
+            "required": ["code", "type"],
+            "properties": {
+              "code": { "type": "string" },
+              "type": { "type": "string", "enum": ["service-account"] }
+            }
+          }
+        ]
+      },
+      "Pagination_ServiceAccount": {
+        "type": "object",
+        "required": ["has_more", "items"],
+        "properties": {
+          "has_more": { "type": "boolean" },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "client_id",
+                "name",
+                "active",
+                "updated_at",
+                "created_at"
+              ],
+              "properties": {
+                "active": { "type": "boolean" },
+                "client_id": { "type": "string", "format": "uuid" },
+                "client_secret": {
+                  "type": ["string", "null"],
+                  "format": "uuid"
+                },
+                "created_at": { "type": "string", "format": "date-time" },
+                "id": { "type": "integer", "format": "int64" },
+                "name": { "type": "string" },
+                "updated_at": { "type": "string", "format": "date-time" }
+              }
+            }
+          }
+        }
+      },
+      "Pagination_Tenent": {
+        "type": "object",
+        "required": ["has_more", "items"],
+        "properties": {
+          "has_more": { "type": "boolean" },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "client_id",
+                "issuer",
+                "algorithm",
+                "private_key",
+                "expires_in_seconds",
+                "refresh_expires_in_seconds",
+                "oauth2_providers",
+                "updated_at",
+                "created_at"
+              ],
+              "properties": {
+                "algorithm": { "type": "string" },
+                "audience": { "type": ["string", "null"] },
+                "client_id": { "type": "string", "format": "uuid" },
+                "created_at": { "type": "string", "format": "date-time" },
+                "expires_in_seconds": { "type": "integer", "format": "int64" },
+                "id": { "type": "integer", "format": "int64" },
+                "issuer": { "type": "string" },
+                "oauth2_providers": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TenentOAuth2Provider"
+                  }
+                },
+                "private_key": { "type": "string" },
+                "public_key": { "type": ["string", "null"] },
+                "refresh_expires_in_seconds": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "updated_at": { "type": "string", "format": "date-time" }
+              }
+            }
+          }
+        }
+      },
+      "Pagination_User": {
+        "type": "object",
+        "required": ["has_more", "items"],
+        "properties": {
+          "has_more": { "type": "boolean" },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "username",
+                "active",
+                "emails",
+                "phone_numbers",
+                "oauth2_providers",
+                "mfa_types",
+                "info",
+                "updated_at",
+                "created_at"
+              ],
+              "properties": {
+                "active": { "type": "boolean" },
+                "config": {
+                  "oneOf": [
+                    { "type": "null" },
+                    { "$ref": "#/components/schemas/UserConfig" }
+                  ]
+                },
+                "created_at": { "type": "string", "format": "date-time" },
+                "email": {
+                  "oneOf": [
+                    { "type": "null" },
+                    { "$ref": "#/components/schemas/UserEmail" }
+                  ]
+                },
+                "emails": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserEmail" }
+                },
+                "id": { "type": "integer", "format": "int64" },
+                "info": { "$ref": "#/components/schemas/UserInfo" },
+                "mfa_types": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserMFAType" }
+                },
+                "oauth2_providers": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserOAuth2Provider" }
+                },
+                "phone_number": {
+                  "oneOf": [
+                    { "type": "null" },
+                    { "$ref": "#/components/schemas/UserPhoneNumber" }
+                  ]
+                },
+                "phone_numbers": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserPhoneNumber" }
+                },
+                "updated_at": { "type": "string", "format": "date-time" },
+                "username": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "RegisterUser": {
+        "type": "object",
+        "required": ["username", "password", "password_confirmation"],
+        "properties": {
+          "password": { "type": "string" },
+          "password_confirmation": { "type": "string" },
+          "username": { "type": "string" }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "required": ["current_password", "password", "password_confirmation"],
+        "properties": {
+          "current_password": { "type": "string" },
+          "password": { "type": "string" },
+          "password_confirmation": { "type": "string" }
+        }
+      },
+      "ServiceAccount": {
+        "type": "object",
+        "required": [
+          "id",
+          "client_id",
+          "name",
+          "active",
+          "updated_at",
+          "created_at"
+        ],
+        "properties": {
+          "active": { "type": "boolean" },
+          "client_id": { "type": "string", "format": "uuid" },
+          "client_secret": { "type": ["string", "null"], "format": "uuid" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ServiceAccountCreateUserEmail": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": { "type": "string" },
+          "primary": { "type": ["boolean", "null"] },
+          "verified": { "type": ["boolean", "null"] }
+        }
+      },
+      "ServiceAccountCreateUserPhoneNumber": {
+        "type": "object",
+        "required": ["phone_number"],
+        "properties": {
+          "phone_number": { "type": "string" },
+          "primary": { "type": ["boolean", "null"] },
+          "verified": { "type": ["boolean", "null"] }
+        }
+      },
+      "ServiceAccountUpdateUserEmail": {
+        "type": "object",
+        "properties": {
+          "primary": { "type": ["boolean", "null"] },
+          "verified": { "type": ["boolean", "null"] }
+        }
+      },
+      "ServiceAccountUpdateUserPhoneNumber": {
+        "type": "object",
+        "properties": {
+          "primary": { "type": ["boolean", "null"] },
+          "verified": { "type": ["boolean", "null"] }
+        }
+      },
+      "Tenent": {
+        "type": "object",
+        "required": [
+          "id",
+          "client_id",
+          "issuer",
+          "algorithm",
+          "private_key",
+          "expires_in_seconds",
+          "refresh_expires_in_seconds",
+          "oauth2_providers",
+          "updated_at",
+          "created_at"
+        ],
+        "properties": {
+          "algorithm": { "type": "string" },
+          "audience": { "type": ["string", "null"] },
+          "client_id": { "type": "string", "format": "uuid" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "expires_in_seconds": { "type": "integer", "format": "int64" },
+          "id": { "type": "integer", "format": "int64" },
+          "issuer": { "type": "string" },
+          "oauth2_providers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TenentOAuth2Provider" }
+          },
+          "private_key": { "type": "string" },
+          "public_key": { "type": ["string", "null"] },
+          "refresh_expires_in_seconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TenentOAuth2Provider": {
+        "type": "object",
+        "required": [
+          "id",
+          "tenent_id",
+          "provider",
+          "active",
+          "client_id",
+          "client_secret",
+          "auth_url",
+          "token_url",
+          "callback_url",
+          "redirect_url",
+          "scope",
+          "updated_at",
+          "created_at"
+        ],
+        "properties": {
+          "active": { "type": "boolean" },
+          "auth_url": { "type": "string" },
+          "callback_url": { "type": "string" },
+          "client_id": { "type": "string" },
+          "client_secret": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "id": { "type": "integer", "format": "int64" },
+          "provider": { "type": "string" },
+          "redirect_url": { "type": "string" },
+          "scope": { "type": "string" },
+          "tenent_id": { "type": "integer", "format": "int64" },
+          "token_url": { "type": "string" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Token": {
+        "type": "object",
+        "required": ["access_token", "token_type", "expires_in"],
+        "properties": {
+          "access_token": { "type": "string" },
+          "expires_in": { "type": "integer", "format": "int64" },
+          "id_token": { "type": ["string", "null"] },
+          "issued_token_type": { "type": ["string", "null"] },
+          "refresh_token": { "type": ["string", "null"] },
+          "refresh_token_expires_in": {
+            "type": ["integer", "null"],
+            "format": "int64"
+          },
+          "scope": { "type": ["string", "null"] },
+          "token_type": { "type": "string" }
+        }
+      },
+      "TokenRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["username", "password", "grant_type"],
+            "properties": {
+              "grant_type": { "type": "string", "enum": ["password"] },
+              "password": { "type": "string", "example": "password" },
+              "scope": { "type": ["string", "null"], "example": "openid" },
+              "username": { "type": "string", "example": "username" }
+            }
+          },
+          {
+            "type": "object",
+            "required": ["refresh_token", "grant_type"],
+            "properties": {
+              "grant_type": { "type": "string", "enum": ["refresh-token"] },
+              "refresh_token": { "type": "string" }
+            }
+          },
+          {
+            "type": "object",
+            "required": ["client_id", "client_secret", "grant_type"],
+            "properties": {
+              "client_id": { "type": "string", "format": "uuid" },
+              "client_secret": { "type": "string", "format": "uuid" },
+              "grant_type": { "type": "string", "enum": ["service-account"] }
+            }
+          },
+          {
+            "type": "object",
+            "required": ["code", "grant_type"],
+            "properties": {
+              "code": { "type": "string" },
+              "grant_type": {
+                "type": "string",
+                "enum": ["authorization-code"]
+              },
+              "scope": { "type": ["string", "null"], "example": "openid" }
+            }
+          }
+        ]
+      },
+      "UpdateServiceAccount": {
+        "type": "object",
+        "properties": {
+          "active": { "type": ["boolean", "null"] },
+          "client_id": { "type": ["string", "null"], "format": "uuid" },
+          "client_secret": { "type": ["string", "null"], "format": "uuid" },
+          "name": { "type": ["string", "null"] }
+        }
+      },
+      "UpdateTenent": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "oneOf": [
+              { "type": "null" },
+              { "$ref": "#/components/schemas/Algorithm" }
+            ]
+          },
+          "audience": { "type": ["string", "null"], "example": "example.com" },
+          "client_id": { "type": ["string", "null"], "format": "uuid" },
+          "expires_in_seconds": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "example": "86400"
+          },
+          "issuer": { "type": ["string", "null"], "example": "Example" },
+          "private_key": { "type": ["string", "null"] },
+          "public_key": { "type": ["string", "null"] },
+          "refresh_expires_in_seconds": {
+            "type": ["integer", "null"],
+            "format": "int64",
+            "example": "604800"
+          }
+        }
+      },
+      "UpdateTenentOAuth2Provider": {
+        "type": "object",
+        "properties": {
+          "active": { "type": ["boolean", "null"] },
+          "auth_url": { "type": ["string", "null"] },
+          "callback_url": { "type": ["string", "null"] },
+          "client_id": { "type": ["string", "null"] },
+          "client_secret": { "type": ["string", "null"] },
+          "redirect_url": { "type": ["string", "null"] },
+          "scope": { "type": ["string", "null"] },
+          "token_url": { "type": ["string", "null"] }
+        }
+      },
+      "UpdateUserConfigRequest": {
+        "type": "object",
+        "properties": {
+          "mfa_type": {
+            "oneOf": [
+              { "type": "null" },
+              { "$ref": "#/components/schemas/UserMFAType" }
+            ]
+          }
+        }
+      },
+      "UpdateUserInfoRequest": {
+        "type": "object",
+        "properties": {
+          "address": { "type": ["string", "null"] },
+          "birthdate": { "type": ["string", "null"], "format": "date-time" },
+          "family_name": { "type": ["string", "null"] },
+          "gender": { "type": ["string", "null"] },
+          "given_name": { "type": ["string", "null"] },
+          "locale": { "type": ["string", "null"] },
+          "middle_name": { "type": ["string", "null"] },
+          "name": { "type": ["string", "null"] },
+          "nickname": { "type": ["string", "null"] },
+          "profile_picture": { "type": ["string", "null"] },
+          "website": { "type": ["string", "null"] },
+          "zone_info": { "type": ["string", "null"] }
+        }
+      },
+      "UpdateUsername": {
+        "type": "object",
+        "properties": { "username": { "type": ["string", "null"] } }
+      },
+      "User": {
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "active",
+          "emails",
+          "phone_numbers",
+          "oauth2_providers",
+          "mfa_types",
+          "info",
+          "updated_at",
+          "created_at"
+        ],
+        "properties": {
+          "active": { "type": "boolean" },
+          "config": {
+            "oneOf": [
+              { "type": "null" },
+              { "$ref": "#/components/schemas/UserConfig" }
+            ]
+          },
+          "created_at": { "type": "string", "format": "date-time" },
+          "email": {
+            "oneOf": [
+              { "type": "null" },
+              { "$ref": "#/components/schemas/UserEmail" }
+            ]
+          },
+          "emails": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserEmail" }
+          },
+          "id": { "type": "integer", "format": "int64" },
+          "info": { "$ref": "#/components/schemas/UserInfo" },
+          "mfa_types": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserMFAType" }
+          },
+          "oauth2_providers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserOAuth2Provider" }
+          },
+          "phone_number": {
+            "oneOf": [
+              { "type": "null" },
+              { "$ref": "#/components/schemas/UserPhoneNumber" }
+            ]
+          },
+          "phone_numbers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserPhoneNumber" }
+          },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "username": { "type": "string" }
+        }
+      },
+      "UserConfig": {
+        "type": "object",
+        "properties": { "mfa_type": { "type": ["string", "null"] } }
+      },
+      "UserEmail": {
+        "type": "object",
+        "required": [
+          "id",
+          "primary",
+          "verified",
+          "email",
+          "updated_at",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": { "type": "string", "format": "date-time" },
+          "email": { "type": "string" },
+          "id": { "type": "integer", "format": "int64" },
+          "primary": { "type": "boolean" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "verified": { "type": "boolean" }
+        }
+      },
+      "UserInfo": {
+        "type": "object",
+        "properties": {
+          "address": { "type": ["string", "null"] },
+          "birthdate": { "type": ["string", "null"], "format": "date-time" },
+          "family_name": { "type": ["string", "null"] },
+          "gender": { "type": ["string", "null"] },
+          "given_name": { "type": ["string", "null"] },
+          "locale": { "type": ["string", "null"] },
+          "middle_name": { "type": ["string", "null"] },
+          "name": { "type": ["string", "null"] },
+          "nickname": { "type": ["string", "null"] },
+          "profile_picture": { "type": ["string", "null"] },
+          "website": { "type": ["string", "null"] },
+          "zone_info": { "type": ["string", "null"] }
+        }
+      },
+      "UserMFAType": {
+        "type": "string",
+        "enum": ["none", "totp", "email", "text"]
+      },
+      "UserOAuth2Provider": {
+        "type": "object",
+        "required": [
+          "id",
+          "tenent_oauth2_provider_id",
+          "updated_at",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": { "type": "string", "format": "date-time" },
+          "email": { "type": ["string", "null"] },
+          "id": { "type": "integer", "format": "int64" },
+          "tenent_oauth2_provider_id": { "type": "integer", "format": "int64" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "UserPhoneNumber": {
+        "type": "object",
+        "required": [
+          "id",
+          "primary",
+          "verified",
+          "phone_number",
+          "updated_at",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": { "type": "string", "format": "date-time" },
+          "id": { "type": "integer", "format": "int64" },
+          "phone_number": { "type": "string" },
+          "primary": { "type": "boolean" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "verified": { "type": "boolean" }
+        }
+      },
+      "UserResetPassword": {
+        "type": "object",
+        "required": ["tenent_id"],
+        "properties": {
+          "scope": { "type": ["string", "null"] },
+          "tenent_id": { "type": "integer", "format": "int64" }
+        }
+      },
+      "UserTOTP": {
+        "type": "object",
+        "required": ["algorithm", "digits", "step", "updated_at", "created_at"],
+        "properties": {
+          "algorithm": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "digits": { "type": "integer", "format": "int64" },
+          "secret": { "type": ["string", "null"] },
+          "step": { "type": "integer", "format": "int64" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Version": {
+        "type": "object",
+        "required": ["version", "build"],
+        "properties": {
+          "build": { "type": "string", "format": "date-time" },
+          "version": { "type": "string" }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Authorization": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "TenentUUID": { "type": "apiKey", "in": "header", "name": "Tenant-ID" }
+    }
+  },
+  "tags": [
+    { "name": "current-user", "description": "Current user endpoints" },
+    { "name": "mfa", "description": "Multi-factor authentication endpoints" },
+    { "name": "oauth2", "description": "OAuth2 endpoints" },
+    { "name": "openapi", "description": "OpenApi endpoints" },
+    { "name": "register", "description": "Register endpoints" },
+    { "name": "service-account", "description": "Service Account endpoints" },
+    { "name": "oauth2-provider", "description": "OAuth2 Provider endpoints" },
+    { "name": "tenent", "description": "Tenent endpoints" },
+    { "name": "token", "description": "Token endpoints" },
+    { "name": "users", "description": "User's endpoints" },
+    { "name": "util", "description": "Utility endpoints" }
+  ]
+}
