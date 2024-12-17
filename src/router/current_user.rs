@@ -210,7 +210,7 @@ pub async fn get_current_user(
 #[utoipa::path(
   post,
   path = "current-user/oauth2/{provider}",
-  tags = ["current-user", "oauth2"],
+  tags = ["current-user"],
   params(
     ("provider" = String, Path, description = "OAuth2 provider", example = "google"),
   ),
