@@ -2,7 +2,7 @@ use std::{fmt, str::FromStr};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 
 use crate::repository::tenent::TenentRow;
 
@@ -16,7 +16,7 @@ pub struct Tenent {
   pub audience: Option<String>,
   pub algorithm: String,
   pub public_key: Option<String>,
-  pub private_key: String,
+  pub private_key: Option<String>,
   pub expires_in_seconds: i64,
   pub refresh_expires_in_seconds: i64,
   pub oauth2_providers: Vec<TenentOAuth2Provider>,
@@ -33,7 +33,7 @@ impl From<TenentRow> for Tenent {
       audience: row.audience,
       algorithm: row.algorithm,
       public_key: row.public_key,
-      private_key: row.private_key,
+      private_key: None,
       expires_in_seconds: row.expires_in_seconds,
       refresh_expires_in_seconds: row.refresh_expires_in_seconds,
       oauth2_providers: Vec::new(),
@@ -128,4 +128,9 @@ pub struct UpdateTenent {
   pub expires_in_seconds: Option<i64>,
   #[schema(example = "604800")]
   pub refresh_expires_in_seconds: Option<i64>,
+}
+
+#[derive(Deserialize, IntoParams)]
+pub struct TenentQuery {
+  pub show_private_key: Option<bool>,
 }
