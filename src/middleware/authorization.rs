@@ -1,5 +1,6 @@
 use axum::extract::{FromRef, FromRequestParts};
 use http::request::Parts;
+use serde::de::DeserializeOwned;
 
 use super::claims::{parse_jwt, parse_jwt_no_validation, BasicClaims, TOKEN_TYPE_BEARER};
 use crate::{
@@ -51,11 +52,14 @@ where
   }
 }
 
-pub async fn parse_authorization(
+pub async fn parse_authorization<T>(
   pool: &sqlx::AnyPool,
   authorization_string: &str,
-) -> Result<(TenentRow, jsonwebtoken::TokenData<BasicClaims>), Errors> {
-  let maybe_invalid_token = match parse_jwt_no_validation::<BasicClaims>(authorization_string) {
+) -> Result<(TenentRow, jsonwebtoken::TokenData<T>), Errors>
+where
+  T: DeserializeOwned,
+{
+  let maybe_invalid_token = match parse_jwt_no_validation::<T>(authorization_string) {
     Ok(maybe_invalid_token) => maybe_invalid_token,
     Err(e) => {
       log::error!("invalid authorization failed to check header: {}", e);
@@ -90,7 +94,7 @@ pub async fn parse_authorization(
       return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
-  let token_data = match parse_jwt::<BasicClaims>(authorization_string, &tenent) {
+  let token_data = match parse_jwt::<T>(authorization_string, &tenent) {
     Ok(token_data) => token_data,
     Err(e) => {
       log::error!("invalid authorization failed to parse claims: {}", e);

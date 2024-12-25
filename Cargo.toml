@@ -27,7 +27,7 @@ axum = { version = "0.8.0-rc.1", default-features = false, features = [
   "query",
   "macros",
 ] }
-utoipa = { version = "5.2", default-features = false, features = [
+utoipa = { version = "5.3", default-features = false, features = [
   "axum_extras",
   "chrono",
   "uuid",
@@ -41,15 +41,15 @@ reqwest = { version = "0.12", default-features = false, features = [
   "rustls-tls",
   "json",
 ] }
-config = "0.14"
+config = "0.15"
 rust-argon2 = "2.1"
 oauth2 = { version = "4.4" }
-http = "1.1"
+http = "1.2"
 totp-rs = { version = "5.6", default-features = false, features = [
   "gen_secret",
 ] }
 rand = "0.8"
-tokio = { version = "1.41", default-features = false, features = [
+tokio = { version = "1.42", default-features = false, features = [
   "rt",
   "rt-multi-thread",
   "macros",

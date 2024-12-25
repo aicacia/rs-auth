@@ -4,7 +4,6 @@ use crate::{
     error::{Errors, INTERNAL_ERROR},
   },
   middleware::{
-    authorization::Authorization,
     claims::{
       parse_jwt, BasicClaims, Claims, TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER,
       TOKEN_TYPE_AUTHORIZATION_CODE, TOKEN_TYPE_BEARER, TOKEN_TYPE_ID, TOKEN_TYPE_MFA_TOTP_PREFIX,
@@ -33,13 +32,7 @@ use crate::{
   },
 };
 
-use axum::{
-  extract::State,
-  http::StatusCode,
-  response::IntoResponse,
-  routing::{get, post},
-  Router,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::post, Router};
 use chrono::{DateTime, Utc};
 use sqlx::AnyPool;
 use utoipa::OpenApi;
@@ -49,7 +42,6 @@ use super::RouterState;
 #[derive(OpenApi)]
 #[openapi(
   paths(
-    token_is_valid,
     token,
   ),
   tags(
@@ -57,23 +49,6 @@ use super::RouterState;
   )
 )]
 pub struct ApiDoc;
-
-#[utoipa::path(
-  get,
-  path = "token",
-  tags = ["token"],
-  responses(
-    (status = 204),
-    (status = 401, content_type = "application/json", body = Errors),
-    (status = 500, content_type = "application/json", body = Errors),
-  ),
-  security(
-    ("Authorization" = [])
-  )
-)]
-pub async fn token_is_valid(Authorization { .. }: Authorization) -> impl IntoResponse {
-  (StatusCode::NO_CONTENT, ()).into_response()
-}
 
 #[utoipa::path(
   post,
@@ -124,10 +99,7 @@ pub async fn token(
 }
 
 pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/token", post(token))
-    .route("/token", get(token_is_valid))
-    .with_state(state)
+  Router::new().route("/token", post(token)).with_state(state)
 }
 
 async fn password_request(

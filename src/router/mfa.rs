@@ -146,12 +146,13 @@ async fn service_account_request(
   tenent: TenentRow,
   service_account_token: String,
 ) -> impl IntoResponse {
-  let service_account_claims = match parse_authorization(pool, &service_account_token).await {
-    Ok((_, claims)) => claims,
-    Err(e) => {
-      return e.into_response();
-    }
-  };
+  let service_account_claims =
+    match parse_authorization::<BasicClaims>(pool, &service_account_token).await {
+      Ok((_, claims)) => claims,
+      Err(e) => {
+        return e.into_response();
+      }
+    };
   if service_account_claims.claims.kind != TOKEN_TYPE_BEARER
     || service_account_claims.claims.sub_kind != TOKEN_SUB_TYPE_SERVICE_ACCOUNT
   {

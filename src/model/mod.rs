@@ -1,4 +1,5 @@
 pub mod current_user;
+pub mod jwt;
 pub mod mfa;
 pub mod oauth2;
 pub mod register;

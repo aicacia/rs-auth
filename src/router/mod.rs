@@ -3,6 +3,7 @@ pub mod current_user_config;
 pub mod current_user_email;
 pub mod current_user_phone_number;
 pub mod current_user_totp;
+pub mod jwt;
 pub mod mfa;
 pub mod oauth2;
 pub mod openapi;
@@ -40,6 +41,7 @@ unsafe impl Sync for RouterState {}
     (path = "/", api = current_user_email::ApiDoc),
     (path = "/", api = current_user_phone_number::ApiDoc),
     (path = "/", api = current_user_totp::ApiDoc),
+    (path = "/", api = jwt::ApiDoc),
     (path = "/", api = mfa::ApiDoc),
     (path = "/", api = oauth2::ApiDoc),
     (path = "/", api = openapi::ApiDoc),
@@ -72,6 +74,7 @@ pub fn create_router(state: RouterState) -> Router {
     .merge(current_user_email::create_router(state.clone()))
     .merge(current_user_phone_number::create_router(state.clone()))
     .merge(current_user_totp::create_router(state.clone()))
+    .merge(jwt::create_router(state.clone()))
     .merge(mfa::create_router(state.clone()))
     .merge(oauth2::create_router(state.clone()))
     .merge(openapi::create_router(doc))
