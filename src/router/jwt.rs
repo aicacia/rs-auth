@@ -11,7 +11,9 @@ use utoipa::OpenApi;
 
 use crate::{
   core::{
-    error::{Errors, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR, REQUIRED_ERROR},
+    error::{
+      Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR, REQUIRED_ERROR,
+    },
     openapi::AUTHORIZATION_HEADER,
   },
   middleware::{
@@ -145,8 +147,8 @@ pub async fn jwt_is_valid(
     Ok(_) => (StatusCode::NO_CONTENT, ()).into_response(),
     Err(e) => {
       log::error!("Error parsing authorization: {}", e);
-      Errors::internal_error()
-        .with_error("jwt", INTERNAL_ERROR)
+      Errors::unauthorized()
+        .with_error(AUTHORIZATION_HEADER, INVALID_ERROR)
         .into_response()
     }
   }

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "auth-api.fullname" . }}
+  labels: {{- include "auth-api.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector: {{- include "auth-api.selectorLabels" . | nindent 4 }}

@@ -7,3 +7,4 @@
 /auth-dev.*
 /auth-admin-service-account.json
 /docker-compose.yaml
+/values.yaml

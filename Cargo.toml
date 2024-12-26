@@ -53,7 +53,9 @@ tokio = { version = "1.42", default-features = false, features = [
   "rt",
   "rt-multi-thread",
   "macros",
+  "signal",
 ] }
+tokio-util = { version = "0.7", default-features = false }
 validator = { version = "0.19", features = ["derive"] }
 log = "0.4"
 jsonwebtoken = "9.3"

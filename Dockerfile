@@ -30,6 +30,8 @@ RUN cargo build --target x86_64-unknown-linux-musl --release
 FROM alpine:3.21
 LABEL org.opencontainers.image.source=https://github.com/aicacia/rs-auth
 
+WORKDIR /app
+
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/auth /usr/local/bin
 
 ENV RUN_MODE=production

@@ -1,0 +1,44 @@
+replicas:
+  min: 1
+  max: 16
+  resource:
+    cpu:
+      utilization: 80
+    memory:
+      utilization: 90
+  scaleDown:
+    stabilizationWindowSeconds: 30
+  scaleUp:
+    stabilizationWindowSeconds: 15
+
+image:
+  repository: aicacia/auth-api
+  tag: latest
+  pullPolicy: Always
+  hash: sha256:41dc5087ec321069388b13f6f84535367df94b8691fe63fd043ba8832afbeb8b
+
+env:
+  DATABASE_URL: "postgresql://postgres:postgres@localhost/auth-prod?pool=20"
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/tls-acme: 'true'
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt
+  hosts:
+    - host: api.auth.aicacia.com
+      paths:
+        - /
+  tls:
+    - secretName: api-auth-aicacia-com-tls
+      hosts:
+        - api.auth.aicacia.com
+
+resources:
+  requests:
+    cpu: 15m
+    memory: 184M
+  limits:
+    cpu: 250m
+    memory: 512M

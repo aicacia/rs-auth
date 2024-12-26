@@ -12,6 +12,7 @@ use auth::{
   router::{create_router, RouterState},
 };
 use sqlx::Executor;
+use tokio_util::sync::CancellationToken;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -42,36 +43,126 @@ async fn main() -> Result<(), Errors> {
 
   let router = create_router(RouterState { pool: pool.clone() });
 
-  let listener = tokio::net::TcpListener::bind(&SocketAddr::from((
-    config.server.address,
-    config.server.port,
-  )))
-  .await?;
-  log::info!("Listening on {}", listener.local_addr()?);
-  axum::serve(
-    listener,
-    router.into_make_service_with_connect_info::<SocketAddr>(),
-  )
-  .await?;
+  let cancellation_token = CancellationToken::new();
 
-  // TODO: make this run on shutdown
-  match pool.acquire().await {
-    Ok(conn) => match conn.backend_name() {
-      "sqlite" => {
-        log::info!("Optimizing database");
-        pool
-          .execute("PRAGMA analysis_limit=400; PRAGMA optimize;")
-          .await?;
+  let serve_cancellation_token = cancellation_token.clone();
+  let serve_shutdown_signal = async move {
+    serve_cancellation_token.cancelled().await;
+  };
+  let serve_handle = tokio::spawn(async move {
+    let listener = match tokio::net::TcpListener::bind(&SocketAddr::from((
+      config.server.address,
+      config.server.port,
+    )))
+    .await
+    {
+      Ok(listener) => listener,
+      Err(e) => {
+        log::error!("Error binding to address: {}", e);
+        return;
       }
-      _ => {}
-    },
+    };
+    let local_addr = match listener.local_addr() {
+      Ok(addr) => addr,
+      Err(e) => {
+        log::error!("Error getting local address: {}", e);
+        return;
+      }
+    };
+    log::info!("Listening on {}", local_addr);
+    match axum::serve(
+      listener,
+      router.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(serve_shutdown_signal)
+    .await
+    {
+      Ok(_) => {}
+      Err(e) => {
+        log::error!("Error serving: {}", e);
+      }
+    }
+  });
+
+  let pool_cleanup_cancellation_token = cancellation_token.clone();
+  let pool_cleanup_handle = tokio::spawn(async move {
+    pool_cleanup_cancellation_token.cancelled().await;
+
+    match pool.acquire().await {
+      Ok(conn) => match conn.backend_name() {
+        "sqlite" => {
+          log::info!("Optimizing database");
+          match pool
+            .execute("PRAGMA analysis_limit=400; PRAGMA optimize;")
+            .await
+          {
+            Ok(_) => {
+              log::info!("Optimized database");
+            }
+            Err(e) => {
+              log::error!("Error optimizing database: {}", e);
+            }
+          }
+        }
+        _ => {}
+      },
+      Err(e) => {
+        log::error!("Error acquiring connection: {}", e);
+      }
+    }
+    pool.close().await;
+  });
+
+  shutdown_signal(cancellation_token).await;
+
+  match serve_handle.await {
+    Ok(_) => {}
     Err(e) => {
-      log::error!("Error acquiring connection: {}", e);
+      log::error!("Error serving: {}", e);
     }
   }
-  pool.close().await;
+  match pool_cleanup_handle.await {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("Error cleaning up pool: {}", e);
+    }
+  }
 
   Ok(())
+}
+
+async fn shutdown_signal(cancellation_token: CancellationToken) {
+  let ctrl_c = async {
+    tokio::signal::ctrl_c()
+      .await
+      .map_err(|e| Errors::internal_error().with_application_error(e.to_string()))
+  };
+
+  #[cfg(unix)]
+  let terminate = async {
+    match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+      Ok(mut signal) => match signal.recv().await {
+        Some(_) => Ok(()),
+        None => Ok(()),
+      },
+      Err(e) => Err(Errors::internal_error().with_application_error(e.to_string())),
+    }
+  };
+
+  #[cfg(not(unix))]
+  let terminate = std::future::pending::<()>();
+
+  let result = tokio::select! {
+    result = ctrl_c => result,
+    result = terminate => result,
+  };
+
+  match result {
+    Ok(_) => log::info!("Signal received, shutting down"),
+    Err(e) => log::error!("Error receiving signal: {}", e),
+  }
+
+  cancellation_token.cancel();
 }
 
 async fn init_service_account(pool: &sqlx::AnyPool) -> Result<(), Errors> {
