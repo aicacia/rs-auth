@@ -25,6 +25,29 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
+Checks if the deployment is using sqlite
+*/}}
+{{- define "auth-api.is-sqlite" -}}
+{{- if and (and .Values.env .Values.env.DATABASE_URL) (hasPrefix "sqlite:" .Values.env.DATABASE_URL) -}}
+{{- "true" -}}
+{{- else if and (and .Values.config (and .Values.config.database .Values.config.database.url)) (hasPrefix "sqlite:" .Values.config.database.url) -}}
+{{- "true" -}}
+{{- else -}}
+{{- "false" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Gets sqlite path
+*/}}
+{{- define "auth-api.sqlite-path" -}}
+{{- $env := default dict .Values.env -}}
+{{- $config := default dict .Values.config -}}
+{{- $database := default dict $config.database -}}
+{{- trimPrefix "sqlite:" (default $env.DATABASE_URL (default "" $database.url)) -}}
+{{- end -}}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "auth-api.chart" -}}

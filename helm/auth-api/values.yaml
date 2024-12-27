@@ -18,13 +18,23 @@ image:
   hash: sha256:41dc5087ec321069388b13f6f84535367df94b8691fe63fd043ba8832afbeb8b
 
 env:
-  DATABASE_URL: "postgresql://postgres:postgres@localhost/auth-prod?pool=20"
+  DATABASE_URL: "sqlite:/data/auth-prod.db"
+
+config:
+  user:
+    register_enabled: false
+
+persistence:
+  storageClassName: linode-block-storage-retain
+  resources:
+    requests:
+      storage: 1Gi
 
 ingress:
   enabled: true
   annotations:
     kubernetes.io/tls-acme: 'true'
-    kubernetes.io/ingress.class: nginx
+    spec.ingressClassName: nginx
     cert-manager.io/cluster-issuer: letsencrypt
   hosts:
     - host: api.auth.aicacia.com

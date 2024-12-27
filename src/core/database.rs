@@ -1,13 +1,44 @@
-use std::{future::Future, pin::Pin, sync::atomic::Ordering, time::Duration};
+use std::{fs::{create_dir_all, File}, future::Future, path::Path, pin::Pin, sync::atomic::Ordering, time::Duration};
 
-use sqlx::Executor;
+use sqlx::{migrate::Migrator, Executor};
 
 use super::{atomic_value::AtomicValue, config::get_config};
 
 static POOL: AtomicValue<sqlx::AnyPool> = AtomicValue::empty();
 
+static SQLITE_MIGRATOR: Migrator = sqlx::migrate!("./migrations/sqlite");
+static POSTGRESQL_MIGRATOR: Migrator = sqlx::migrate!("./migrations/postgresql");
+
 pub async fn init_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
   let config = get_config();
+
+  log::info!("Creating pool for database: {}", config.database.url);
+
+  if config.database.url.starts_with("sqlite:") {
+    let path = Path::new(&config.database.url["sqlite:".len()..]);
+    if let Some(parent) = path.parent() {
+      if !parent.as_os_str().is_empty() && !parent.exists() {
+        log::info!("Creating database directory: {:?}", parent);
+        match create_dir_all(parent) {
+          Ok(_) => (),
+          Err(e) => {
+            log::error!("Failed to create database directory: {}", e);
+            return Err(sqlx::Error::Io(e));
+          }
+        }
+      }
+    }
+    if !path.exists() {
+      log::info!("Creating database file: {:?}", path);
+      match File::create(path) {
+        Ok(_) => (),
+        Err(e) => {
+          log::error!("Failed to create database file: {}", e);
+          return Err(sqlx::Error::Io(e));
+        }
+      }
+    }
+  }
 
   let pool = sqlx::any::AnyPoolOptions::new()
     .min_connections(config.database.min_connections)
@@ -34,6 +65,12 @@ pub async fn init_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
     .await?;
 
   POOL.set(pool.clone(), Ordering::SeqCst);
+
+  if config.database.url.starts_with("sqlite:") {
+    SQLITE_MIGRATOR.run(&pool).await?;
+  } else if config.database.url.starts_with("postgres:") {
+    POSTGRESQL_MIGRATOR.run(&pool).await?;
+  }
 
   Ok(pool)
 }

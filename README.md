@@ -134,19 +134,19 @@ To build and deploy the service using Docker and Helm:
 1. **Build the Docker image:**
 
    ```bash
-   docker build -t ghcr.io/aicacia/auth-api:latest .
+   docker build -t aicacia/auth-api:latest .
    ```
 
 2. **Push the image to the registry:**
 
    ```bash
-   docker push ghcr.io/aicacia/auth-api:latest
+   docker push aicacia/auth-api:latest
    ```
 
 3. **Deploy with Helm:**
 
    ```bash
-   helm upgrade auth helm/auth-api -n api --install -f values.yaml --set image.hash="$(docker inspect --format='{{index .Id}}' ghcr.io/aicacia/auth-api:latest)"
+   helm upgrade auth helm/auth-api -n api --install -f values.yaml --set image.hash="$(docker inspect --format='{{index .Id}}' aicacia/auth-api:latest)"
    ```
 
 4. **Deploy locally**
@@ -155,7 +155,7 @@ To build and deploy the service using Docker and Helm:
     -p 3000:3000 \
     -v $(pwd)/config.json:/app/config.json \
     -v $(pwd)/auth-dev.db:/app/auth-dev.db \
-    ghcr.io/aicacia/auth-api:latest
+    aicacia/auth-api:latest
    ```
 
 ### Undeployment

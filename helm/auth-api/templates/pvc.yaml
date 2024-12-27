@@ -1,0 +1,15 @@
+{{- if eq (include "auth-api.is-sqlite" .) "true" -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "auth-api.fullname" . }}-pvc
+  labels:
+    {{- include "auth-api.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+  resources:
+    {{- toYaml .Values.persistence.resources | nindent 6 }}
+  storageClassName: {{ .Values.persistence.storageClassName }}
+{{- end }}

@@ -1,4 +1,7 @@
+/.cargo
+/.github
 /.vscode
+/helm
 /target
 /.cargo
 /.env*

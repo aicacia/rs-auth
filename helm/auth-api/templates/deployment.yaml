@@ -13,6 +13,7 @@ spec:
     metadata:
       annotations:
         checksum/config-environment: {{ include (print $.Template.BasePath "/config-environment.yaml") . | sha256sum }}
+        checksum/config-config: {{ include (print $.Template.BasePath "/config-json.yaml") . | sha256sum }}
         image/hash: {{ .Values.image.hash }}
       labels:
         {{- include "auth-api.selectorLabels" . | nindent 8 }}
@@ -28,10 +29,15 @@ spec:
             - secretRef:
                 name: {{ .Values.envSecret }}
             {{- end }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            - name: config-json
+              mountPath: /app/config.json
+              subPath: config.json
+            {{- if eq (include "auth-api.is-sqlite" .) "true" }}
+            - name: sqlite-pvc
+              mountPath: {{ include "auth-api.sqlite-path" . }}
+              subPath: auth.db
+            {{- end }}
           ports:
             - name: http
               containerPort: 3000
@@ -46,10 +52,15 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.volumes }}
       volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        - name: config-json
+          configMap:
+            name: {{ include "auth-api.fullname" . }}-config
+        {{- if eq (include "auth-api.is-sqlite" .) "true" }}
+        - name: sqlite-pvc
+          persistentVolumeClaim:
+            claimName: {{ include "auth-api.fullname" . }}-pvc
+        {{- end -}}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
