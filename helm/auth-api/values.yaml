@@ -28,13 +28,13 @@ persistence:
   storageClassName: linode-block-storage-retain
   resources:
     requests:
-      storage: 1Gi
+      storage: 10Gi
 
 ingress:
   enabled: true
+  ingressClassName: nginx
   annotations:
     kubernetes.io/tls-acme: 'true'
-    spec.ingressClassName: nginx
     cert-manager.io/cluster-issuer: letsencrypt
   hosts:
     - host: api.auth.aicacia.com

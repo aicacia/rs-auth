@@ -8,7 +8,6 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-    - ReadOnlyMany
   resources:
     {{- toYaml .Values.persistence.resources | nindent 6 }}
   storageClassName: {{ .Values.persistence.storageClassName }}

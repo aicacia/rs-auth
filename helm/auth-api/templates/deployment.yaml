@@ -35,8 +35,8 @@ spec:
               subPath: config.json
             {{- if eq (include "auth-api.is-sqlite" .) "true" }}
             - name: sqlite-pvc
-              mountPath: {{ include "auth-api.sqlite-path" . }}
-              subPath: auth.db
+              mountPath: {{ dir (include "auth-api.sqlite-path" .) }}
+              subPath: {{ base (include "auth-api.sqlite-path" .) }}
             {{- end }}
           ports:
             - name: http
