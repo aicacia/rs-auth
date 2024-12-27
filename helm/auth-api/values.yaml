@@ -21,6 +21,8 @@ env:
   DATABASE_URL: "sqlite:/data/auth-prod.db"
 
 config:
+  server:
+    url: https://api.auth.aicacia.com
   user:
     register_enabled: false
 
