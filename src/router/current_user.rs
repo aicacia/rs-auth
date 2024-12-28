@@ -4,8 +4,11 @@ use crate::{
   core::{
     config::get_config,
     error::{Errors, ALREADY_USED_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
+    openapi::AUTHORIZATION_HEADER,
   },
   middleware::{
+    authorization::Authorization,
+    claims::{TOKEN_SUB_TYPE_USER, TOKEN_TYPE_BEARER, TOKEN_TYPE_RESET_PASSWORD},
     json::Json,
     openid_claims::{
       has_address_scope, has_email_scope, has_phone_scope, has_profile_scope, parse_scopes,
@@ -307,10 +310,19 @@ pub async fn create_current_user_add_oauth2_provider_url(
 )]
 pub async fn reset_current_user_password(
   State(state): State<RouterState>,
-  UserAuthorization { user, .. }: UserAuthorization,
+  Authorization { claims, .. }: Authorization,
   ValidatedJson(payload): ValidatedJson<ResetPasswordRequest>,
 ) -> impl IntoResponse {
-  match get_user_active_password_by_user_id(&state.pool, user.id).await {
+  if (claims.kind != TOKEN_TYPE_BEARER && claims.kind != TOKEN_TYPE_RESET_PASSWORD)
+    || claims.sub_kind != TOKEN_SUB_TYPE_USER
+  {
+    return Errors::unauthorized()
+      .with_error(AUTHORIZATION_HEADER, "invalid-token-type")
+      .into_response();
+  }
+  let user_id = claims.sub;
+
+  match get_user_active_password_by_user_id(&state.pool, user_id).await {
     Ok(Some(user_password)) => match user_password.verify(&payload.current_password) {
       Ok(true) => {}
       Ok(false) => {
@@ -334,7 +346,7 @@ pub async fn reset_current_user_password(
     }
   }
 
-  match create_user_password(&state.pool, user.id, &payload.password).await {
+  match create_user_password(&state.pool, user_id, &payload.password).await {
     Ok(_) => {}
     Err(e) => {
       match &e {

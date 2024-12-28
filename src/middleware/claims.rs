@@ -38,7 +38,7 @@ pub trait Claims: Serialize + DeserializeOwned {
   }
 }
 
-#[derive(Serialize, Deserialize, Default, Clone)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct BasicClaims {
   #[serde(rename = "type")]
   pub kind: String,

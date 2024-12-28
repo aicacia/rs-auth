@@ -1,7 +1,7 @@
 use crate::{
   core::{
     config::get_config,
-    error::{Errors, INTERNAL_ERROR},
+    error::{Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
   },
   middleware::{
     claims::{
@@ -278,7 +278,9 @@ async fn service_account_request(
     Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
     Err(e) => {
       log::error!("error fetching service account from database: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED).into_response();
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_error("client_id", NOT_FOUND_ERROR)
+        .into_response();
     }
   };
   match service_account.verify(&client_secret.to_string()) {
@@ -294,7 +296,7 @@ async fn service_account_request(
     Err(e) => {
       log::error!("error verifying user password: {}", e);
       Errors::from(StatusCode::UNAUTHORIZED)
-        .with_application_error(INTERNAL_ERROR)
+        .with_error("client_secret", INVALID_ERROR)
         .into_response()
     }
   }
