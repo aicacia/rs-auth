@@ -1,7 +1,7 @@
 [package]
 authors = ["nathanfaucett@gmail.com"]
 default-run = "auth"
-description = "auth"
+description = "Aicacia Auth API provides authentication services for applications."
 edition = "2021"
 license = "MIT OR Apache-2.0"
 name = "auth"
@@ -40,6 +40,11 @@ lazy_static = "1.5"
 reqwest = { version = "0.12", default-features = false, features = [
   "rustls-tls",
   "json",
+] }
+clap = { version = "4.5", default-features = false, features = [
+  "std",
+  "derive",
+  "help",
 ] }
 config = "0.15"
 rust-argon2 = "2.1"

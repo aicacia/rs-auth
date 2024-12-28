@@ -1,4 +1,11 @@
-use std::{fs::{create_dir_all, File}, future::Future, path::Path, pin::Pin, sync::atomic::Ordering, time::Duration};
+use std::{
+  fs::{create_dir_all, File},
+  future::Future,
+  path::Path,
+  pin::Pin,
+  sync::atomic::Ordering,
+  time::Duration,
+};
 
 use sqlx::{migrate::Migrator, Executor};
 
@@ -48,7 +55,7 @@ pub async fn init_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
     .max_lifetime(Duration::from_secs(config.database.max_lifetime))
     .after_connect(|conn, _meta| {
       Box::pin(async move {
-        match conn.backend_name() {
+        match conn.backend_name().to_lowercase().as_str() {
           "sqlite" => {
             conn
               .execute(

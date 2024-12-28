@@ -2,7 +2,7 @@ use std::{fs, net::SocketAddr, str::FromStr};
 
 use auth::{
   core::{
-    config::init_config,
+    config::{get_config, init_config},
     database::init_pool,
     encryption,
     error::{Errors, DATEBASE_ERROR, INTERNAL_ERROR},
@@ -11,9 +11,18 @@ use auth::{
   repository::{self, service_account::get_service_accounts},
   router::{create_router, RouterState},
 };
+use axum::Router;
+use clap::Parser;
 use sqlx::Executor;
 use tokio_util::sync::CancellationToken;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+#[derive(Parser, Debug)]
+#[command(author, version, about)]
+struct Args {
+  #[arg(short, long, default_value = "false")]
+  create_new_admin: bool,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Errors> {
@@ -39,79 +48,17 @@ async fn main() -> Result<(), Errors> {
 
   let pool = init_pool().await?;
 
-  init_service_account(&pool).await?;
+  let args = Args::parse();
+  if args.create_new_admin {
+    return create_new_admin_service_account(&pool).await;
+  }
 
-  let router = create_router(RouterState { pool: pool.clone() });
+  init_service_accounts(&pool).await?;
 
   let cancellation_token = CancellationToken::new();
 
-  let serve_cancellation_token = cancellation_token.clone();
-  let serve_shutdown_signal = async move {
-    serve_cancellation_token.cancelled().await;
-  };
-  let serve_handle = tokio::spawn(async move {
-    let listener = match tokio::net::TcpListener::bind(&SocketAddr::from((
-      config.server.address,
-      config.server.port,
-    )))
-    .await
-    {
-      Ok(listener) => listener,
-      Err(e) => {
-        log::error!("Error binding to address: {}", e);
-        return;
-      }
-    };
-    let local_addr = match listener.local_addr() {
-      Ok(addr) => addr,
-      Err(e) => {
-        log::error!("Error getting local address: {}", e);
-        return;
-      }
-    };
-    log::info!("Listening on {}", local_addr);
-    match axum::serve(
-      listener,
-      router.into_make_service_with_connect_info::<SocketAddr>(),
-    )
-    .with_graceful_shutdown(serve_shutdown_signal)
-    .await
-    {
-      Ok(_) => {}
-      Err(e) => {
-        log::error!("Error serving: {}", e);
-      }
-    }
-  });
-
-  let pool_cleanup_cancellation_token = cancellation_token.clone();
-  let pool_cleanup_handle = tokio::spawn(async move {
-    pool_cleanup_cancellation_token.cancelled().await;
-
-    match pool.acquire().await {
-      Ok(conn) => match conn.backend_name() {
-        "sqlite" => {
-          log::info!("Optimizing database");
-          match pool
-            .execute("PRAGMA analysis_limit=400; PRAGMA optimize;")
-            .await
-          {
-            Ok(_) => {
-              log::info!("Optimized database");
-            }
-            Err(e) => {
-              log::error!("Error optimizing database: {}", e);
-            }
-          }
-        }
-        _ => {}
-      },
-      Err(e) => {
-        log::error!("Error acquiring connection: {}", e);
-      }
-    }
-    pool.close().await;
-  });
+  let router = create_router(RouterState { pool: pool.clone() });
+  let serve_handle = tokio::spawn(serve(router, cancellation_token.clone()));
 
   shutdown_signal(cancellation_token).await;
 
@@ -121,13 +68,56 @@ async fn main() -> Result<(), Errors> {
       log::error!("Error serving: {}", e);
     }
   }
-  match pool_cleanup_handle.await {
-    Ok(_) => {}
+  cleanup_pool(pool).await;
+
+  Ok(())
+}
+
+async fn cleanup_pool(pool: sqlx::AnyPool) {
+  match pool.acquire().await {
+    Ok(conn) => match conn.backend_name().to_lowercase().as_str() {
+      "sqlite" => {
+        log::info!("Optimizing database");
+        match pool
+          .execute("PRAGMA analysis_limit=400; PRAGMA optimize;")
+          .await
+        {
+          Ok(_) => {
+            log::info!("Optimized database");
+          }
+          Err(e) => {
+            log::error!("Error optimizing database: {}", e);
+          }
+        }
+      }
+      _ => {}
+    },
     Err(e) => {
-      log::error!("Error cleaning up pool: {}", e);
+      log::error!("Error acquiring connection: {}", e);
     }
   }
+  pool.close().await;
+}
 
+async fn serve(router: Router, cancellation_token: CancellationToken) -> Result<(), Errors> {
+  let serve_shutdown_signal = async move {
+    cancellation_token.cancelled().await;
+  };
+  let config = get_config();
+
+  let listener = tokio::net::TcpListener::bind(&SocketAddr::from((
+    config.server.address,
+    config.server.port,
+  )))
+  .await?;
+  let local_addr = listener.local_addr()?;
+  log::info!("Listening on {}", local_addr);
+  axum::serve(
+    listener,
+    router.into_make_service_with_connect_info::<SocketAddr>(),
+  )
+  .with_graceful_shutdown(serve_shutdown_signal)
+  .await?;
   Ok(())
 }
 
@@ -158,14 +148,14 @@ async fn shutdown_signal(cancellation_token: CancellationToken) {
   };
 
   match result {
-    Ok(_) => log::info!("Signal received, shutting down"),
-    Err(e) => log::error!("Error receiving signal: {}", e),
+    Ok(_) => log::info!("Shutdown signal received, shutting down"),
+    Err(e) => log::error!("Error receiving shutdown signal: {}", e),
   }
 
   cancellation_token.cancel();
 }
 
-async fn init_service_account(pool: &sqlx::AnyPool) -> Result<(), Errors> {
+async fn init_service_accounts(pool: &sqlx::AnyPool) -> Result<(), Errors> {
   let service_accounts = match get_service_accounts(pool, None, None).await {
     Ok(service_accounts) => service_accounts,
     Err(e) => {
@@ -176,7 +166,11 @@ async fn init_service_account(pool: &sqlx::AnyPool) -> Result<(), Errors> {
   if !service_accounts.is_empty() {
     return Ok(());
   }
-  log::info!("No service accounts found, creating admin service account");
+  log::info!("No service accounts found, creating initial admin service account");
+  create_new_admin_service_account(pool).await
+}
+
+async fn create_new_admin_service_account(pool: &sqlx::AnyPool) -> Result<(), Errors> {
   let client_id = uuid::Uuid::new_v4();
   let client_secret = uuid::Uuid::new_v4();
   let encrypted_client_secret = match encryption::encrypt_password(&client_secret.to_string()) {

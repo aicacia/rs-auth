@@ -22,7 +22,7 @@ pub const NOT_ALLOWED_ERROR: &str = "not-allowed";
 pub const ALREADY_USED_ERROR: &str = "already-used";
 pub const ALREADY_EXISTS_ERROR: &str = "already-exists";
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct ErrorMessage {
   code: String,
   parameters: HashMap<String, Value>,
@@ -74,7 +74,7 @@ impl From<sqlx::Error> for ErrorMessage {
   }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, ToSchema)]
 pub struct ErrorMessages(Vec<ErrorMessage>);
 
 impl ErrorMessages {
@@ -89,7 +89,7 @@ impl ErrorMessages {
   }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Errors {
   status_code: u16,
   messages: HashMap<String, ErrorMessages>,
