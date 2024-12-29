@@ -146,7 +146,7 @@ To build and deploy the service using Docker and Helm:
 3. **Deploy with Helm:**
 
    ```bash
-   helm upgrade auth helm/auth-api -n api --install -f values.yaml --set image.hash="$(docker inspect --format='{{index .Id}}' aicacia/auth-api:latest)"
+   helm upgrade auth-api helm/auth-api -n api --install -f values.yaml --set image.hash="$(docker inspect --format='{{index .Id}}' aicacia/auth-api:latest)"
    ```
 
 4. **Deploy locally**
@@ -163,5 +163,5 @@ To build and deploy the service using Docker and Helm:
 To undeploy the service:
 
 ```bash
-helm delete -n api auth
+helm delete -n api auth-api
 ```
