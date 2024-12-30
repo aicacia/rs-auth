@@ -52,7 +52,6 @@ pub struct BasicClaims {
   pub sub_kind: String,
   pub sub: i64,
   pub app: i64,
-  #[serde(rename = "scope")]
   pub scopes: Vec<String>,
 }
 

@@ -104,7 +104,7 @@ pub async fn create_jwt(
   path = "jwt",
   tags = ["jwt"],
   responses(
-    (status = 204),
+    (status = 200, content_type = "application/json", body = serde_json::Map<String, serde_json::Value>),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -138,20 +138,21 @@ pub async fn jwt_is_valid(
     None => "",
   };
 
-  match parse_authorization::<serde_json::Map<String, serde_json::Value>>(
+  let (_tenent, token) = match parse_authorization::<serde_json::Map<String, serde_json::Value>>(
     &state.pool,
     authorization_string,
   )
   .await
   {
-    Ok(_) => (StatusCode::NO_CONTENT, ()).into_response(),
+    Ok(result) => result,
     Err(e) => {
       log::error!("Error parsing authorization: {}", e);
-      Errors::unauthorized()
+      return Errors::unauthorized()
         .with_error(AUTHORIZATION_HEADER, INVALID_ERROR)
-        .into_response()
+        .into_response();
     }
-  }
+  };
+  axum::Json(token.claims).into_response()
 }
 
 pub fn create_router(state: RouterState) -> Router {
