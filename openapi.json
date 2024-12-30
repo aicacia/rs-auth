@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "auth",
-    "description": "auth",
+    "description": "Aicacia Auth API provides authentication services for applications.",
     "contact": { "name": "nathanfaucett@gmail.com" },
     "license": {
       "name": "MIT OR Apache-2.0",
@@ -723,6 +723,83 @@
         }
       }
     },
+    "/jwt": {
+      "get": {
+        "tags": ["jwt"],
+        "operationId": "jwt_is_valid",
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      },
+      "post": {
+        "tags": ["jwt"],
+        "operationId": "create_jwt",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JWTRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": { "text/plain": { "schema": { "type": "string" } } }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
     "/mfa": {
       "post": {
         "tags": ["mfa"],
@@ -1193,6 +1270,12 @@
             "in": "query",
             "required": false,
             "schema": { "type": ["integer", "null"], "minimum": 0 }
+          },
+          {
+            "name": "show_private_key",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["boolean", "null"] }
           }
         ],
         "responses": {
@@ -1271,6 +1354,62 @@
         "security": [{ "Authorization": [] }]
       }
     },
+    "/tenents/by-client-id/{tenent_client_id}": {
+      "get": {
+        "tags": ["tenent"],
+        "operationId": "get_tenent_by_client_id",
+        "parameters": [
+          {
+            "name": "tenent_client_id",
+            "in": "path",
+            "description": "Tenent ID",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "show_private_key",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["boolean", "null"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenent" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
+      }
+    },
     "/tenents/{tenent_id}": {
       "get": {
         "tags": ["tenent"],
@@ -1282,6 +1421,12 @@
             "description": "Tenent ID",
             "required": true,
             "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "show_private_key",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["boolean", "null"] }
           }
         ],
         "responses": {
@@ -1621,30 +1766,6 @@
       }
     },
     "/token": {
-      "get": {
-        "tags": ["token"],
-        "operationId": "token_is_valid",
-        "responses": {
-          "204": { "description": "" },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
-              }
-            }
-          }
-        },
-        "security": [{ "Authorization": [] }]
-      },
       "post": {
         "tags": ["token"],
         "operationId": "token",
@@ -2411,6 +2532,18 @@
         "required": ["db"],
         "properties": { "db": { "type": "boolean" } }
       },
+      "JWTRequest": {
+        "type": "object",
+        "required": ["tenent_id", "claims"],
+        "properties": {
+          "claims": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": { "type": "string" }
+          },
+          "tenent_id": { "type": "integer", "format": "int64" }
+        }
+      },
       "MFARequest": {
         "oneOf": [
           {
@@ -2478,7 +2611,6 @@
                 "client_id",
                 "issuer",
                 "algorithm",
-                "private_key",
                 "expires_in_seconds",
                 "refresh_expires_in_seconds",
                 "oauth2_providers",
@@ -2499,7 +2631,7 @@
                     "$ref": "#/components/schemas/TenentOAuth2Provider"
                   }
                 },
-                "private_key": { "type": "string" },
+                "private_key": { "type": ["string", "null"] },
                 "public_key": { "type": ["string", "null"] },
                 "refresh_expires_in_seconds": {
                   "type": "integer",
@@ -2655,7 +2787,6 @@
           "client_id",
           "issuer",
           "algorithm",
-          "private_key",
           "expires_in_seconds",
           "refresh_expires_in_seconds",
           "oauth2_providers",
@@ -2674,7 +2805,7 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/TenentOAuth2Provider" }
           },
-          "private_key": { "type": "string" },
+          "private_key": { "type": ["string", "null"] },
           "public_key": { "type": ["string", "null"] },
           "refresh_expires_in_seconds": {
             "type": "integer",
