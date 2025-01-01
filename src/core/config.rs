@@ -1,3 +1,4 @@
+use atomicoption::AtomicOption;
 use config::ConfigError;
 use serde::Deserialize;
 use std::{
@@ -5,19 +6,19 @@ use std::{
   sync::{atomic::Ordering, Arc},
 };
 
-use super::atomic_value::AtomicValue;
-
-static CONFIG: AtomicValue<Arc<Config>> = AtomicValue::empty();
+static CONFIG: AtomicOption<Arc<Config>> = AtomicOption::none();
 
 pub async fn init_config() -> Result<Arc<Config>, ConfigError> {
   let config = Arc::new(Config::new().await?);
-  CONFIG.set(config.clone(), Ordering::SeqCst);
+  CONFIG.store(Ordering::SeqCst, config.clone());
   Ok(config)
 }
 
 pub fn get_config() -> Arc<Config> {
-  assert!(!CONFIG.is_empty(), "Config not initialized");
-  CONFIG.get(Ordering::Relaxed)
+  CONFIG
+    .as_ref(Ordering::Relaxed)
+    .expect("Config not initialized")
+    .clone()
 }
 
 #[derive(Debug, Deserialize)]

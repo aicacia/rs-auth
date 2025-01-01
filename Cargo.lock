@@ -104,9 +104,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "atomicoption"
+version = "0.1.0"
+source = "git+https://github.com/aicacia/rs-atomic-option.git?rev=f5cc802#f5cc8026f882f323a6a3435d4156e3ee599aa1e2"
+
+[[package]]
 name = "auth"
 version = "0.1.0"
 dependencies = [
+ "atomicoption",
  "axum",
  "build-time",
  "chrono",

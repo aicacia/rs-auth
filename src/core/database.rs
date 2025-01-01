@@ -7,11 +7,12 @@ use std::{
   time::Duration,
 };
 
+use atomicoption::AtomicOption;
 use sqlx::{migrate::Migrator, Executor};
 
-use super::{atomic_value::AtomicValue, config::get_config};
+use super::config::get_config;
 
-static POOL: AtomicValue<sqlx::AnyPool> = AtomicValue::empty();
+static POOL: AtomicOption<sqlx::AnyPool> = AtomicOption::none();
 
 static SQLITE_MIGRATOR: Migrator = sqlx::migrate!("./migrations/sqlite");
 static POSTGRESQL_MIGRATOR: Migrator = sqlx::migrate!("./migrations/postgresql");
@@ -71,7 +72,7 @@ pub async fn init_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
     .connect(&config.database.url)
     .await?;
 
-  POOL.set(pool.clone(), Ordering::SeqCst);
+  POOL.store(Ordering::SeqCst, pool.clone());
 
   if config.database.url.starts_with("sqlite:") {
     SQLITE_MIGRATOR.run(&pool).await?;
@@ -83,8 +84,10 @@ pub async fn init_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
 }
 
 pub fn get_pool() -> sqlx::AnyPool {
-  assert!(!POOL.is_empty(), "Pool not initialized");
-  POOL.get(Ordering::Relaxed)
+  POOL
+    .as_ref(Ordering::Relaxed)
+    .expect("Pool not initialized")
+    .clone()
 }
 
 pub async fn run_transaction<T, F>(
