@@ -78,7 +78,11 @@ sqlx = { version = "0.8", default-features = false, features = [
   "runtime-tokio-rustls",
   "all-databases",
 ] }
-uuid = { version = "1.11", features = ["serde", "v4"] }
+uuid = { version = "1.11", default-features = false, features = [
+  "serde",
+  "v4",
+] }
+base64 = { version = "0.22", default-features = false }
 atomicoption = { git = "https://github.com/aicacia/rs-atomic-option.git", rev = "f5cc802" }
 
 [dev-dependencies]

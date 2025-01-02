@@ -255,7 +255,9 @@ pub async fn create_tenent(
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
   Json(payload): Json<CreateTenent>,
 ) -> impl IntoResponse {
-  let tenent = match repository::tenent::create_tenent(
+  let algorithm = payload.algorithm.unwrap_or_default();
+  let (public_key, private_key) = algorithm.keys(payload.public_key, payload.private_key);
+  let tenent_row = match repository::tenent::create_tenent(
     &state.pool,
     repository::tenent::CreateTenent {
       client_id: payload
@@ -264,16 +266,16 @@ pub async fn create_tenent(
         .to_string(),
       issuer: payload.issuer,
       audience: payload.audience,
-      algorithm: payload.algorithm.unwrap_or_default().to_string(),
-      public_key: payload.public_key,
-      private_key: payload.private_key,
+      algorithm: algorithm.to_string(),
+      public_key: public_key,
+      private_key: private_key,
       expires_in_seconds: payload.expires_in_seconds.unwrap_or(86400),
       refresh_expires_in_seconds: payload.refresh_expires_in_seconds.unwrap_or(604800),
     },
   )
   .await
   {
-    Ok(tenent) => tenent,
+    Ok(tenent_row) => tenent_row,
     Err(e) => {
       log::error!("error creating tenent: {}", e);
       return Errors::internal_error()
@@ -281,7 +283,10 @@ pub async fn create_tenent(
         .into_response();
     }
   };
-  axum::Json(Into::<Tenent>::into(tenent)).into_response()
+  let private_key = tenent_row.private_key.clone();
+  let mut tenent = Tenent::from(tenent_row);
+  tenent.private_key = Some(private_key);
+  axum::Json(tenent).into_response()
 }
 
 #[utoipa::path(
@@ -337,7 +342,7 @@ pub async fn update_tenent(
         .into_response();
     }
   };
-  axum::Json(Into::<Tenent>::into(tenent)).into_response()
+  axum::Json(Tenent::from(tenent)).into_response()
 }
 
 #[utoipa::path(

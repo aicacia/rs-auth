@@ -1,10 +1,11 @@
 use std::{fmt, str::FromStr};
 
+use base64::{prelude::BASE64_STANDARD, Engine};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
-use crate::repository::tenent::TenentRow;
+use crate::{core::encryption::random_bytes, repository::tenent::TenentRow};
 
 use super::tenent_oauth2_provider::TenentOAuth2Provider;
 
@@ -77,6 +78,33 @@ pub enum Algorithm {
   EdDSA,
 }
 
+impl Algorithm {
+  pub fn keys(
+    &self,
+    public_key: Option<String>,
+    private_key: Option<String>,
+  ) -> (Option<String>, String) {
+    match self {
+      Algorithm::HS256 => (
+        public_key,
+        private_key.unwrap_or_else(|| BASE64_STANDARD.encode(random_bytes(256))),
+      ),
+      Algorithm::HS384 => (
+        public_key,
+        private_key.unwrap_or_else(|| BASE64_STANDARD.encode(random_bytes(384))),
+      ),
+      Algorithm::HS512 => (
+        public_key,
+        private_key.unwrap_or_else(|| BASE64_STANDARD.encode(random_bytes(512))),
+      ),
+      _ => (
+        public_key,
+        private_key.unwrap_or_else(|| BASE64_STANDARD.encode(random_bytes(256))),
+      ),
+    }
+  }
+}
+
 impl fmt::Display for Algorithm {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     match self {
@@ -101,12 +129,12 @@ pub struct CreateTenent {
   pub client_id: Option<uuid::Uuid>,
   #[schema(example = "Example")]
   pub issuer: String,
-  #[schema(example = "example.com")]
+  #[schema(example = "https://example.com")]
   pub audience: String,
   #[schema(example = "HS256")]
   pub algorithm: Option<Algorithm>,
   pub public_key: Option<String>,
-  pub private_key: String,
+  pub private_key: Option<String>,
   #[schema(example = "86400")]
   pub expires_in_seconds: Option<i64>,
   #[schema(example = "604800")]
