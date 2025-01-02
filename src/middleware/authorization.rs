@@ -31,14 +31,14 @@ where
       let authorization_string = match authorization_header_value.to_str() {
         Ok(authorization_string) => {
           if authorization_string.len() < TOKEN_TYPE_BEARER.len() + 1 {
-            log::error!("invalid authorization header is missing");
-            return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR));
+            log::error!("invalid authorization header is invalid");
+            return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
           }
           &authorization_string[(TOKEN_TYPE_BEARER.len() + 1)..]
         }
         Err(e) => {
-          log::error!("invalid authorization header is missing: {}", e);
-          return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR));
+          log::error!("invalid authorization header is invalid: {}", e);
+          return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
         }
       };
       let (tenent, token_data) =

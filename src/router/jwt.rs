@@ -14,7 +14,7 @@ use crate::{
     error::{
       Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR, REQUIRED_ERROR,
     },
-    openapi::AUTHORIZATION_HEADER,
+    openapi::{AUTHORIZATION_HEADER, TENENT_ID_HEADER},
   },
   middleware::{
     authorization::parse_authorization,
@@ -110,6 +110,7 @@ pub async fn create_jwt(
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
+    ("TenentUUID" = []),
     ("Authorization" = [])
   )
 )]
@@ -121,24 +122,54 @@ pub async fn jwt_is_valid(
     Some(authorization_header_value) => match authorization_header_value.to_str() {
       Ok(authorization_string) => {
         if authorization_string.len() < TOKEN_TYPE_BEARER.len() + 1 {
-          log::error!("invalid authorization header is missing");
+          log::error!("invalid authorization header is invalid");
           return Errors::unauthorized()
-            .with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR)
+            .with_error(AUTHORIZATION_HEADER, INVALID_ERROR)
             .into_response();
         }
         &authorization_string[(TOKEN_TYPE_BEARER.len() + 1)..]
       }
       Err(e) => {
-        log::error!("invalid authorization header is missing: {}", e);
+        log::error!("invalid authorization header is invalid: {}", e);
         return Errors::unauthorized()
-          .with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR)
+          .with_error(AUTHORIZATION_HEADER, INVALID_ERROR)
           .into_response();
       }
     },
-    None => "",
+    None => {
+      log::error!("invalid authorization header is missing");
+      return Errors::unauthorized()
+        .with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR)
+        .into_response();
+    }
+  };
+  let tenent_client_id = match headers.get(TENENT_ID_HEADER) {
+    Some(tenent_client_id_value) => match tenent_client_id_value.to_str() {
+      Ok(tenent_client_id_string) => match uuid::Uuid::from_str(tenent_client_id_string) {
+        Ok(client_id) => client_id,
+        Err(e) => {
+          log::error!("invalid tenent header is invalid: {}", e);
+          return Errors::unauthorized()
+            .with_error(TENENT_ID_HEADER, INVALID_ERROR)
+            .into_response();
+        }
+      },
+      Err(e) => {
+        log::error!("invalid tenent header is invalid: {}", e);
+        return Errors::unauthorized()
+          .with_error(TENENT_ID_HEADER, INVALID_ERROR)
+          .into_response();
+      }
+    },
+    None => {
+      log::error!("invalid tenent header is missing");
+      return Errors::unauthorized()
+        .with_error(TENENT_ID_HEADER, REQUIRED_ERROR)
+        .into_response();
+    }
   };
 
-  let (_tenent, token) = match parse_authorization::<serde_json::Map<String, serde_json::Value>>(
+  let (tenent, token) = match parse_authorization::<serde_json::Map<String, serde_json::Value>>(
     &state.pool,
     authorization_string,
   )
@@ -152,6 +183,20 @@ pub async fn jwt_is_valid(
         .into_response();
     }
   };
+  let token_tenent_client_id = match uuid::Uuid::from_str(&tenent.client_id) {
+    Ok(client_id) => client_id,
+    Err(e) => {
+      log::error!("authorization tenent id is not a valid uuid: {}", e);
+      return Errors::unauthorized()
+        .with_error("tenent", INVALID_ERROR)
+        .into_response();
+    }
+  };
+  if tenent_client_id != token_tenent_client_id {
+    return Errors::unauthorized()
+      .with_error("tenent", INVALID_ERROR)
+      .into_response();
+  }
   axum::Json(token.claims).into_response()
 }
 
