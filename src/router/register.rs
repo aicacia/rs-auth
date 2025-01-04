@@ -3,7 +3,7 @@ use crate::{
     config::get_config,
     error::{Errors, INTERNAL_ERROR, NOT_ALLOWED_ERROR},
   },
-  middleware::{openid_claims::SCOPE_OPENID, tenent_id::TenentId, validated_json::ValidatedJson},
+  middleware::{openid_claims::SCOPE_OPENID, tenant_id::TenantId, validated_json::ValidatedJson},
   model::{register::RegisterUser, token::TOKEN_ISSUED_TYPE_REGISTER, user::User},
   repository::user::{create_user_with_password, CreateUserWithPassword},
 };
@@ -37,12 +37,12 @@ pub struct ApiDoc;
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("TenentUUID" = [])
+    ("TenantUUID" = [])
   )
 )]
 pub async fn register_user(
   State(state): State<RouterState>,
-  TenentId(tenent): TenentId,
+  TenantId(tenant): TenantId,
   ValidatedJson(payload): ValidatedJson<RegisterUser>,
 ) -> impl IntoResponse {
   if !get_config().user.register_enabled {
@@ -69,7 +69,7 @@ pub async fn register_user(
   };
   create_user_token(
     &state.pool,
-    tenent,
+    tenant,
     new_user,
     Some(SCOPE_OPENID.to_owned()),
     Some(TOKEN_ISSUED_TYPE_REGISTER.to_owned()),

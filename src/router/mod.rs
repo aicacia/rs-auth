@@ -9,8 +9,8 @@ pub mod oauth2;
 pub mod openapi;
 pub mod register;
 pub mod service_account;
-pub mod tenent;
-pub mod tenent_oauth2_provider;
+pub mod tenant;
+pub mod tenant_oauth2_provider;
 pub mod token;
 pub mod user;
 pub mod user_email;
@@ -47,8 +47,8 @@ unsafe impl Sync for RouterState {}
     (path = "/", api = openapi::ApiDoc),
     (path = "/", api = register::ApiDoc),
     (path = "/", api = service_account::ApiDoc),
-    (path = "/", api = tenent_oauth2_provider::ApiDoc),
-    (path = "/", api = tenent::ApiDoc),
+    (path = "/", api = tenant_oauth2_provider::ApiDoc),
+    (path = "/", api = tenant::ApiDoc),
     (path = "/", api = token::ApiDoc),
     (path = "/", api = user::ApiDoc),
     (path = "/", api = user_email::ApiDoc),
@@ -80,8 +80,8 @@ pub fn create_router(state: RouterState) -> Router {
     .merge(openapi::create_router(doc))
     .merge(register::create_router(state.clone()))
     .merge(service_account::create_router(state.clone()))
-    .merge(tenent_oauth2_provider::create_router(state.clone()))
-    .merge(tenent::create_router(state.clone()))
+    .merge(tenant_oauth2_provider::create_router(state.clone()))
+    .merge(tenant::create_router(state.clone()))
     .merge(token::create_router(state.clone()))
     .merge(user::create_router(state.clone()))
     .merge(user_email::create_router(state.clone()))

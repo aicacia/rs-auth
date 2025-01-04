@@ -14,14 +14,14 @@ use crate::{
       TOKEN_TYPE_AUTHORIZATION_CODE,
     },
     openid_claims::{parse_scopes, SCOPE_ADDRESS, SCOPE_EMAIL, SCOPE_PHONE, SCOPE_PROFILE},
-    tenent_id::TenentId,
+    tenant_id::TenantId,
   },
   model::oauth2::{
     oauth2_authorize_url, oauth2_profile, OAuth2CallbackQuery, OAuth2Query, OAuth2State,
   },
   repository::{
-    tenent::get_tenent_by_id,
-    tenent_oauth2_provider::get_active_tenent_oauth2_provider,
+    tenant::get_tenant_by_id,
+    tenant_oauth2_provider::get_active_tenant_oauth2_provider,
     user::{create_user_with_oauth2, get_user_by_id, CreateUserWithOAuth2},
     user_info::UserInfoUpdate,
     user_oauth2_provider::{
@@ -75,18 +75,18 @@ pub struct ApiDoc;
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("TenentUUID" = [])
+    ("TenantUUID" = [])
   )
 )]
 pub async fn create_oauth2_url(
   State(state): State<RouterState>,
   Path(provider): Path<String>,
-  TenentId(tenent): TenentId,
+  TenantId(tenant): TenantId,
   Query(OAuth2Query { register }): Query<OAuth2Query>,
 ) -> impl IntoResponse {
-  let tenent_oauth2_provider =
-    match get_active_tenent_oauth2_provider(&state.pool, tenent.id, &provider).await {
-      Ok(Some(tenent_oauth2_provider)) => tenent_oauth2_provider,
+  let tenant_oauth2_provider =
+    match get_active_tenant_oauth2_provider(&state.pool, tenant.id, &provider).await {
+      Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
         return Errors::internal_error()
@@ -94,13 +94,13 @@ pub async fn create_oauth2_url(
           .into_response();
       }
       Err(e) => {
-        log::error!("Error getting tenent oauth2 provider: {}", e);
+        log::error!("Error getting tenant oauth2 provider: {}", e);
         return Errors::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
     };
-  let basic_client = match tenent_oauth2_provider.basic_client() {
+  let basic_client = match tenant_oauth2_provider.basic_client() {
     Ok(client) => client,
     Err(e) => {
       log::error!("Error getting basic client: {}", e);
@@ -111,10 +111,10 @@ pub async fn create_oauth2_url(
   };
   let (url, csrf_token, pkce_code_verifier) = match oauth2_authorize_url(
     &basic_client,
-    &tenent,
+    &tenant,
     register.unwrap_or(false),
     None,
-    parse_scopes(Some(tenent_oauth2_provider.scope.as_str()))
+    parse_scopes(Some(tenant_oauth2_provider.scope.as_str()))
       .into_iter()
       .map(oauth2::Scope::new),
   ) {
@@ -180,31 +180,31 @@ pub async fn oauth2_callback(
           .into_response();
       }
     };
-  let tenent_id = match maybe_invalid_oauth2_state_token
+  let tenant_id = match maybe_invalid_oauth2_state_token
     .header
     .kid
     .as_ref()
     .map(String::as_str)
     .map(str::parse::<i64>)
   {
-    Some(Ok(tenent_id)) => tenent_id,
+    Some(Ok(tenant_id)) => tenant_id,
     Some(Err(e)) => {
-      log::error!("Error parsing tenent id: {}", e);
+      log::error!("Error parsing tenant id: {}", e);
       return Errors::internal_error()
         .with_error("oauth2-state-token", PARSE_ERROR)
         .into_response();
     }
     None => {
-      log::error!("No tenent id found in OAuth2 state");
+      log::error!("No tenant id found in OAuth2 state");
       return Errors::internal_error()
         .with_error("oauth2-state-token", INVALID_ERROR)
         .into_response();
     }
   };
 
-  let tenent_oauth2_provider =
-    match get_active_tenent_oauth2_provider(&state.pool, tenent_id, &provider).await {
-      Ok(Some(tenent_oauth2_provider)) => tenent_oauth2_provider,
+  let tenant_oauth2_provider =
+    match get_active_tenant_oauth2_provider(&state.pool, tenant_id, &provider).await {
+      Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
         return Errors::internal_error()
@@ -212,18 +212,18 @@ pub async fn oauth2_callback(
           .into_response();
       }
       Err(e) => {
-        log::error!("Error getting tenent oauth2 provider: {}", e);
+        log::error!("Error getting tenant oauth2 provider: {}", e);
         return Errors::internal_error()
           .with_error("oauth2-provider", INTERNAL_ERROR)
           .into_response();
       }
     };
   let mut errors = Errors::bad_request();
-  let mut redirect_url = match Url::parse(&tenent_oauth2_provider.redirect_url) {
+  let mut redirect_url = match Url::parse(&tenant_oauth2_provider.redirect_url) {
     Ok(url) => url.to_owned(),
     Err(e) => {
       log::error!(
-        "Error parsing redirect url from tenent oauth2 provider: {}",
+        "Error parsing redirect url from tenant oauth2 provider: {}",
         e
       );
       return Errors::internal_error()
@@ -232,7 +232,7 @@ pub async fn oauth2_callback(
     }
   };
 
-  let basic_client = match tenent_oauth2_provider.basic_client() {
+  let basic_client = match tenant_oauth2_provider.basic_client() {
     Ok(client) => client,
     Err(e) => {
       log::error!("Error getting basic client: {}", e);
@@ -240,15 +240,15 @@ pub async fn oauth2_callback(
       return redirect_with_error(redirect_url, errors).into_response();
     }
   };
-  let tenent = match get_tenent_by_id(&state.pool, tenent_id).await {
-    Ok(Some(tenent)) => tenent,
+  let tenant = match get_tenant_by_id(&state.pool, tenant_id).await {
+    Ok(Some(tenant)) => tenant,
     Ok(None) => {
-      log::error!("Tenent not found");
+      log::error!("Tenant not found");
       errors.error("oauth2-state-token", INVALID_ERROR);
       return redirect_with_error(redirect_url, errors).into_response();
     }
     Err(e) => {
-      log::error!("Error getting tenent from OAuth2 state: {}", e);
+      log::error!("Error getting tenant from OAuth2 state: {}", e);
       errors.error("oauth2-state-token", INVALID_ERROR);
       return redirect_with_error(redirect_url, errors).into_response();
     }
@@ -273,7 +273,7 @@ pub async fn oauth2_callback(
   };
 
   let oauth2_state_token: jsonwebtoken::TokenData<OAuth2State> =
-    match parse_jwt::<OAuth2State>(&oauth2_state_token_string, &tenent) {
+    match parse_jwt::<OAuth2State>(&oauth2_state_token_string, &tenant) {
       Ok(token) => token,
       Err(e) => {
         log::error!("Error parsing OAuth2 state: {}", e);
@@ -298,7 +298,7 @@ pub async fn oauth2_callback(
     }
   };
 
-  let openid_profile = match oauth2_profile(&tenent_oauth2_provider, token_response).await {
+  let openid_profile = match oauth2_profile(&tenant_oauth2_provider, token_response).await {
     Ok(p) => p,
     Err(e) => {
       log::error!("Error getting OAuth2 profile: {}", e);
@@ -334,7 +334,7 @@ pub async fn oauth2_callback(
       &state.pool,
       CreateUserWithOAuth2 {
         active: true,
-        tenent_oauth2_provider_id: tenent_oauth2_provider.id,
+        tenant_oauth2_provider_id: tenant_oauth2_provider.id,
         email: email,
         email_verified: openid_profile.email_verified.unwrap_or(false),
         phone_number: openid_profile.phone_number,
@@ -387,7 +387,7 @@ pub async fn oauth2_callback(
     match create_user_oauth2_provider_and_email(
       &state.pool,
       user.id,
-      tenent_oauth2_provider.id,
+      tenant_oauth2_provider.id,
       &email,
     )
     .await
@@ -403,7 +403,7 @@ pub async fn oauth2_callback(
 
     user
   } else {
-    match get_user_by_oauth2_provider_and_email(&state.pool, tenent_oauth2_provider.id, &email)
+    match get_user_by_oauth2_provider_and_email(&state.pool, tenant_oauth2_provider.id, &email)
       .await
     {
       Ok(Some(user)) => user,
@@ -424,18 +424,18 @@ pub async fn oauth2_callback(
   let now = chrono::Utc::now();
   let claims = BasicClaims {
     kind: TOKEN_TYPE_AUTHORIZATION_CODE.to_owned(),
-    app: tenent.id,
+    app: tenant.id,
     sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),
-    exp: now.timestamp() + tenent.expires_in_seconds,
-    iss: tenent.issuer.clone(),
-    aud: tenent.audience.clone(),
+    exp: now.timestamp() + tenant.expires_in_seconds,
+    iss: tenant.issuer.clone(),
+    aud: tenant.audience.clone(),
     scopes,
   };
 
-  let authorization_code = match claims.encode(&tenent) {
+  let authorization_code = match claims.encode(&tenant) {
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);

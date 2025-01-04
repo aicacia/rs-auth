@@ -4,8 +4,8 @@ use utoipa::IntoParams;
 
 use crate::{
   core::config::get_config,
-  middleware::{claims::tenent_encoding_key, openid_claims::OpenIdProfile},
-  repository::{tenent::TenentRow, tenent_oauth2_provider::TenentOAuth2ProviderRow},
+  middleware::{claims::tenant_encoding_key, openid_claims::OpenIdProfile},
+  repository::{tenant::TenantRow, tenant_oauth2_provider::TenantOAuth2ProviderRow},
 };
 
 #[derive(Deserialize, IntoParams)]
@@ -23,29 +23,29 @@ pub struct OAuth2CallbackQuery {
 #[derive(Serialize, Deserialize)]
 pub struct OAuth2State {
   pub exp: i64,
-  pub tenent_id: i64,
+  pub tenant_id: i64,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub user_id: Option<i64>,
   pub register: bool,
 }
 
 impl OAuth2State {
-  pub fn new(tenent_id: i64, register: bool, user_id: Option<i64>) -> Self {
+  pub fn new(tenant_id: i64, register: bool, user_id: Option<i64>) -> Self {
     Self {
       exp: chrono::Utc::now().timestamp() + (get_config().oauth2.code_timeout_in_seconds as i64),
-      tenent_id,
+      tenant_id,
       register: register,
       user_id: user_id,
     }
   }
 
-  fn encode(&self, tenent: &TenentRow) -> Result<String, jsonwebtoken::errors::Error> {
-    let algorithm = jsonwebtoken::Algorithm::from_str(&tenent.algorithm)?;
+  fn encode(&self, tenant: &TenantRow) -> Result<String, jsonwebtoken::errors::Error> {
+    let algorithm = jsonwebtoken::Algorithm::from_str(&tenant.algorithm)?;
 
     let mut header = jsonwebtoken::Header::new(algorithm);
-    header.kid = Some(tenent.id.to_string());
+    header.kid = Some(tenant.id.to_string());
 
-    let key = tenent_encoding_key(tenent, algorithm)?;
+    let key = tenant_encoding_key(tenant, algorithm)?;
 
     jsonwebtoken::encode(&header, self, &key)
   }
@@ -53,7 +53,7 @@ impl OAuth2State {
 
 pub fn oauth2_authorize_url<I>(
   client: &oauth2::basic::BasicClient,
-  tenent: &TenentRow,
+  tenant: &TenantRow,
   register: bool,
   user_id: Option<i64>,
   scopes: I,
@@ -70,8 +70,8 @@ where
 {
   let (pkce_code_challenge, pkce_code_verifier) = oauth2::PkceCodeChallenge::new_random_sha256();
 
-  let oauth2_state = OAuth2State::new(tenent.id, register, user_id);
-  let oauth2_state_token = match oauth2_state.encode(tenent) {
+  let oauth2_state = OAuth2State::new(tenant.id, register, user_id);
+  let oauth2_state_token = match oauth2_state.encode(tenant) {
     Ok(t) => t,
     Err(err) => return Err(io::Error::new(io::ErrorKind::InvalidData, err)),
   };
@@ -87,14 +87,14 @@ where
 }
 
 pub async fn oauth2_profile<TR, TT>(
-  tenent_oauth2_provider: &TenentOAuth2ProviderRow,
+  tenant_oauth2_provider: &TenantOAuth2ProviderRow,
   token_response: TR,
 ) -> Result<OpenIdProfile, io::Error>
 where
   TR: oauth2::TokenResponse<TT>,
   TT: oauth2::TokenType,
 {
-  match tenent_oauth2_provider.provider.as_str() {
+  match tenant_oauth2_provider.provider.as_str() {
     "google" => oauth2_google_profile(token_response.access_token().secret()).await,
     "facebook" => oauth2_facebook_profile(token_response.access_token().secret()).await,
     _ => {

@@ -14,7 +14,7 @@ use crate::{
       has_address_scope, has_email_scope, has_phone_scope, has_profile_scope, parse_scopes,
       OpenIdClaims,
     },
-    tenent_id::TenentId,
+    tenant_id::TenantId,
   },
   model::token::{
     Token, TokenRequest, TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE, TOKEN_ISSUED_TYPE_PASSWORD,
@@ -22,7 +22,7 @@ use crate::{
   },
   repository::{
     service_account::{get_service_account_by_client_id, ServiceAccountRow},
-    tenent::TenentRow,
+    tenant::TenantRow,
     user::{get_user_by_id, get_user_by_username_or_primary_email, UserRow},
     user_config::get_user_config_by_user_id,
     user_email::get_user_emails_by_user_id,
@@ -63,12 +63,12 @@ pub struct ApiDoc;
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("TenentUUID" = [])
+    ("TenantUUID" = [])
   )
 )]
 pub async fn token(
   State(state): State<RouterState>,
-  TenentId(tenent): TenentId,
+  TenantId(tenant): TenantId,
   Json(payload): Json<TokenRequest>,
 ) -> impl IntoResponse {
   match payload {
@@ -76,22 +76,22 @@ pub async fn token(
       username,
       password,
       scope,
-    } => password_request(&state.pool, tenent, username, password, scope)
+    } => password_request(&state.pool, tenant, username, password, scope)
       .await
       .into_response(),
     TokenRequest::RefreshToken { refresh_token } => {
-      refresh_token_request(&state.pool, tenent, refresh_token)
+      refresh_token_request(&state.pool, tenant, refresh_token)
         .await
         .into_response()
     }
     TokenRequest::ServiceAccount {
       client_id,
       client_secret,
-    } => service_account_request(&state.pool, tenent, client_id, client_secret)
+    } => service_account_request(&state.pool, tenant, client_id, client_secret)
       .await
       .into_response(),
     TokenRequest::AuthorizationCode { code, scope } => {
-      authorization_code_request(&state.pool, tenent, code, scope)
+      authorization_code_request(&state.pool, tenant, code, scope)
         .await
         .into_response()
     }
@@ -104,7 +104,7 @@ pub fn create_router(state: RouterState) -> Router {
 
 async fn password_request(
   pool: &AnyPool,
-  tenent: TenentRow,
+  tenant: TenantRow,
   username: String,
   password: String,
   scope: Option<String>,
@@ -149,7 +149,7 @@ async fn password_request(
     if chrono::Utc::now().timestamp() >= expire_time {
       return create_reset_password_token(
         pool,
-        tenent,
+        tenant,
         user,
         scope,
         Some(TOKEN_ISSUED_TYPE_PASSWORD.to_owned()),
@@ -160,7 +160,7 @@ async fn password_request(
   }
   create_user_token(
     pool,
-    tenent,
+    tenant,
     user,
     scope,
     Some(TOKEN_ISSUED_TYPE_PASSWORD.to_owned()),
@@ -172,10 +172,10 @@ async fn password_request(
 
 async fn refresh_token_request(
   pool: &AnyPool,
-  tenent: TenentRow,
+  tenant: TenantRow,
   token_request: String,
 ) -> impl IntoResponse {
-  let jwt = match parse_jwt::<BasicClaims>(&token_request, &tenent) {
+  let jwt = match parse_jwt::<BasicClaims>(&token_request, &tenant) {
     Ok(claims) => claims,
     Err(e) => {
       log::error!("error decoding jwt: {}", e);
@@ -207,7 +207,7 @@ async fn refresh_token_request(
   let scope = jwt.claims.scopes.join(" ");
   create_user_token(
     pool,
-    tenent,
+    tenant,
     user,
     if scope.is_empty() { None } else { Some(scope) },
     Some(TOKEN_ISSUED_TYPE_REFRESH_TOKEN.to_owned()),
@@ -219,11 +219,11 @@ async fn refresh_token_request(
 
 async fn authorization_code_request(
   pool: &AnyPool,
-  tenent: TenentRow,
+  tenant: TenantRow,
   code: String,
   scope: Option<String>,
 ) -> impl IntoResponse {
-  let jwt = match parse_jwt::<BasicClaims>(&code, &tenent) {
+  let jwt = match parse_jwt::<BasicClaims>(&code, &tenant) {
     Ok(claims) => claims,
     Err(e) => {
       log::error!("error decoding jwt: {}", e);
@@ -257,7 +257,7 @@ async fn authorization_code_request(
   let scope = scope.unwrap_or_else(|| jwt.claims.scopes.join(" "));
   create_user_token(
     pool,
-    tenent,
+    tenant,
     user,
     if scope.is_empty() { None } else { Some(scope) },
     Some(TOKEN_ISSUED_TYPE_AUTHORIZATION_CODE.to_owned()),
@@ -269,7 +269,7 @@ async fn authorization_code_request(
 
 async fn service_account_request(
   pool: &AnyPool,
-  tenent: TenentRow,
+  tenant: TenantRow,
   client_id: uuid::Uuid,
   client_secret: uuid::Uuid,
 ) -> impl IntoResponse {
@@ -286,7 +286,7 @@ async fn service_account_request(
   match service_account.verify(&client_secret.to_string()) {
     Ok(true) => create_service_token_token(
       pool,
-      tenent,
+      tenant,
       service_account,
       Some(TOKEN_ISSUED_TYPE_SERVICE_ACCOUNT.to_owned()),
     )
@@ -304,7 +304,7 @@ async fn service_account_request(
 
 async fn create_service_token_token(
   _pool: &AnyPool,
-  tenent: TenentRow,
+  tenant: TenantRow,
   service_account: ServiceAccountRow,
   issued_token_type: Option<String>,
 ) -> impl IntoResponse {
@@ -312,18 +312,18 @@ async fn create_service_token_token(
 
   let claims = BasicClaims {
     kind: TOKEN_TYPE_BEARER.to_owned(),
-    app: tenent.id,
+    app: tenant.id,
     sub_kind: TOKEN_SUB_TYPE_SERVICE_ACCOUNT.to_owned(),
     sub: service_account.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),
-    exp: now.timestamp() + tenent.expires_in_seconds,
-    iss: tenent.issuer.clone(),
-    aud: tenent.audience.clone(),
+    exp: now.timestamp() + tenant.expires_in_seconds,
+    iss: tenant.issuer.clone(),
+    aud: tenant.audience.clone(),
     scopes: Vec::with_capacity(0),
   };
 
-  let access_token = match claims.encode(&tenent) {
+  let access_token = match claims.encode(&tenant) {
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
@@ -335,8 +335,8 @@ async fn create_service_token_token(
 
   let mut refresh_claims = claims.clone();
   refresh_claims.kind = TOKEN_TYPE_REFRESH.to_owned();
-  refresh_claims.exp = refresh_claims.iat + tenent.refresh_expires_in_seconds;
-  let refresh_token = match claims.encode(&tenent) {
+  refresh_claims.exp = refresh_claims.iat + tenant.refresh_expires_in_seconds;
+  let refresh_token = match claims.encode(&tenant) {
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
@@ -352,10 +352,10 @@ async fn create_service_token_token(
       access_token,
       token_type: claims.kind,
       issued_token_type,
-      expires_in: tenent.expires_in_seconds,
+      expires_in: tenant.expires_in_seconds,
       scope: None,
       refresh_token: Some(refresh_token),
-      refresh_token_expires_in: Some(tenent.refresh_expires_in_seconds),
+      refresh_token_expires_in: Some(tenant.refresh_expires_in_seconds),
       id_token: None,
     }),
   )
@@ -364,7 +364,7 @@ async fn create_service_token_token(
 
 pub(crate) async fn create_user_token(
   pool: &AnyPool,
-  tenent: TenentRow,
+  tenant: TenantRow,
   user: UserRow,
   scope: Option<String>,
   issued_token_type: Option<String>,
@@ -377,7 +377,7 @@ pub(crate) async fn create_user_token(
           if mfa_type != "none" {
             return create_mfa_token(
               pool,
-              tenent,
+              tenant,
               user,
               scope,
               issued_token_type,
@@ -402,18 +402,18 @@ pub(crate) async fn create_user_token(
 
   let claims = BasicClaims {
     kind: TOKEN_TYPE_BEARER.to_owned(),
-    app: tenent.id,
+    app: tenant.id,
     sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),
-    exp: now.timestamp() + tenent.expires_in_seconds,
-    iss: tenent.issuer.clone(),
-    aud: tenent.audience.clone(),
+    exp: now.timestamp() + tenant.expires_in_seconds,
+    iss: tenant.issuer.clone(),
+    aud: tenant.audience.clone(),
     scopes: scopes.clone(),
   };
 
-  let access_token = match claims.encode(&tenent) {
+  let access_token = match claims.encode(&tenant) {
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
@@ -425,8 +425,8 @@ pub(crate) async fn create_user_token(
 
   let mut refresh_claims = claims.clone();
   refresh_claims.kind = TOKEN_TYPE_REFRESH.to_owned();
-  refresh_claims.exp = refresh_claims.iat + tenent.refresh_expires_in_seconds;
-  let refresh_token = match claims.encode(&tenent) {
+  refresh_claims.exp = refresh_claims.iat + tenant.refresh_expires_in_seconds;
+  let refresh_token = match claims.encode(&tenant) {
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
@@ -533,7 +533,7 @@ pub(crate) async fn create_user_token(
       }
     }
     id_claims.claims.kind = TOKEN_TYPE_ID.to_owned();
-    id_token = match id_claims.encode(&tenent) {
+    id_token = match id_claims.encode(&tenant) {
       Ok(token) => Some(token),
       Err(e) => {
         log::error!("error encoding jwt: {}", e);
@@ -550,10 +550,10 @@ pub(crate) async fn create_user_token(
       access_token,
       token_type: claims.kind,
       issued_token_type,
-      expires_in: tenent.expires_in_seconds,
+      expires_in: tenant.expires_in_seconds,
       scope,
       refresh_token: Some(refresh_token),
-      refresh_token_expires_in: Some(tenent.refresh_expires_in_seconds),
+      refresh_token_expires_in: Some(tenant.refresh_expires_in_seconds),
       id_token: id_token,
     }),
   )
@@ -562,7 +562,7 @@ pub(crate) async fn create_user_token(
 
 pub(crate) async fn create_reset_password_token(
   _pool: &AnyPool,
-  tenent: TenentRow,
+  tenant: TenantRow,
   user: UserRow,
   scope: Option<String>,
   issued_token_type: Option<String>,
@@ -572,18 +572,18 @@ pub(crate) async fn create_reset_password_token(
 
   let claims = BasicClaims {
     kind: TOKEN_TYPE_RESET_PASSWORD.to_owned(),
-    app: tenent.id,
+    app: tenant.id,
     sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),
-    exp: now.timestamp() + tenent.expires_in_seconds,
-    iss: tenent.issuer.clone(),
-    aud: tenent.audience.clone(),
+    exp: now.timestamp() + tenant.expires_in_seconds,
+    iss: tenant.issuer.clone(),
+    aud: tenant.audience.clone(),
     scopes: scopes.clone(),
   };
 
-  let access_token = match claims.encode(&tenent) {
+  let access_token = match claims.encode(&tenant) {
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
@@ -599,7 +599,7 @@ pub(crate) async fn create_reset_password_token(
       access_token,
       token_type: claims.kind,
       issued_token_type,
-      expires_in: tenent.expires_in_seconds,
+      expires_in: tenant.expires_in_seconds,
       scope,
       refresh_token: None,
       refresh_token_expires_in: None,
@@ -611,7 +611,7 @@ pub(crate) async fn create_reset_password_token(
 
 async fn create_mfa_token(
   _pool: &AnyPool,
-  tenent: TenentRow,
+  tenant: TenantRow,
   user: UserRow,
   scope: Option<String>,
   issued_token_type: Option<String>,
@@ -622,18 +622,18 @@ async fn create_mfa_token(
 
   let claims = BasicClaims {
     kind: mfa_token_type,
-    app: tenent.id,
+    app: tenant.id,
     sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),
-    exp: now.timestamp() + tenent.expires_in_seconds,
-    iss: tenent.issuer.clone(),
-    aud: tenent.audience.clone(),
+    exp: now.timestamp() + tenant.expires_in_seconds,
+    iss: tenant.issuer.clone(),
+    aud: tenant.audience.clone(),
     scopes: scopes.clone(),
   };
 
-  let access_token = match claims.encode(&tenent) {
+  let access_token = match claims.encode(&tenant) {
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
@@ -649,7 +649,7 @@ async fn create_mfa_token(
       access_token,
       token_type: claims.kind,
       issued_token_type,
-      expires_in: tenent.expires_in_seconds,
+      expires_in: tenant.expires_in_seconds,
       scope,
       refresh_token: None,
       refresh_token_expires_in: None,

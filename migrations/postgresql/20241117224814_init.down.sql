@@ -9,5 +9,5 @@ DROP TABLE IF EXISTS "users" CASCADE;
 
 DROP TABLE IF EXISTS "service_accounts" CASCADE;
 
-DROP TABLE IF EXISTS "tenent_oauth2_providers" CASCADE;
-DROP TABLE IF EXISTS "tenents" CASCADE;
+DROP TABLE IF EXISTS "tenant_oauth2_providers" CASCADE;
+DROP TABLE IF EXISTS "tenants" CASCADE;

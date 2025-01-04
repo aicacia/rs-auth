@@ -2,12 +2,12 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::repository::tenent_oauth2_provider::TenentOAuth2ProviderRow;
+use crate::repository::tenant_oauth2_provider::TenantOAuth2ProviderRow;
 
 #[derive(Serialize, ToSchema)]
-pub struct TenentOAuth2Provider {
+pub struct TenantOAuth2Provider {
   pub id: i64,
-  pub tenent_id: i64,
+  pub tenant_id: i64,
   pub provider: String,
   pub active: bool,
   pub client_id: String,
@@ -21,13 +21,13 @@ pub struct TenentOAuth2Provider {
   pub created_at: DateTime<Utc>,
 }
 
-impl From<TenentOAuth2ProviderRow> for TenentOAuth2Provider {
-  fn from(row: TenentOAuth2ProviderRow) -> Self {
+impl From<TenantOAuth2ProviderRow> for TenantOAuth2Provider {
+  fn from(row: TenantOAuth2ProviderRow) -> Self {
     let active = row.is_active();
     let callback_url = row.callback_url();
     Self {
       id: row.id,
-      tenent_id: row.tenent_id,
+      tenant_id: row.tenant_id,
       provider: row.provider,
       active,
       client_id: row.client_id,
@@ -44,7 +44,7 @@ impl From<TenentOAuth2ProviderRow> for TenentOAuth2Provider {
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct CreateTenentOAuth2Provider {
+pub struct CreateTenantOAuth2Provider {
   pub provider: String,
   pub client_id: String,
   pub client_secret: String,
@@ -56,7 +56,7 @@ pub struct CreateTenentOAuth2Provider {
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct UpdateTenentOAuth2Provider {
+pub struct UpdateTenantOAuth2Provider {
   pub client_id: Option<String>,
   pub client_secret: Option<String>,
   pub active: Option<bool>,

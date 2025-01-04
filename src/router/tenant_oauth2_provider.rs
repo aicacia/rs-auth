@@ -1,8 +1,8 @@
 use crate::{
   core::error::{Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
-  model::tenent_oauth2_provider::{
-    CreateTenentOAuth2Provider, TenentOAuth2Provider, UpdateTenentOAuth2Provider,
+  model::tenant_oauth2_provider::{
+    CreateTenantOAuth2Provider, TenantOAuth2Provider, UpdateTenantOAuth2Provider,
   },
   repository,
 };
@@ -21,9 +21,9 @@ use super::RouterState;
 #[derive(OpenApi)]
 #[openapi(
   paths(
-    create_tenent_oauth2_provider, 
-    update_tenent_oauth2_provider,
-    delete_tenent_oauth2_provider
+    create_tenant_oauth2_provider, 
+    update_tenant_oauth2_provider,
+    delete_tenant_oauth2_provider
   ),
   tags(
     (name = "oauth2-provider", description = "OAuth2 Provider endpoints"),
@@ -33,14 +33,14 @@ pub struct ApiDoc;
 
 #[utoipa::path(
   post,
-  path = "tenents/{tenent_id}/oauth2-providers",
+  path = "tenants/{tenant_id}/oauth2-providers",
   tags = ["oauth2-provider"],
-  request_body = CreateTenentOAuth2Provider,
+  request_body = CreateTenantOAuth2Provider,
   params(
-    ("tenent_id" = i64, Path, description = "Tenent ID")
+    ("tenant_id" = i64, Path, description = "Tenant ID")
   ),
   responses(
-    (status = 201, content_type = "application/json", body = TenentOAuth2Provider),
+    (status = 201, content_type = "application/json", body = TenantOAuth2Provider),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 409, content_type = "application/json", body = Errors),
@@ -51,14 +51,14 @@ pub struct ApiDoc;
     ("Authorization" = [])
   )
 )]
-pub async fn create_tenent_oauth2_provider(
+pub async fn create_tenant_oauth2_provider(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Path(tenent_id): Path<i64>,
-  Json(payload): Json<CreateTenentOAuth2Provider>,
+  Path(tenant_id): Path<i64>,
+  Json(payload): Json<CreateTenantOAuth2Provider>,
 ) -> impl IntoResponse {
   let mut params =
-    match repository::tenent_oauth2_provider::CreateTenentOAuth2Provider::new(&payload.provider) {
+    match repository::tenant_oauth2_provider::CreateTenantOAuth2Provider::new(&payload.provider) {
       Some(params) => params,
       None => {
         return Errors::from(StatusCode::NOT_IMPLEMENTED)
@@ -83,31 +83,31 @@ pub async fn create_tenent_oauth2_provider(
     params.callback_url = Some(callback_url);
   }
 
-  let tenent = match repository::tenent_oauth2_provider::create_tenent_oauth2_provider(&state.pool, tenent_id, params).await {
-    Ok(tenent) => tenent,
+  let tenant = match repository::tenant_oauth2_provider::create_tenant_oauth2_provider(&state.pool, tenant_id, params).await {
+    Ok(tenant) => tenant,
     Err(e) => {
       if e.to_string().to_lowercase().contains("unique constraint") {
         return Errors::from(StatusCode::CONFLICT)
           .with_error("oauth2-provider", ALREADY_EXISTS_ERROR)
           .into_response();
       }
-      log::error!("error creating tenent OAuth2 provider: {}", e);
+      log::error!("error creating tenant OAuth2 provider: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
   };
-  axum::Json(TenentOAuth2Provider::from(tenent)).into_response()
+  axum::Json(TenantOAuth2Provider::from(tenant)).into_response()
 }
 
 #[utoipa::path(
   put,
-  path = "tenents/{tenent_id}/oauth2-providers/{tenent_oauht2_provider_id}",
+  path = "tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
   tags = ["oauth2-provider"],
-  request_body = UpdateTenentOAuth2Provider,
+  request_body = UpdateTenantOAuth2Provider,
   params(
-    ("tenent_id" = i64, Path, description = "Tenent ID"),
-    ("tenent_oauht2_provider_id" = i64, Path, description = "OAuth2 Provider ID"),
+    ("tenant_id" = i64, Path, description = "Tenant ID"),
+    ("tenant_oauht2_provider_id" = i64, Path, description = "OAuth2 Provider ID"),
   ),
   responses(
     (status = 204),
@@ -120,17 +120,17 @@ pub async fn create_tenent_oauth2_provider(
     ("Authorization" = [])
   )
 )]
-pub async fn update_tenent_oauth2_provider(
+pub async fn update_tenant_oauth2_provider(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Path((tenent_id, tenent_oauht2_provider_id)): Path<(i64, i64)>,
-  Json(payload): Json<UpdateTenentOAuth2Provider>,
+  Path((tenant_id, tenant_oauht2_provider_id)): Path<(i64, i64)>,
+  Json(payload): Json<UpdateTenantOAuth2Provider>,
 ) -> impl IntoResponse {
-  match repository::tenent_oauth2_provider::update_tenent_oauth2_provider(
+  match repository::tenant_oauth2_provider::update_tenant_oauth2_provider(
     &state.pool,
-    tenent_id,
-    tenent_oauht2_provider_id,
-    repository::tenent_oauth2_provider::UpdateTenentOAuth2Provider {
+    tenant_id,
+    tenant_oauht2_provider_id,
+    repository::tenant_oauth2_provider::UpdateTenantOAuth2Provider {
       client_id: payload.client_id,
       client_secret: payload.client_secret,
       active: payload.active.map(Into::into),
@@ -145,10 +145,10 @@ pub async fn update_tenent_oauth2_provider(
   {
     Ok(Some(_)) => {},
     Ok(None) => {
-      return Errors::not_found().with_error("tenent-oauth2-provider", NOT_FOUND_ERROR).into_response();
+      return Errors::not_found().with_error("tenant-oauth2-provider", NOT_FOUND_ERROR).into_response();
     }
     Err(e) => {
-      log::error!("error updating tenent OAuth2 provider: {}", e);
+      log::error!("error updating tenant OAuth2 provider: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -159,11 +159,11 @@ pub async fn update_tenent_oauth2_provider(
 
 #[utoipa::path(
   delete,
-  path = "tenents/{tenent_id}/oauth2-providers/{tenent_oauht2_provider_id}",
+  path = "tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
   tags = ["oauth2-provider"],
   params(
-    ("tenent_id" = i64, Path, description = "Tenent ID"),
-    ("tenent_oauht2_provider_id" = i64, Path, description = "OAuth2 Provider ID"),
+    ("tenant_id" = i64, Path, description = "Tenant ID"),
+    ("tenant_oauht2_provider_id" = i64, Path, description = "OAuth2 Provider ID"),
   ),
   responses(
     (status = 204),
@@ -176,18 +176,18 @@ pub async fn update_tenent_oauth2_provider(
     ("Authorization" = [])
   )
 )]
-pub async fn delete_tenent_oauth2_provider(
+pub async fn delete_tenant_oauth2_provider(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Path((tenent_id, tenent_oauht2_provider_id)): Path<(i64, i64)>
+  Path((tenant_id, tenant_oauht2_provider_id)): Path<(i64, i64)>
 ) -> impl IntoResponse {
-  match repository::tenent_oauth2_provider::delete_tenent_oauth2_provider(&state.pool, tenent_id, tenent_oauht2_provider_id).await {
+  match repository::tenant_oauth2_provider::delete_tenant_oauth2_provider(&state.pool, tenant_id, tenant_oauht2_provider_id).await {
     Ok(Some(_)) => {},
     Ok(None) => {
-      return Errors::not_found().with_error("tenent-oauth2-provider", NOT_FOUND_ERROR).into_response();
+      return Errors::not_found().with_error("tenant-oauth2-provider", NOT_FOUND_ERROR).into_response();
     }
     Err(e) => {
-      log::error!("error deleting tenent OAuth2 provider: {}", e);
+      log::error!("error deleting tenant OAuth2 provider: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -199,16 +199,16 @@ pub async fn delete_tenent_oauth2_provider(
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
     .route(
-      "/tenents/{tenent_id}/oauth2-providers",
-      post(create_tenent_oauth2_provider),
+      "/tenants/{tenant_id}/oauth2-providers",
+      post(create_tenant_oauth2_provider),
     )
     .route(
-      "/tenents/{tenent_id}/oauth2-providers/{tenent_oauht2_provider_id}",
-      put(update_tenent_oauth2_provider),
+      "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
+      put(update_tenant_oauth2_provider),
     )
     .route(
-      "/tenents/{tenent_id}/oauth2-providers/{tenent_oauht2_provider_id}",
-      delete(delete_tenent_oauth2_provider),
+      "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
+      delete(delete_tenant_oauth2_provider),
     )
     .with_state(state)
 }

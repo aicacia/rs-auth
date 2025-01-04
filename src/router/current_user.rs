@@ -23,7 +23,7 @@ use crate::{
   },
   repository::{
     self,
-    tenent_oauth2_provider::get_active_tenent_oauth2_provider,
+    tenant_oauth2_provider::get_active_tenant_oauth2_provider,
     user_config::get_user_config_by_user_id,
     user_email::get_user_emails_by_user_id,
     user_info::{get_user_info_by_user_id, UserInfoUpdate},
@@ -229,11 +229,11 @@ pub async fn get_current_user(
 pub async fn create_current_user_add_oauth2_provider_url(
   State(state): State<RouterState>,
   Path(provider): Path<String>,
-  UserAuthorization { user, tenent, .. }: UserAuthorization,
+  UserAuthorization { user, tenant, .. }: UserAuthorization,
 ) -> impl IntoResponse {
-  let tenent_oauth2_provider =
-    match get_active_tenent_oauth2_provider(&state.pool, tenent.id, &provider).await {
-      Ok(Some(tenent_oauth2_provider)) => tenent_oauth2_provider,
+  let tenant_oauth2_provider =
+    match get_active_tenant_oauth2_provider(&state.pool, tenant.id, &provider).await {
+      Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
         return Errors::internal_error()
@@ -241,13 +241,13 @@ pub async fn create_current_user_add_oauth2_provider_url(
           .into_response();
       }
       Err(e) => {
-        log::error!("Error getting tenent oauth2 provider: {}", e);
+        log::error!("Error getting tenant oauth2 provider: {}", e);
         return Errors::internal_error()
           .with_error("oauth2-provider", INTERNAL_ERROR)
           .into_response();
       }
     };
-  let basic_client = match tenent_oauth2_provider.basic_client() {
+  let basic_client = match tenant_oauth2_provider.basic_client() {
     Ok(client) => client,
     Err(e) => {
       log::error!("Error getting basic client: {}", e);
@@ -258,10 +258,10 @@ pub async fn create_current_user_add_oauth2_provider_url(
   };
   let (url, csrf_token, pkce_code_verifier) = match oauth2_authorize_url(
     &basic_client,
-    &tenent,
+    &tenant,
     false,
     Some(user.id),
-    parse_scopes(Some(tenent_oauth2_provider.scope.as_str()))
+    parse_scopes(Some(tenant_oauth2_provider.scope.as_str()))
       .into_iter()
       .map(oauth2::Scope::new),
   ) {

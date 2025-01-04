@@ -13,7 +13,7 @@ use crate::{
   },
   repository::{
     self,
-    tenent::get_tenent_by_id,
+    tenant::get_tenant_by_id,
     user::get_users,
     user_config::{get_users_configs, UserConfigRow},
     user_email::{get_user_emails_by_user_id, get_users_emails, UserEmailRow},
@@ -238,7 +238,7 @@ pub async fn get_user_by_id(
     Some(row) => row,
     None => {
       return Errors::not_found()
-        .with_error("tenent", NOT_FOUND_ERROR)
+        .with_error("tenant", NOT_FOUND_ERROR)
         .into_response()
     }
   };
@@ -336,30 +336,30 @@ pub async fn create_user_reset_password_token(
   Path(user_id): Path<i64>,
   Json(payload): Json<UserResetPassword>,
 ) -> impl IntoResponse {
-  let (user, tenent) = match tokio::try_join!(
+  let (user, tenant) = match tokio::try_join!(
     repository::user::get_user_by_id(&state.pool, user_id),
-    get_tenent_by_id(&state.pool, payload.tenent_id)
+    get_tenant_by_id(&state.pool, payload.tenant_id)
   ) {
-    Ok((Some(user), Some(tenent))) => (user, tenent),
-    Ok((user, tenent)) => {
+    Ok((Some(user), Some(tenant))) => (user, tenant),
+    Ok((user, tenant)) => {
       let mut errors = Errors::not_found();
       if user.is_none() {
         errors.error("user_id", NOT_FOUND_ERROR);
       }
-      if tenent.is_none() {
-        errors.error("tenent_id", NOT_FOUND_ERROR);
+      if tenant.is_none() {
+        errors.error("tenant_id", NOT_FOUND_ERROR);
       }
       return errors.into_response();
     }
     Err(e) => {
-      log::error!("error getting user/tenent: {}", e);
+      log::error!("error getting user/tenant: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
   };
 
-  token::create_reset_password_token(&state.pool, tenent, user, payload.scope, None)
+  token::create_reset_password_token(&state.pool, tenant, user, payload.scope, None)
     .await
     .into_response()
 }

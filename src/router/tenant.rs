@@ -4,15 +4,15 @@ use crate::{
   core::error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
-    tenent::{CreateTenent, Tenent, TenentQuery, UpdateTenent},
-    tenent_oauth2_provider::TenentOAuth2Provider,
+    tenant::{CreateTenant, Tenant, TenantQuery, UpdateTenant},
+    tenant_oauth2_provider::TenantOAuth2Provider,
     util::{OffsetAndLimit, Pagination, DEFAULT_LIMIT},
   },
   repository::{
     self,
-    tenent::get_tenents,
-    tenent_oauth2_provider::{
-      get_tenent_oauth2_providers, get_tenents_oauth2_providers, TenentOAuth2ProviderRow,
+    tenant::get_tenants,
+    tenant_oauth2_provider::{
+      get_tenant_oauth2_providers, get_tenants_oauth2_providers, TenantOAuth2ProviderRow,
     },
   },
 };
@@ -31,29 +31,29 @@ use super::RouterState;
 #[derive(OpenApi)]
 #[openapi(
   paths(
-    all_tenents,
-    get_tenent_by_id,
-    get_tenent_by_client_id,
-    create_tenent,
-    update_tenent,
-    delete_tenent
+    all_tenants,
+    get_tenant_by_id,
+    get_tenant_by_client_id,
+    create_tenant,
+    update_tenant,
+    delete_tenant
   ),
   tags(
-    (name = "tenent", description = "Tenent endpoints"),
+    (name = "tenant", description = "Tenant endpoints"),
   )
 )]
 pub struct ApiDoc;
 
 #[utoipa::path(
   get,
-  path = "tenents",
-  tags = ["tenent"],
+  path = "tenants",
+  tags = ["tenant"],
   params(
     OffsetAndLimit,
-    TenentQuery
+    TenantQuery
   ),
   responses(
-    (status = 200, content_type = "application/json", body = Pagination<Tenent>),
+    (status = 200, content_type = "application/json", body = Pagination<Tenant>),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
   ),
@@ -61,70 +61,70 @@ pub struct ApiDoc;
     ("Authorization" = [])
   )
 )]
-pub async fn all_tenents(
+pub async fn all_tenants(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
   Query(offset_and_limit): Query<OffsetAndLimit>,
-  Query(query): Query<TenentQuery>,
+  Query(query): Query<TenantQuery>,
 ) -> impl IntoResponse {
   let limit = offset_and_limit.limit.unwrap_or(DEFAULT_LIMIT);
   let offset = offset_and_limit.offset.unwrap_or(0);
   let (rows, oauth2_providers) = match tokio::try_join!(
-    get_tenents(&state.pool, limit, offset),
-    get_tenents_oauth2_providers(&state.pool, limit, offset),
+    get_tenants(&state.pool, limit, offset),
+    get_tenants_oauth2_providers(&state.pool, limit, offset),
   ) {
     Ok(results) => results,
     Err(e) => {
-      log::error!("error getting tenents: {}", e);
+      log::error!("error getting tenants: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
   };
-  let mut oauth2_providers_by_id: HashMap<i64, Vec<TenentOAuth2ProviderRow>> = oauth2_providers
+  let mut oauth2_providers_by_id: HashMap<i64, Vec<TenantOAuth2ProviderRow>> = oauth2_providers
     .into_iter()
     .fold(HashMap::new(), |mut acc, row| {
-      acc.entry(row.tenent_id).or_default().push(row);
+      acc.entry(row.tenant_id).or_default().push(row);
       acc
     });
   let show_private_key = query.show_private_key.unwrap_or(false);
-  let tenents = rows
+  let tenants = rows
     .into_iter()
     .map(|row| {
       let private_key = row.private_key.clone();
-      let mut tenent = Tenent::from(row);
+      let mut tenant = Tenant::from(row);
       for oauth2_provider in oauth2_providers_by_id
-        .remove(&tenent.id)
+        .remove(&tenant.id)
         .unwrap_or_default()
       {
-        tenent
+        tenant
           .oauth2_providers
-          .push(TenentOAuth2Provider::from(oauth2_provider));
+          .push(TenantOAuth2Provider::from(oauth2_provider));
       }
       if show_private_key {
-        tenent.private_key = Some(private_key);
+        tenant.private_key = Some(private_key);
       }
-      tenent
+      tenant
     })
     .collect::<Vec<_>>();
 
   axum::Json(Pagination {
-    has_more: tenents.len() == limit,
-    items: tenents,
+    has_more: tenants.len() == limit,
+    items: tenants,
   })
   .into_response()
 }
 
 #[utoipa::path(
   get,
-  path = "tenents/by-client-id/{tenent_client_id}",
-  tags = ["tenent"],
+  path = "tenants/by-client-id/{tenant_client_id}",
+  tags = ["tenant"],
   params(
-    ("tenent_client_id" = uuid::Uuid, Path, description = "Tenent ID"),
-    TenentQuery,
+    ("tenant_client_id" = uuid::Uuid, Path, description = "Tenant ID"),
+    TenantQuery,
   ),
   responses(
-    (status = 200, content_type = "application/json", body = Tenent),
+    (status = 200, content_type = "application/json", body = Tenant),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 404, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -133,19 +133,19 @@ pub async fn all_tenents(
     ("Authorization" = [])
   )
 )]
-pub async fn get_tenent_by_client_id(
+pub async fn get_tenant_by_client_id(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Path(tenent_client_id): Path<uuid::Uuid>,
-  Query(query): Query<TenentQuery>,
+  Path(tenant_client_id): Path<uuid::Uuid>,
+  Query(query): Query<TenantQuery>,
 ) -> impl IntoResponse {
   let row_optional =
-    match repository::tenent::get_tenent_by_client_id(&state.pool, &tenent_client_id.to_string())
+    match repository::tenant::get_tenant_by_client_id(&state.pool, &tenant_client_id.to_string())
       .await
     {
       Ok(row) => row,
       Err(e) => {
-        log::error!("error getting tenent: {}", e);
+        log::error!("error getting tenant: {}", e);
         return Errors::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
@@ -155,41 +155,41 @@ pub async fn get_tenent_by_client_id(
     Some(row) => row,
     None => {
       return Errors::not_found()
-        .with_error("tenent", NOT_FOUND_ERROR)
+        .with_error("tenant", NOT_FOUND_ERROR)
         .into_response()
     }
   };
 
-  let oauth2_providers = match get_tenent_oauth2_providers(&state.pool, row.id).await {
+  let oauth2_providers = match get_tenant_oauth2_providers(&state.pool, row.id).await {
     Ok(results) => results,
     Err(e) => {
-      log::error!("error getting tenents: {}", e);
+      log::error!("error getting tenants: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
   };
   let private_key = row.private_key.clone();
-  let mut tenent = Tenent::from(row);
+  let mut tenant = Tenant::from(row);
   for oauth2_provider in oauth2_providers {
-    tenent.oauth2_providers.push(oauth2_provider.into());
+    tenant.oauth2_providers.push(oauth2_provider.into());
   }
   if query.show_private_key.unwrap_or(false) {
-    tenent.private_key = Some(private_key);
+    tenant.private_key = Some(private_key);
   }
-  axum::Json(tenent).into_response()
+  axum::Json(tenant).into_response()
 }
 
 #[utoipa::path(
   get,
-  path = "tenents/{tenent_id}",
-  tags = ["tenent"],
+  path = "tenants/{tenant_id}",
+  tags = ["tenant"],
   params(
-    ("tenent_id" = i64, Path, description = "Tenent ID"),
-    TenentQuery,
+    ("tenant_id" = i64, Path, description = "Tenant ID"),
+    TenantQuery,
   ),
   responses(
-    (status = 200, content_type = "application/json", body = Tenent),
+    (status = 200, content_type = "application/json", body = Tenant),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 404, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -198,19 +198,19 @@ pub async fn get_tenent_by_client_id(
     ("Authorization" = [])
   )
 )]
-pub async fn get_tenent_by_id(
+pub async fn get_tenant_by_id(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Path(tenent_id): Path<i64>,
-  Query(query): Query<TenentQuery>,
+  Path(tenant_id): Path<i64>,
+  Query(query): Query<TenantQuery>,
 ) -> impl IntoResponse {
   let (row_optional, oauth2_providers) = match tokio::try_join!(
-    repository::tenent::get_tenent_by_id(&state.pool, tenent_id),
-    get_tenent_oauth2_providers(&state.pool, tenent_id),
+    repository::tenant::get_tenant_by_id(&state.pool, tenant_id),
+    get_tenant_oauth2_providers(&state.pool, tenant_id),
   ) {
     Ok(results) => results,
     Err(e) => {
-      log::error!("error getting tenents: {}", e);
+      log::error!("error getting tenants: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -220,28 +220,28 @@ pub async fn get_tenent_by_id(
     Some(row) => row,
     None => {
       return Errors::not_found()
-        .with_error("tenent", NOT_FOUND_ERROR)
+        .with_error("tenant", NOT_FOUND_ERROR)
         .into_response()
     }
   };
   let private_key = row.private_key.clone();
-  let mut tenent = Tenent::from(row);
+  let mut tenant = Tenant::from(row);
   for oauth2_provider in oauth2_providers {
-    tenent.oauth2_providers.push(oauth2_provider.into());
+    tenant.oauth2_providers.push(oauth2_provider.into());
   }
   if query.show_private_key.unwrap_or(false) {
-    tenent.private_key = Some(private_key);
+    tenant.private_key = Some(private_key);
   }
-  axum::Json(tenent).into_response()
+  axum::Json(tenant).into_response()
 }
 
 #[utoipa::path(
   post,
-  path = "tenents",
-  tags = ["tenent"],
-  request_body = CreateTenent,
+  path = "tenants",
+  tags = ["tenant"],
+  request_body = CreateTenant,
   responses(
-    (status = 201, content_type = "application/json", body = Tenent),
+    (status = 201, content_type = "application/json", body = Tenant),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -250,16 +250,16 @@ pub async fn get_tenent_by_id(
     ("Authorization" = [])
   )
 )]
-pub async fn create_tenent(
+pub async fn create_tenant(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Json(payload): Json<CreateTenent>,
+  Json(payload): Json<CreateTenant>,
 ) -> impl IntoResponse {
   let algorithm = payload.algorithm.unwrap_or_default();
   let (public_key, private_key) = algorithm.keys(payload.public_key, payload.private_key);
-  let tenent_row = match repository::tenent::create_tenent(
+  let tenant_row = match repository::tenant::create_tenant(
     &state.pool,
-    repository::tenent::CreateTenent {
+    repository::tenant::CreateTenant {
       client_id: payload
         .client_id
         .unwrap_or_else(uuid::Uuid::new_v4)
@@ -275,30 +275,30 @@ pub async fn create_tenent(
   )
   .await
   {
-    Ok(tenent_row) => tenent_row,
+    Ok(tenant_row) => tenant_row,
     Err(e) => {
-      log::error!("error creating tenent: {}", e);
+      log::error!("error creating tenant: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
   };
-  let private_key = tenent_row.private_key.clone();
-  let mut tenent = Tenent::from(tenent_row);
-  tenent.private_key = Some(private_key);
-  axum::Json(tenent).into_response()
+  let private_key = tenant_row.private_key.clone();
+  let mut tenant = Tenant::from(tenant_row);
+  tenant.private_key = Some(private_key);
+  axum::Json(tenant).into_response()
 }
 
 #[utoipa::path(
   put,
-  path = "tenents/{tenent_id}",
-  tags = ["tenent"],
-  request_body = UpdateTenent,
+  path = "tenants/{tenant_id}",
+  tags = ["tenant"],
+  request_body = UpdateTenant,
   params(
-    ("tenent_id" = i64, Path, description = "Tenent ID")
+    ("tenant_id" = i64, Path, description = "Tenant ID")
   ),
   responses(
-    (status = 201, content_type = "application/json", body = Tenent),
+    (status = 201, content_type = "application/json", body = Tenant),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -307,16 +307,16 @@ pub async fn create_tenent(
     ("Authorization" = [])
   )
 )]
-pub async fn update_tenent(
+pub async fn update_tenant(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Path(tenent_id): Path<i64>,
-  Json(payload): Json<UpdateTenent>,
+  Path(tenant_id): Path<i64>,
+  Json(payload): Json<UpdateTenant>,
 ) -> impl IntoResponse {
-  let tenent = match repository::tenent::update_tenent(
+  let tenant = match repository::tenant::update_tenant(
     &state.pool,
-    tenent_id,
-    repository::tenent::UpdateTenent {
+    tenant_id,
+    repository::tenant::UpdateTenant {
       client_id: payload.client_id.as_ref().map(ToString::to_string),
       issuer: payload.issuer,
       audience: payload.audience,
@@ -329,28 +329,28 @@ pub async fn update_tenent(
   )
   .await
   {
-    Ok(Some(tenent)) => tenent,
+    Ok(Some(tenant)) => tenant,
     Ok(None) => {
       return Errors::not_found()
-        .with_error("tenent", NOT_FOUND_ERROR)
+        .with_error("tenant", NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
-      log::error!("error creating tenent: {}", e);
+      log::error!("error creating tenant: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
   };
-  axum::Json(Tenent::from(tenent)).into_response()
+  axum::Json(Tenant::from(tenant)).into_response()
 }
 
 #[utoipa::path(
   delete,
-  path = "tenents/{tenent_id}",
-  tags = ["tenent"],
+  path = "tenants/{tenant_id}",
+  tags = ["tenant"],
   params(
-    ("tenent_id" = i64, Path, description = "Tenent ID")
+    ("tenant_id" = i64, Path, description = "Tenant ID")
   ),
   responses(
     (status = 204),
@@ -362,20 +362,20 @@ pub async fn update_tenent(
     ("Authorization" = [])
   )
 )]
-pub async fn delete_tenent(
+pub async fn delete_tenant(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Path(tenent_id): Path<i64>,
+  Path(tenant_id): Path<i64>,
 ) -> impl IntoResponse {
-  match repository::tenent::delete_tenent(&state.pool, tenent_id).await {
+  match repository::tenant::delete_tenant(&state.pool, tenant_id).await {
     Ok(Some(_)) => {}
     Ok(None) => {
       return Errors::not_found()
-        .with_error("tenent", NOT_FOUND_ERROR)
+        .with_error("tenant", NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
-      log::error!("error creating tenent: {}", e);
+      log::error!("error creating tenant: {}", e);
       return Errors::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -386,14 +386,14 @@ pub async fn delete_tenent(
 
 pub fn create_router(state: RouterState) -> Router {
   Router::new()
-    .route("/tenents", get(all_tenents))
+    .route("/tenants", get(all_tenants))
     .route(
-      "/tenents/by-client-id/{tenent_client_id}",
-      get(get_tenent_by_client_id),
+      "/tenants/by-client-id/{tenant_client_id}",
+      get(get_tenant_by_client_id),
     )
-    .route("/tenents/{tenent_id}", get(get_tenent_by_id))
-    .route("/tenents", post(create_tenent))
-    .route("/tenents/{tenent_id}", put(update_tenent))
-    .route("/tenents/{tenent_id}", delete(delete_tenent))
+    .route("/tenants/{tenant_id}", get(get_tenant_by_id))
+    .route("/tenants", post(create_tenant))
+    .route("/tenants/{tenant_id}", put(update_tenant))
+    .route("/tenants/{tenant_id}", delete(delete_tenant))
     .with_state(state)
 }

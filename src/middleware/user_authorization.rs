@@ -11,15 +11,15 @@ use crate::{
     openapi::AUTHORIZATION_HEADER,
   },
   repository::{
-    tenent::TenentRow,
-    user::{UserRow, get_user_by_id},
+    tenant::TenantRow,
+    user::{get_user_by_id, UserRow},
   },
   router::RouterState,
 };
 
 pub struct UserAuthorization {
   pub user: UserRow,
-  pub tenent: TenentRow,
+  pub tenant: TenantRow,
   pub scopes: Vec<String>,
 }
 
@@ -48,7 +48,7 @@ where
         }
         return Ok(Self {
           user,
-          tenent: authorization.tenent,
+          tenant: authorization.tenant,
           scopes: authorization.claims.scopes,
         });
       }

@@ -902,7 +902,7 @@
             }
           }
         },
-        "security": [{ "TenentUUID": [] }]
+        "security": [{ "TenantUUID": [] }]
       }
     },
     "/oauth2/{provider}/callback": {
@@ -1019,7 +1019,7 @@
             }
           }
         },
-        "security": [{ "TenentUUID": [] }]
+        "security": [{ "TenantUUID": [] }]
       }
     },
     "/service-accounts": {
@@ -1265,10 +1265,10 @@
         "security": [{ "Authorization": [] }]
       }
     },
-    "/tenents": {
+    "/tenants": {
       "get": {
-        "tags": ["tenent"],
-        "operationId": "all_tenents",
+        "tags": ["tenant"],
+        "operationId": "all_tenants",
         "parameters": [
           {
             "name": "offset",
@@ -1294,7 +1294,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Pagination_Tenent" }
+                "schema": { "$ref": "#/components/schemas/Pagination_Tenant" }
               }
             }
           },
@@ -1318,12 +1318,12 @@
         "security": [{ "Authorization": [] }]
       },
       "post": {
-        "tags": ["tenent"],
-        "operationId": "create_tenent",
+        "tags": ["tenant"],
+        "operationId": "create_tenant",
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateTenent" }
+              "schema": { "$ref": "#/components/schemas/CreateTenant" }
             }
           },
           "required": true
@@ -1333,7 +1333,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Tenent" }
+                "schema": { "$ref": "#/components/schemas/Tenant" }
               }
             }
           },
@@ -1365,15 +1365,15 @@
         "security": [{ "Authorization": [] }]
       }
     },
-    "/tenents/by-client-id/{tenent_client_id}": {
+    "/tenants/by-client-id/{tenant_client_id}": {
       "get": {
-        "tags": ["tenent"],
-        "operationId": "get_tenent_by_client_id",
+        "tags": ["tenant"],
+        "operationId": "get_tenant_by_client_id",
         "parameters": [
           {
-            "name": "tenent_client_id",
+            "name": "tenant_client_id",
             "in": "path",
-            "description": "Tenent ID",
+            "description": "Tenant ID",
             "required": true,
             "schema": { "type": "string", "format": "uuid" }
           },
@@ -1389,7 +1389,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Tenent" }
+                "schema": { "$ref": "#/components/schemas/Tenant" }
               }
             }
           },
@@ -1421,15 +1421,15 @@
         "security": [{ "Authorization": [] }]
       }
     },
-    "/tenents/{tenent_id}": {
+    "/tenants/{tenant_id}": {
       "get": {
-        "tags": ["tenent"],
-        "operationId": "get_tenent_by_id",
+        "tags": ["tenant"],
+        "operationId": "get_tenant_by_id",
         "parameters": [
           {
-            "name": "tenent_id",
+            "name": "tenant_id",
             "in": "path",
-            "description": "Tenent ID",
+            "description": "Tenant ID",
             "required": true,
             "schema": { "type": "integer", "format": "int64" }
           },
@@ -1445,7 +1445,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Tenent" }
+                "schema": { "$ref": "#/components/schemas/Tenant" }
               }
             }
           },
@@ -1477,13 +1477,13 @@
         "security": [{ "Authorization": [] }]
       },
       "put": {
-        "tags": ["tenent"],
-        "operationId": "update_tenent",
+        "tags": ["tenant"],
+        "operationId": "update_tenant",
         "parameters": [
           {
-            "name": "tenent_id",
+            "name": "tenant_id",
             "in": "path",
-            "description": "Tenent ID",
+            "description": "Tenant ID",
             "required": true,
             "schema": { "type": "integer", "format": "int64" }
           }
@@ -1491,7 +1491,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateTenent" }
+              "schema": { "$ref": "#/components/schemas/UpdateTenant" }
             }
           },
           "required": true
@@ -1501,7 +1501,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Tenent" }
+                "schema": { "$ref": "#/components/schemas/Tenant" }
               }
             }
           },
@@ -1533,13 +1533,13 @@
         "security": [{ "Authorization": [] }]
       },
       "delete": {
-        "tags": ["tenent"],
-        "operationId": "delete_tenent",
+        "tags": ["tenant"],
+        "operationId": "delete_tenant",
         "parameters": [
           {
-            "name": "tenent_id",
+            "name": "tenant_id",
             "in": "path",
-            "description": "Tenent ID",
+            "description": "Tenant ID",
             "required": true,
             "schema": { "type": "integer", "format": "int64" }
           }
@@ -1574,15 +1574,15 @@
         "security": [{ "Authorization": [] }]
       }
     },
-    "/tenents/{tenent_id}/oauth2-providers": {
+    "/tenants/{tenant_id}/oauth2-providers": {
       "post": {
         "tags": ["oauth2-provider"],
-        "operationId": "create_tenent_oauth2_provider",
+        "operationId": "create_tenant_oauth2_provider",
         "parameters": [
           {
-            "name": "tenent_id",
+            "name": "tenant_id",
             "in": "path",
-            "description": "Tenent ID",
+            "description": "Tenant ID",
             "required": true,
             "schema": { "type": "integer", "format": "int64" }
           }
@@ -1591,7 +1591,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTenentOAuth2Provider"
+                "$ref": "#/components/schemas/CreateTenantOAuth2Provider"
               }
             }
           },
@@ -1603,7 +1603,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TenentOAuth2Provider"
+                  "$ref": "#/components/schemas/TenantOAuth2Provider"
                 }
               }
             }
@@ -1652,20 +1652,20 @@
         "security": [{ "Authorization": [] }]
       }
     },
-    "/tenents/{tenent_id}/oauth2-providers/{tenent_oauht2_provider_id}": {
+    "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}": {
       "put": {
         "tags": ["oauth2-provider"],
-        "operationId": "update_tenent_oauth2_provider",
+        "operationId": "update_tenant_oauth2_provider",
         "parameters": [
           {
-            "name": "tenent_id",
+            "name": "tenant_id",
             "in": "path",
-            "description": "Tenent ID",
+            "description": "Tenant ID",
             "required": true,
             "schema": { "type": "integer", "format": "int64" }
           },
           {
-            "name": "tenent_oauht2_provider_id",
+            "name": "tenant_oauht2_provider_id",
             "in": "path",
             "description": "OAuth2 Provider ID",
             "required": true,
@@ -1676,7 +1676,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateTenentOAuth2Provider"
+                "$ref": "#/components/schemas/UpdateTenantOAuth2Provider"
               }
             }
           },
@@ -1721,17 +1721,17 @@
       },
       "delete": {
         "tags": ["oauth2-provider"],
-        "operationId": "delete_tenent_oauth2_provider",
+        "operationId": "delete_tenant_oauth2_provider",
         "parameters": [
           {
-            "name": "tenent_id",
+            "name": "tenant_id",
             "in": "path",
-            "description": "Tenent ID",
+            "description": "Tenant ID",
             "required": true,
             "schema": { "type": "integer", "format": "int64" }
           },
           {
-            "name": "tenent_oauht2_provider_id",
+            "name": "tenant_oauht2_provider_id",
             "in": "path",
             "description": "OAuth2 Provider ID",
             "required": true,
@@ -1830,7 +1830,7 @@
             }
           }
         },
-        "security": [{ "TenentUUID": [] }]
+        "security": [{ "TenantUUID": [] }]
       }
     },
     "/users": {
@@ -2449,7 +2449,7 @@
           }
         }
       },
-      "CreateTenent": {
+      "CreateTenant": {
         "type": "object",
         "required": ["issuer", "audience", "private_key"],
         "properties": {
@@ -2476,7 +2476,7 @@
           }
         }
       },
-      "CreateTenentOAuth2Provider": {
+      "CreateTenantOAuth2Provider": {
         "type": "object",
         "required": ["provider", "client_id", "client_secret", "redirect_url"],
         "properties": {
@@ -2545,14 +2545,14 @@
       },
       "JWTRequest": {
         "type": "object",
-        "required": ["tenent_id", "claims"],
+        "required": ["tenant_id", "claims"],
         "properties": {
           "claims": {
             "type": "object",
             "additionalProperties": {},
             "propertyNames": { "type": "string" }
           },
-          "tenent_id": { "type": "integer", "format": "int64" }
+          "tenant_id": { "type": "integer", "format": "int64" }
         }
       },
       "MFARequest": {
@@ -2608,7 +2608,7 @@
           }
         }
       },
-      "Pagination_Tenent": {
+      "Pagination_Tenant": {
         "type": "object",
         "required": ["has_more", "items"],
         "properties": {
@@ -2639,7 +2639,7 @@
                 "oauth2_providers": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/TenentOAuth2Provider"
+                    "$ref": "#/components/schemas/TenantOAuth2Provider"
                   }
                 },
                 "private_key": { "type": ["string", "null"] },
@@ -2791,7 +2791,7 @@
           "verified": { "type": ["boolean", "null"] }
         }
       },
-      "Tenent": {
+      "Tenant": {
         "type": "object",
         "required": [
           "id",
@@ -2814,7 +2814,7 @@
           "issuer": { "type": "string" },
           "oauth2_providers": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/TenentOAuth2Provider" }
+            "items": { "$ref": "#/components/schemas/TenantOAuth2Provider" }
           },
           "private_key": { "type": ["string", "null"] },
           "public_key": { "type": ["string", "null"] },
@@ -2825,11 +2825,11 @@
           "updated_at": { "type": "string", "format": "date-time" }
         }
       },
-      "TenentOAuth2Provider": {
+      "TenantOAuth2Provider": {
         "type": "object",
         "required": [
           "id",
-          "tenent_id",
+          "tenant_id",
           "provider",
           "active",
           "client_id",
@@ -2853,7 +2853,7 @@
           "provider": { "type": "string" },
           "redirect_url": { "type": "string" },
           "scope": { "type": "string" },
-          "tenent_id": { "type": "integer", "format": "int64" },
+          "tenant_id": { "type": "integer", "format": "int64" },
           "token_url": { "type": "string" },
           "updated_at": { "type": "string", "format": "date-time" }
         }
@@ -2927,7 +2927,7 @@
           "name": { "type": ["string", "null"] }
         }
       },
-      "UpdateTenent": {
+      "UpdateTenant": {
         "type": "object",
         "properties": {
           "algorithm": {
@@ -2953,7 +2953,7 @@
           }
         }
       },
-      "UpdateTenentOAuth2Provider": {
+      "UpdateTenantOAuth2Provider": {
         "type": "object",
         "properties": {
           "active": { "type": ["boolean", "null"] },
@@ -3103,7 +3103,7 @@
         "type": "object",
         "required": [
           "id",
-          "tenent_oauth2_provider_id",
+          "tenant_oauth2_provider_id",
           "updated_at",
           "created_at"
         ],
@@ -3111,7 +3111,7 @@
           "created_at": { "type": "string", "format": "date-time" },
           "email": { "type": ["string", "null"] },
           "id": { "type": "integer", "format": "int64" },
-          "tenent_oauth2_provider_id": { "type": "integer", "format": "int64" },
+          "tenant_oauth2_provider_id": { "type": "integer", "format": "int64" },
           "updated_at": { "type": "string", "format": "date-time" }
         }
       },
@@ -3136,10 +3136,10 @@
       },
       "UserResetPassword": {
         "type": "object",
-        "required": ["tenent_id"],
+        "required": ["tenant_id"],
         "properties": {
           "scope": { "type": ["string", "null"] },
-          "tenent_id": { "type": "integer", "format": "int64" }
+          "tenant_id": { "type": "integer", "format": "int64" }
         }
       },
       "UserTOTP": {
@@ -3169,7 +3169,7 @@
         "scheme": "bearer",
         "bearerFormat": "JWT"
       },
-      "TenentUUID": { "type": "apiKey", "in": "header", "name": "Tenant-ID" }
+      "TenantUUID": { "type": "apiKey", "in": "header", "name": "Tenant-ID" }
     }
   },
   "tags": [
@@ -3180,7 +3180,7 @@
     { "name": "register", "description": "Register endpoints" },
     { "name": "service-account", "description": "Service Account endpoints" },
     { "name": "oauth2-provider", "description": "OAuth2 Provider endpoints" },
-    { "name": "tenent", "description": "Tenent endpoints" },
+    { "name": "tenant", "description": "Tenant endpoints" },
     { "name": "token", "description": "Token endpoints" },
     { "name": "users", "description": "User's endpoints" },
     { "name": "util", "description": "Utility endpoints" }

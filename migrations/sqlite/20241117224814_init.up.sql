@@ -1,4 +1,4 @@
-CREATE TABLE "tenents" (
+CREATE TABLE "tenants" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"client_id" TEXT NOT NULL,
   "issuer" TEXT NOT NULL,
@@ -11,18 +11,18 @@ CREATE TABLE "tenents" (
 	"updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
 	"created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 ) STRICT;
-CREATE UNIQUE INDEX "tenents_id_unique_idx" ON "tenents" ("id");
-CREATE UNIQUE INDEX "tenents_client_id_unique_idx" ON "tenents" ("client_id");
+CREATE UNIQUE INDEX "tenants_id_unique_idx" ON "tenants" ("id");
+CREATE UNIQUE INDEX "tenants_client_id_unique_idx" ON "tenants" ("client_id");
 
-INSERT INTO "tenents"
+INSERT INTO "tenants"
   ("client_id", "issuer", "audience", "private_key")
   VALUES
 	('6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Admin', null, hex(randomblob(255)));
 
 
-CREATE TABLE "tenent_oauth2_providers" (
+CREATE TABLE "tenant_oauth2_providers" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  "tenent_id" INTEGER NOT NULL,
+  "tenant_id" INTEGER NOT NULL,
   "provider" TEXT NOT NULL,
   "active" INTEGER NOT NULL DEFAULT 1,
   "client_id" TEXT NOT NULL,
@@ -34,11 +34,11 @@ CREATE TABLE "tenent_oauth2_providers" (
   "scope" TEXT NOT NULL,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-  FOREIGN KEY ("tenent_id") REFERENCES "tenents" ("id") ON DELETE CASCADE
+  FOREIGN KEY ("tenant_id") REFERENCES "tenants" ("id") ON DELETE CASCADE
 ) STRICT;
-CREATE UNIQUE INDEX "tenent_oauth2_providers_id_unique_idx" ON "tenent_oauth2_providers" ("id");
-CREATE UNIQUE INDEX "tenent_oauth2_providers_tenent_id_provider_unique_idx" ON "tenent_oauth2_providers" ("tenent_id", "provider");
-CREATE INDEX "tenent_oauth2_providers_tenent_id_idx" ON "tenent_oauth2_providers" ("tenent_id");
+CREATE UNIQUE INDEX "tenant_oauth2_providers_id_unique_idx" ON "tenant_oauth2_providers" ("id");
+CREATE UNIQUE INDEX "tenant_oauth2_providers_tenant_id_provider_unique_idx" ON "tenant_oauth2_providers" ("tenant_id", "provider");
+CREATE INDEX "tenant_oauth2_providers_tenant_id_idx" ON "tenant_oauth2_providers" ("tenant_id");
 
 
 CREATE TABLE "service_accounts" (
@@ -157,14 +157,14 @@ CREATE INDEX "user_phone_numbers_user_id_idx" ON "user_phone_numbers" ("user_id"
 CREATE TABLE "user_oauth2_providers" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   "user_id" INTEGER NOT NULL,
-  "tenent_oauth2_provider_id" INTEGER NOT NULL,
+  "tenant_oauth2_provider_id" INTEGER NOT NULL,
   "email" TEXT NOT NULL,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE,
-  FOREIGN KEY ("tenent_oauth2_provider_id") REFERENCES "tenent_oauth2_providers" ("id") ON DELETE CASCADE
+  FOREIGN KEY ("tenant_oauth2_provider_id") REFERENCES "tenant_oauth2_providers" ("id") ON DELETE CASCADE
 ) STRICT;
 CREATE UNIQUE INDEX "user_oauth2_providers_id_unique_idx" ON "user_oauth2_providers" ("id");
-CREATE UNIQUE INDEX "user_oauth2_providers_tenent_oauth2_provider_id_email_unique_idx" ON "user_oauth2_providers" ("tenent_oauth2_provider_id", "email");
+CREATE UNIQUE INDEX "user_oauth2_providers_tenant_oauth2_provider_id_email_unique_idx" ON "user_oauth2_providers" ("tenant_oauth2_provider_id", "email");
 CREATE INDEX "user_oauth2_providers_user_id_idx" ON "user_oauth2_providers" ("user_id");
-CREATE INDEX "user_oauth2_providers_tenent_oauth2_provider_id_idx" ON "user_oauth2_providers" ("tenent_oauth2_provider_id");
+CREATE INDEX "user_oauth2_providers_tenant_oauth2_provider_id_idx" ON "user_oauth2_providers" ("tenant_oauth2_provider_id");

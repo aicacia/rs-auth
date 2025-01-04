@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::repository::tenent::TenentRow;
+use crate::repository::tenant::TenantRow;
 
 pub const TOKEN_TYPE_BEARER: &str = "bearer";
 pub const TOKEN_TYPE_REFRESH: &str = "refresh";
@@ -26,13 +26,13 @@ pub trait Claims: Serialize + DeserializeOwned {
   fn app(&self) -> i64;
   fn scopes(&self) -> &[String];
 
-  fn encode(&self, tenent: &TenentRow) -> Result<String, jsonwebtoken::errors::Error> {
-    let algorithm = jsonwebtoken::Algorithm::from_str(&tenent.algorithm)?;
+  fn encode(&self, tenant: &TenantRow) -> Result<String, jsonwebtoken::errors::Error> {
+    let algorithm = jsonwebtoken::Algorithm::from_str(&tenant.algorithm)?;
 
     let mut header = jsonwebtoken::Header::new(algorithm);
-    header.kid = Some(tenent.id.to_string());
+    header.kid = Some(tenant.id.to_string());
 
-    let key = tenent_encoding_key(tenent, algorithm)?;
+    let key = tenant_encoding_key(tenant, algorithm)?;
 
     jsonwebtoken::encode(&header, self, &key)
   }
@@ -90,21 +90,21 @@ impl Claims for BasicClaims {
 
 pub fn parse_jwt<T>(
   jwt: &str,
-  tenent: &TenentRow,
+  tenant: &TenantRow,
 ) -> Result<jsonwebtoken::TokenData<T>, jsonwebtoken::errors::Error>
 where
   T: DeserializeOwned,
 {
-  let algorithm = jsonwebtoken::Algorithm::from_str(&tenent.algorithm)?;
+  let algorithm = jsonwebtoken::Algorithm::from_str(&tenant.algorithm)?;
 
   let mut validation = jsonwebtoken::Validation::new(algorithm);
   validation.validate_nbf = true;
-  validation.set_issuer(&[&tenent.issuer]);
-  if let Some(audience) = &tenent.audience {
+  validation.set_issuer(&[&tenant.issuer]);
+  if let Some(audience) = &tenant.audience {
     validation.set_audience(&[audience]);
   }
 
-  let key = tenent_decoding_key(tenent, algorithm)?;
+  let key = tenant_decoding_key(tenant, algorithm)?;
 
   jsonwebtoken::decode(jwt, &key, &validation)
 }
@@ -127,15 +127,15 @@ where
   )
 }
 
-pub fn tenent_decoding_key(
-  tenent: &TenentRow,
+pub fn tenant_decoding_key(
+  tenant: &TenantRow,
   algorithm: jsonwebtoken::Algorithm,
 ) -> Result<jsonwebtoken::DecodingKey, jsonwebtoken::errors::Error> {
   match &algorithm {
     jsonwebtoken::Algorithm::HS256
     | jsonwebtoken::Algorithm::HS384
     | jsonwebtoken::Algorithm::HS512 => Ok(jsonwebtoken::DecodingKey::from_secret(
-      tenent.private_key.as_bytes(),
+      tenant.private_key.as_bytes(),
     )),
     _ => {
       return Err(jsonwebtoken::errors::Error::from(
@@ -145,15 +145,15 @@ pub fn tenent_decoding_key(
   }
 }
 
-pub fn tenent_encoding_key(
-  tenent: &TenentRow,
+pub fn tenant_encoding_key(
+  tenant: &TenantRow,
   algorithm: jsonwebtoken::Algorithm,
 ) -> Result<jsonwebtoken::EncodingKey, jsonwebtoken::errors::Error> {
   match &algorithm {
     jsonwebtoken::Algorithm::HS256
     | jsonwebtoken::Algorithm::HS384
     | jsonwebtoken::Algorithm::HS512 => Ok(jsonwebtoken::EncodingKey::from_secret(
-      tenent.private_key.as_bytes(),
+      tenant.private_key.as_bytes(),
     )),
     _ => {
       return Err(jsonwebtoken::errors::Error::from(

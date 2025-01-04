@@ -178,7 +178,7 @@ pub async fn create_user_with_password(
 
 pub struct CreateUserWithOAuth2 {
   pub active: bool,
-  pub tenent_oauth2_provider_id: i64,
+  pub tenant_oauth2_provider_id: i64,
   pub email: String,
   pub email_verified: bool,
   pub phone_number: Option<String>,
@@ -212,10 +212,10 @@ pub async fn create_user_with_oauth2(
       .await?;
 
       sqlx::query(
-        r#"INSERT INTO user_oauth2_providers ("user_id", "tenent_oauth2_provider_id", "email") VALUES ($1, $2, $3);"#,
+        r#"INSERT INTO user_oauth2_providers ("user_id", "tenant_oauth2_provider_id", "email") VALUES ($1, $2, $3);"#,
       )
       .bind(user.id)
-      .bind(&params.tenent_oauth2_provider_id)
+      .bind(&params.tenant_oauth2_provider_id)
       .bind(&params.email)
       .execute(&mut **transaction)
       .await?;

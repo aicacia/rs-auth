@@ -1,9 +1,9 @@
 use crate::core::config::get_config;
 
 #[derive(sqlx::FromRow)]
-pub struct TenentOAuth2ProviderRow {
+pub struct TenantOAuth2ProviderRow {
   pub id: i64,
-  pub tenent_id: i64,
+  pub tenant_id: i64,
   pub provider: String,
   pub active: i64,
   pub client_id: String,
@@ -17,7 +17,7 @@ pub struct TenentOAuth2ProviderRow {
   pub created_at: i64,
 }
 
-impl TenentOAuth2ProviderRow {
+impl TenantOAuth2ProviderRow {
   pub fn is_active(&self) -> bool {
     self.active != 0
   }
@@ -44,46 +44,46 @@ impl TenentOAuth2ProviderRow {
   }
 }
 
-pub async fn get_active_tenent_oauth2_provider(
+pub async fn get_active_tenant_oauth2_provider(
   pool: &sqlx::AnyPool,
-  tenent_id: i64,
+  tenant_id: i64,
   provider: &str,
-) -> sqlx::Result<Option<TenentOAuth2ProviderRow>> {
+) -> sqlx::Result<Option<TenantOAuth2ProviderRow>> {
   sqlx::query_as(
     r#"SELECT toap.* 
-    FROM tenent_oauth2_providers toap 
-    WHERE toap.active = 1 AND toap.tenent_id = $1 AND toap.provider = $2 
+    FROM tenant_oauth2_providers toap 
+    WHERE toap.active = 1 AND toap.tenant_id = $1 AND toap.provider = $2 
     LIMIT 1;"#,
   )
-  .bind(tenent_id)
+  .bind(tenant_id)
   .bind(provider)
   .fetch_optional(pool)
   .await
 }
 
-pub async fn get_tenent_oauth2_providers(
+pub async fn get_tenant_oauth2_providers(
   pool: &sqlx::AnyPool,
-  tenent_id: i64,
-) -> sqlx::Result<Vec<TenentOAuth2ProviderRow>> {
+  tenant_id: i64,
+) -> sqlx::Result<Vec<TenantOAuth2ProviderRow>> {
   sqlx::query_as(
     r#"SELECT toap.* 
-      FROM tenent_oauth2_providers toap 
-      WHERE toap.tenent_id = $1;"#,
+      FROM tenant_oauth2_providers toap 
+      WHERE toap.tenant_id = $1;"#,
   )
-  .bind(tenent_id)
+  .bind(tenant_id)
   .fetch_all(pool)
   .await
 }
 
-pub async fn get_tenents_oauth2_providers(
+pub async fn get_tenants_oauth2_providers(
   pool: &sqlx::AnyPool,
   limit: usize,
   offset: usize,
-) -> sqlx::Result<Vec<TenentOAuth2ProviderRow>> {
+) -> sqlx::Result<Vec<TenantOAuth2ProviderRow>> {
   sqlx::query_as(
     r#"SELECT toap.* 
-    FROM tenent_oauth2_providers toap 
-    WHERE toap.tenent_id IN (SELECT t.id FROM tenents t LIMIT $1 OFFSET $2);"#,
+    FROM tenant_oauth2_providers toap 
+    WHERE toap.tenant_id IN (SELECT t.id FROM tenants t LIMIT $1 OFFSET $2);"#,
   )
   .bind(limit as i64)
   .bind(offset as i64)
@@ -92,7 +92,7 @@ pub async fn get_tenents_oauth2_providers(
 }
 
 #[derive(Default)]
-pub struct CreateTenentOAuth2Provider {
+pub struct CreateTenantOAuth2Provider {
   pub provider: String,
   pub client_id: String,
   pub client_secret: String,
@@ -103,7 +103,7 @@ pub struct CreateTenentOAuth2Provider {
   pub scope: String,
 }
 
-impl CreateTenentOAuth2Provider {
+impl CreateTenantOAuth2Provider {
   pub fn new(provider: &str) -> Option<Self> {
     match provider {
       "google" => Some(Self::google()),
@@ -161,19 +161,19 @@ impl CreateTenentOAuth2Provider {
   }
 }
 
-pub async fn create_tenent_oauth2_provider(
+pub async fn create_tenant_oauth2_provider(
   pool: &sqlx::AnyPool,
-  tenent_id: i64,
-  params: CreateTenentOAuth2Provider,
-) -> sqlx::Result<TenentOAuth2ProviderRow> {
+  tenant_id: i64,
+  params: CreateTenantOAuth2Provider,
+) -> sqlx::Result<TenantOAuth2ProviderRow> {
   sqlx::query_as(
-    r#"INSERT INTO tenent_oauth2_providers 
-      (tenent_id, provider, client_id, client_secret, auth_url, token_url, callback_url, redirect_url, scope) 
+    r#"INSERT INTO tenant_oauth2_providers 
+      (tenant_id, provider, client_id, client_secret, auth_url, token_url, callback_url, redirect_url, scope) 
       VALUES 
       ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
       RETURNING *;"#,
   )
-  .bind(tenent_id)
+  .bind(tenant_id)
   .bind(params.provider)
   .bind(params.client_id)
   .bind(params.client_secret)
@@ -187,7 +187,7 @@ pub async fn create_tenent_oauth2_provider(
 }
 
 #[derive(Default)]
-pub struct UpdateTenentOAuth2Provider {
+pub struct UpdateTenantOAuth2Provider {
   pub client_id: Option<String>,
   pub client_secret: Option<String>,
   pub active: Option<i64>,
@@ -198,14 +198,14 @@ pub struct UpdateTenentOAuth2Provider {
   pub scope: Option<String>,
 }
 
-pub async fn update_tenent_oauth2_provider(
+pub async fn update_tenant_oauth2_provider(
   pool: &sqlx::AnyPool,
-  tenent_id: i64,
-  tenent_oauht2_provider_id: i64,
-  params: UpdateTenentOAuth2Provider,
-) -> sqlx::Result<Option<TenentOAuth2ProviderRow>> {
+  tenant_id: i64,
+  tenant_oauht2_provider_id: i64,
+  params: UpdateTenantOAuth2Provider,
+) -> sqlx::Result<Option<TenantOAuth2ProviderRow>> {
   sqlx::query_as(
-    r#"UPDATE tenent_oauth2_providers SET
+    r#"UPDATE tenant_oauth2_providers SET
       client_id = COALESCE($3, client_id),
       client_secret = COALESCE($4, client_secret),
       active = COALESCE($5, active),
@@ -215,11 +215,11 @@ pub async fn update_tenent_oauth2_provider(
       redirect_url = COALESCE($9, redirect_url),
       scope = COALESCE($10, scope),
       updated_at = $11
-    WHERE tenent_id = $1 AND id = $2
+    WHERE tenant_id = $1 AND id = $2
     RETURNING *;"#,
   )
-  .bind(tenent_id)
-  .bind(tenent_oauht2_provider_id)
+  .bind(tenant_id)
+  .bind(tenant_oauht2_provider_id)
   .bind(params.client_id)
   .bind(params.client_secret)
   .bind(params.active)
@@ -233,15 +233,15 @@ pub async fn update_tenent_oauth2_provider(
   .await
 }
 
-pub async fn delete_tenent_oauth2_provider(
+pub async fn delete_tenant_oauth2_provider(
   pool: &sqlx::AnyPool,
-  tenent_id: i64,
+  tenant_id: i64,
   id: i64,
-) -> sqlx::Result<Option<TenentOAuth2ProviderRow>> {
+) -> sqlx::Result<Option<TenantOAuth2ProviderRow>> {
   sqlx::query_as(
-    r#"DELETE FROM tenent_oauth2_providers WHERE tenent_id = $1 AND id = $2 RETURNING *;"#,
+    r#"DELETE FROM tenant_oauth2_providers WHERE tenant_id = $1 AND id = $2 RETURNING *;"#,
   )
-  .bind(tenent_id)
+  .bind(tenant_id)
   .bind(id)
   .fetch_optional(pool)
   .await

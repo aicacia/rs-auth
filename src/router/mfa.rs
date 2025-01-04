@@ -18,7 +18,7 @@ use crate::{
     token::{Token, TOKEN_ISSUED_TYPE_MFA},
   },
   repository::{
-    tenent::TenentRow,
+    tenant::TenantRow,
     user::{get_user_by_id, UserRow},
     user_totp::get_user_totp_by_user_id,
   },
@@ -54,7 +54,7 @@ pub struct ApiDoc;
 )]
 pub async fn mfa(
   State(state): State<RouterState>,
-  Authorization { claims, tenent, .. }: Authorization,
+  Authorization { claims, tenant, .. }: Authorization,
   Json(payload): Json<MFARequest>,
 ) -> impl IntoResponse {
   if !claims.kind.starts_with(TOKEN_TYPE_MFA_TOTP_PREFIX) {
@@ -79,11 +79,11 @@ pub async fn mfa(
     }
   };
   match payload {
-    MFARequest::TOTP { code } => totp_request(&state.pool, user, claims, tenent, code)
+    MFARequest::TOTP { code } => totp_request(&state.pool, user, claims, tenant, code)
       .await
       .into_response(),
     MFARequest::ServiceAccount { code } => {
-      service_account_request(&state.pool, user, claims, tenent, code)
+      service_account_request(&state.pool, user, claims, tenant, code)
         .await
         .into_response()
     }
@@ -94,7 +94,7 @@ async fn totp_request(
   pool: &sqlx::AnyPool,
   user: UserRow,
   claims: BasicClaims,
-  tenent: TenentRow,
+  tenant: TenantRow,
   code: String,
 ) -> impl IntoResponse {
   let totp = match get_user_totp_by_user_id(pool, user.id).await {
@@ -129,7 +129,7 @@ async fn totp_request(
 
   create_user_token(
     pool,
-    tenent,
+    tenant,
     user,
     Some(claims.scopes.join(" ")),
     Some(TOKEN_ISSUED_TYPE_MFA.to_owned()),
@@ -143,7 +143,7 @@ async fn service_account_request(
   pool: &sqlx::AnyPool,
   user: UserRow,
   claims: BasicClaims,
-  tenent: TenentRow,
+  tenant: TenantRow,
   service_account_token: String,
 ) -> impl IntoResponse {
   let service_account_claims =
@@ -162,7 +162,7 @@ async fn service_account_request(
   }
   create_user_token(
     pool,
-    tenent,
+    tenant,
     user,
     Some(claims.scopes.join(" ")),
     Some(TOKEN_ISSUED_TYPE_MFA.to_owned()),

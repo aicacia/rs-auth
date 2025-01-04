@@ -5,12 +5,12 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
-use crate::{core::encryption::random_bytes, repository::tenent::TenentRow};
+use crate::{core::encryption::random_bytes, repository::tenant::TenantRow};
 
-use super::tenent_oauth2_provider::TenentOAuth2Provider;
+use super::tenant_oauth2_provider::TenantOAuth2Provider;
 
 #[derive(Serialize, ToSchema)]
-pub struct Tenent {
+pub struct Tenant {
   pub id: i64,
   pub client_id: uuid::Uuid,
   pub issuer: String,
@@ -20,13 +20,13 @@ pub struct Tenent {
   pub private_key: Option<String>,
   pub expires_in_seconds: i64,
   pub refresh_expires_in_seconds: i64,
-  pub oauth2_providers: Vec<TenentOAuth2Provider>,
+  pub oauth2_providers: Vec<TenantOAuth2Provider>,
   pub updated_at: DateTime<Utc>,
   pub created_at: DateTime<Utc>,
 }
 
-impl From<TenentRow> for Tenent {
-  fn from(row: TenentRow) -> Self {
+impl From<TenantRow> for Tenant {
+  fn from(row: TenantRow) -> Self {
     Self {
       id: row.id,
       client_id: uuid::Uuid::from_str(&row.client_id).unwrap_or_default(),
@@ -125,7 +125,7 @@ impl fmt::Display for Algorithm {
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct CreateTenent {
+pub struct CreateTenant {
   pub client_id: Option<uuid::Uuid>,
   #[schema(example = "Example")]
   pub issuer: String,
@@ -142,7 +142,7 @@ pub struct CreateTenent {
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct UpdateTenent {
+pub struct UpdateTenant {
   pub client_id: Option<uuid::Uuid>,
   #[schema(example = "Example")]
   pub issuer: Option<String>,
@@ -159,6 +159,6 @@ pub struct UpdateTenent {
 }
 
 #[derive(Deserialize, IntoParams)]
-pub struct TenentQuery {
+pub struct TenantQuery {
   pub show_private_key: Option<bool>,
 }

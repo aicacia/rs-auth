@@ -1,5 +1,5 @@
 #[derive(sqlx::FromRow)]
-pub struct TenentRow {
+pub struct TenantRow {
   pub id: i64,
   pub client_id: String,
   pub issuer: String,
@@ -13,49 +13,49 @@ pub struct TenentRow {
   pub created_at: i64,
 }
 
-pub async fn get_tenents(
+pub async fn get_tenants(
   pool: &sqlx::AnyPool,
   limit: usize,
   offset: usize,
-) -> sqlx::Result<Vec<TenentRow>> {
-  sqlx::query_as(r#"SELECT t.* FROM tenents t LIMIT $1 OFFSET $2;"#)
+) -> sqlx::Result<Vec<TenantRow>> {
+  sqlx::query_as(r#"SELECT t.* FROM tenants t LIMIT $1 OFFSET $2;"#)
     .bind(limit as i64)
     .bind(offset as i64)
     .fetch_all(pool)
     .await
 }
 
-pub async fn get_tenent_by_id(
+pub async fn get_tenant_by_id(
   pool: &sqlx::AnyPool,
-  tenent_id: i64,
-) -> sqlx::Result<Option<TenentRow>> {
+  tenant_id: i64,
+) -> sqlx::Result<Option<TenantRow>> {
   sqlx::query_as(
     r#"SELECT t.*
-    FROM tenents t
+    FROM tenants t
     WHERE t.id = $1
     LIMIT 1;"#,
   )
-  .bind(tenent_id)
+  .bind(tenant_id)
   .fetch_optional(pool)
   .await
 }
 
-pub async fn get_tenent_by_client_id(
+pub async fn get_tenant_by_client_id(
   pool: &sqlx::AnyPool,
-  tenent_client_id: &str,
-) -> sqlx::Result<Option<TenentRow>> {
+  tenant_client_id: &str,
+) -> sqlx::Result<Option<TenantRow>> {
   sqlx::query_as(
     r#"SELECT t.*
-    FROM tenents t
+    FROM tenants t
     WHERE t.client_id = $1
     LIMIT 1;"#,
   )
-  .bind(tenent_client_id)
+  .bind(tenant_client_id)
   .fetch_optional(pool)
   .await
 }
 
-pub struct CreateTenent {
+pub struct CreateTenant {
   pub client_id: String,
   pub issuer: String,
   pub audience: String,
@@ -66,9 +66,9 @@ pub struct CreateTenent {
   pub refresh_expires_in_seconds: i64,
 }
 
-pub async fn create_tenent(pool: &sqlx::AnyPool, tenent: CreateTenent) -> sqlx::Result<TenentRow> {
+pub async fn create_tenant(pool: &sqlx::AnyPool, tenant: CreateTenant) -> sqlx::Result<TenantRow> {
   sqlx::query_as(
-    r#"INSERT INTO tenents (
+    r#"INSERT INTO tenants (
       client_id,
       issuer,
       audience,
@@ -80,19 +80,19 @@ pub async fn create_tenent(pool: &sqlx::AnyPool, tenent: CreateTenent) -> sqlx::
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING *;"#,
   )
-  .bind(tenent.client_id)
-  .bind(tenent.issuer)
-  .bind(tenent.audience)
-  .bind(tenent.algorithm)
-  .bind(tenent.public_key)
-  .bind(tenent.private_key)
-  .bind(tenent.expires_in_seconds)
-  .bind(tenent.refresh_expires_in_seconds)
+  .bind(tenant.client_id)
+  .bind(tenant.issuer)
+  .bind(tenant.audience)
+  .bind(tenant.algorithm)
+  .bind(tenant.public_key)
+  .bind(tenant.private_key)
+  .bind(tenant.expires_in_seconds)
+  .bind(tenant.refresh_expires_in_seconds)
   .fetch_one(pool)
   .await
 }
 
-pub struct UpdateTenent {
+pub struct UpdateTenant {
   pub client_id: Option<String>,
   pub issuer: Option<String>,
   pub audience: Option<String>,
@@ -103,13 +103,13 @@ pub struct UpdateTenent {
   pub refresh_expires_in_seconds: Option<i64>,
 }
 
-pub async fn update_tenent(
+pub async fn update_tenant(
   pool: &sqlx::AnyPool,
-  tenent_id: i64,
-  tenent: UpdateTenent,
-) -> sqlx::Result<Option<TenentRow>> {
+  tenant_id: i64,
+  tenant: UpdateTenant,
+) -> sqlx::Result<Option<TenantRow>> {
   sqlx::query_as(
-    r#"UPDATE tenents SET
+    r#"UPDATE tenants SET
       client_id = COALESCE($2, client_id),
       issuer = COALESCE($3, issuer),
       audience = COALESCE($4, audience),
@@ -122,30 +122,30 @@ pub async fn update_tenent(
     WHERE id = $1
     RETURNING *;"#,
   )
-  .bind(tenent_id)
-  .bind(tenent.client_id)
-  .bind(tenent.issuer)
-  .bind(tenent.audience)
-  .bind(tenent.algorithm)
-  .bind(tenent.public_key)
-  .bind(tenent.private_key)
-  .bind(tenent.expires_in_seconds)
-  .bind(tenent.refresh_expires_in_seconds)
+  .bind(tenant_id)
+  .bind(tenant.client_id)
+  .bind(tenant.issuer)
+  .bind(tenant.audience)
+  .bind(tenant.algorithm)
+  .bind(tenant.public_key)
+  .bind(tenant.private_key)
+  .bind(tenant.expires_in_seconds)
+  .bind(tenant.refresh_expires_in_seconds)
   .bind(chrono::Utc::now().timestamp())
   .fetch_optional(pool)
   .await
 }
 
-pub async fn delete_tenent(
+pub async fn delete_tenant(
   pool: &sqlx::AnyPool,
-  tenent_id: i64,
-) -> sqlx::Result<Option<TenentRow>> {
+  tenant_id: i64,
+) -> sqlx::Result<Option<TenantRow>> {
   sqlx::query_as(
-    r#"DELETE FROM tenents
+    r#"DELETE FROM tenants
     WHERE id = $1
     RETURNING *;"#,
   )
-  .bind(tenent_id)
+  .bind(tenant_id)
   .fetch_optional(pool)
   .await
 }

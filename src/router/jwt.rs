@@ -18,12 +18,12 @@ use crate::{
   },
   middleware::{
     authorization::parse_authorization,
-    claims::{tenent_encoding_key, TOKEN_TYPE_BEARER},
+    claims::{tenant_encoding_key, TOKEN_TYPE_BEARER},
     json::Json,
     service_account_authorization::ServiceAccountAuthorization,
   },
   model::jwt::JWTRequest,
-  repository::tenent::get_tenent_by_id,
+  repository::tenant::get_tenant_by_id,
 };
 
 use super::RouterState;
@@ -52,22 +52,22 @@ pub async fn create_jwt(
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
   Json(payload): Json<JWTRequest>,
 ) -> impl IntoResponse {
-  let tenent = match get_tenent_by_id(&state.pool, payload.tenent_id).await {
-    Ok(Some(tenent)) => tenent,
+  let tenant = match get_tenant_by_id(&state.pool, payload.tenant_id).await {
+    Ok(Some(tenant)) => tenant,
     Ok(None) => {
       return Errors::bad_request()
-        .with_error("tenent_id", NOT_FOUND_ERROR)
+        .with_error("tenant_id", NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
-      log::error!("failed to get tenent by id: {e}");
+      log::error!("failed to get tenant by id: {e}");
       return Errors::internal_error()
-        .with_error("tenent_id", INTERNAL_ERROR)
+        .with_error("tenant_id", INTERNAL_ERROR)
         .into_response();
     }
   };
 
-  let algorithm = match jsonwebtoken::Algorithm::from_str(&tenent.algorithm) {
+  let algorithm = match jsonwebtoken::Algorithm::from_str(&tenant.algorithm) {
     Ok(algorithm) => algorithm,
     Err(_) => {
       return Errors::bad_request()
@@ -77,9 +77,9 @@ pub async fn create_jwt(
   };
 
   let mut header = jsonwebtoken::Header::new(algorithm);
-  header.kid = Some(tenent.id.to_string());
+  header.kid = Some(tenant.id.to_string());
 
-  let key = match tenent_encoding_key(&tenent, algorithm) {
+  let key = match tenant_encoding_key(&tenant, algorithm) {
     Ok(key) => key,
     Err(_) => {
       return Errors::bad_request()
@@ -110,7 +110,7 @@ pub async fn create_jwt(
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("TenentUUID" = []),
+    ("TenantUUID" = []),
     ("Authorization" = [])
   )
 )]
@@ -143,33 +143,33 @@ pub async fn jwt_is_valid(
         .into_response();
     }
   };
-  let tenent_client_id = match headers.get(TENENT_ID_HEADER) {
-    Some(tenent_client_id_value) => match tenent_client_id_value.to_str() {
-      Ok(tenent_client_id_string) => match uuid::Uuid::from_str(tenent_client_id_string) {
+  let tenant_client_id = match headers.get(TENENT_ID_HEADER) {
+    Some(tenant_client_id_value) => match tenant_client_id_value.to_str() {
+      Ok(tenant_client_id_string) => match uuid::Uuid::from_str(tenant_client_id_string) {
         Ok(client_id) => client_id,
         Err(e) => {
-          log::error!("invalid tenent header is invalid: {}", e);
+          log::error!("invalid tenant header is invalid: {}", e);
           return Errors::unauthorized()
             .with_error(TENENT_ID_HEADER, INVALID_ERROR)
             .into_response();
         }
       },
       Err(e) => {
-        log::error!("invalid tenent header is invalid: {}", e);
+        log::error!("invalid tenant header is invalid: {}", e);
         return Errors::unauthorized()
           .with_error(TENENT_ID_HEADER, INVALID_ERROR)
           .into_response();
       }
     },
     None => {
-      log::error!("invalid tenent header is missing");
+      log::error!("invalid tenant header is missing");
       return Errors::unauthorized()
         .with_error(TENENT_ID_HEADER, REQUIRED_ERROR)
         .into_response();
     }
   };
 
-  let (tenent, token) = match parse_authorization::<serde_json::Map<String, serde_json::Value>>(
+  let (tenant, token) = match parse_authorization::<serde_json::Map<String, serde_json::Value>>(
     &state.pool,
     authorization_string,
   )
@@ -183,18 +183,18 @@ pub async fn jwt_is_valid(
         .into_response();
     }
   };
-  let token_tenent_client_id = match uuid::Uuid::from_str(&tenent.client_id) {
+  let token_tenant_client_id = match uuid::Uuid::from_str(&tenant.client_id) {
     Ok(client_id) => client_id,
     Err(e) => {
-      log::error!("authorization tenent id is not a valid uuid: {}", e);
+      log::error!("authorization tenant id is not a valid uuid: {}", e);
       return Errors::unauthorized()
-        .with_error("tenent", INVALID_ERROR)
+        .with_error("tenant", INVALID_ERROR)
         .into_response();
     }
   };
-  if tenent_client_id != token_tenent_client_id {
+  if tenant_client_id != token_tenant_client_id {
     return Errors::unauthorized()
-      .with_error("tenent", INVALID_ERROR)
+      .with_error("tenant", INVALID_ERROR)
       .into_response();
   }
   axum::Json(token.claims).into_response()

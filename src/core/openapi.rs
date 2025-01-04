@@ -1,6 +1,6 @@
 use utoipa::{
-  Modify,
   openapi::security::{ApiKey, ApiKeyValue, HttpAuthScheme, HttpBuilder, SecurityScheme},
+  Modify,
 };
 
 pub const AUTHORIZATION_HEADER: &str = "Authorization";
@@ -21,7 +21,7 @@ impl Modify for SecurityAddon {
       ),
     );
     components.add_security_scheme(
-      "TenentUUID",
+      "TenantUUID",
       SecurityScheme::ApiKey(ApiKey::Header(ApiKeyValue::new(TENENT_ID_HEADER))),
     );
   }

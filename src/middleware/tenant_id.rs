@@ -6,13 +6,13 @@ use crate::{
     error::{Errors, INVALID_ERROR, PARSE_ERROR, REQUIRED_ERROR},
     openapi::TENENT_ID_HEADER,
   },
-  repository::tenent::{get_tenent_by_client_id, TenentRow},
+  repository::tenant::{get_tenant_by_client_id, TenantRow},
   router::RouterState,
 };
 
-pub struct TenentId(pub TenentRow);
+pub struct TenantId(pub TenantRow);
 
-impl<S> FromRequestParts<S> for TenentId
+impl<S> FromRequestParts<S> for TenantId
 where
   RouterState: FromRef<S>,
   S: Send + Sync,
@@ -26,22 +26,22 @@ where
       match id_header_value.to_str() {
         Ok(id_string) => match id_string.parse::<uuid::Uuid>() {
           Ok(client_id) => {
-            match get_tenent_by_client_id(&router_state.pool, &client_id.to_string()).await {
-              Ok(Some(tenent)) => Ok(TenentId(tenent)),
+            match get_tenant_by_client_id(&router_state.pool, &client_id.to_string()).await {
+              Ok(Some(tenant)) => Ok(TenantId(tenant)),
               Ok(None) => Err(Errors::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR)),
               Err(e) => {
-                log::error!("invalid tenent id: {}", e);
+                log::error!("invalid tenant id: {}", e);
                 Err(Errors::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR))
               }
             }
           }
           Err(e) => {
-            log::error!("invalid tenent id: {}", e);
+            log::error!("invalid tenant id: {}", e);
             Err(Errors::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR))
           }
         },
         Err(e) => {
-          log::error!("invalid tenent id: {}", e);
+          log::error!("invalid tenant id: {}", e);
           Err(Errors::bad_request().with_error(TENENT_ID_HEADER, PARSE_ERROR))
         }
       }

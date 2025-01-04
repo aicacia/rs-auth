@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 
-CREATE TABLE "tenents" (
+CREATE TABLE "tenants" (
 	"id" SERIAL PRIMARY KEY,
 	"client_id" VARCHAR(36) NOT NULL,
   "issuer" TEXT NOT NULL,
@@ -14,17 +14,17 @@ CREATE TABLE "tenents" (
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc')
 );
-CREATE UNIQUE INDEX "tenents_client_id_unique_idx" ON "tenents" ("client_id");
+CREATE UNIQUE INDEX "tenants_client_id_unique_idx" ON "tenants" ("client_id");
 
-INSERT INTO "tenents"
+INSERT INTO "tenants"
   ("client_id", "issuer", "private_key")
   VALUES
 	('6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Admin', encode(public.gen_random_bytes(255), 'base64'));
 
 
-CREATE TABLE "tenent_oauth2_providers" (
+CREATE TABLE "tenant_oauth2_providers" (
 	"id" SERIAL PRIMARY KEY,
-	"tenent_id" BIGINT NOT NULL,
+	"tenant_id" BIGINT NOT NULL,
   "provider" TEXT NOT NULL,
   "active" SMALLINT NOT NULL DEFAULT 1,
   "client_id" TEXT NOT NULL,
@@ -36,9 +36,9 @@ CREATE TABLE "tenent_oauth2_providers" (
   "scope" TEXT NOT NULL,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-  FOREIGN KEY ("tenent_id") REFERENCES "tenents" ("id") ON DELETE CASCADE
+  FOREIGN KEY ("tenant_id") REFERENCES "tenants" ("id") ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX "tenent_oauth2_providers_tenent_id_provider_unique_idx" ON "tenent_oauth2_providers" ("tenent_id", "provider");
+CREATE UNIQUE INDEX "tenant_oauth2_providers_tenant_id_provider_unique_idx" ON "tenant_oauth2_providers" ("tenant_id", "provider");
 
 
 CREATE TABLE "service_accounts" (
@@ -148,11 +148,11 @@ CREATE TABLE "user_phone_numbers" (
 CREATE TABLE "user_oauth2_providers" (
 	"id" SERIAL PRIMARY KEY,
   "user_id" BIGINT NOT NULL,
-  "tenent_oauth2_provider_id" BIGINT NOT NULL,
+  "tenant_oauth2_provider_id" BIGINT NOT NULL,
   "email" TEXT NOT NULL,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
   CONSTRAINT "user_oauth2_providers_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users" ("id") ON DELETE CASCADE,
-  CONSTRAINT "user_oauth2_providers_tenent_oauth2_provider_id_fk" FOREIGN KEY("tenent_oauth2_provider_id") REFERENCES "tenent_oauth2_providers" ("id") ON DELETE CASCADE
+  CONSTRAINT "user_oauth2_providers_tenant_oauth2_provider_id_fk" FOREIGN KEY("tenant_oauth2_provider_id") REFERENCES "tenant_oauth2_providers" ("id") ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX "user_oauth2_providers_tenent_oauth2_provider_id_email_unique_idx" ON "user_oauth2_providers" ("tenent_oauth2_provider_id", "email");
+CREATE UNIQUE INDEX "user_oauth2_providers_tenant_oauth2_provider_id_email_unique_idx" ON "user_oauth2_providers" ("tenant_oauth2_provider_id", "email");

@@ -8,13 +8,13 @@ use crate::{
     error::{Errors, INVALID_ERROR, REQUIRED_ERROR},
     openapi::AUTHORIZATION_HEADER,
   },
-  repository::tenent::{get_tenent_by_id, TenentRow},
+  repository::tenant::{get_tenant_by_id, TenantRow},
   router::RouterState,
 };
 
 pub struct Authorization {
   pub claims: BasicClaims,
-  pub tenent: TenentRow,
+  pub tenant: TenantRow,
 }
 
 impl<S> FromRequestParts<S> for Authorization
@@ -41,11 +41,11 @@ where
           return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
         }
       };
-      let (tenent, token_data) =
+      let (tenant, token_data) =
         parse_authorization(&router_state.pool, authorization_string).await?;
       return Ok(Self {
         claims: token_data.claims,
-        tenent,
+        tenant,
       });
     }
     Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR))
@@ -55,7 +55,7 @@ where
 pub async fn parse_authorization<T>(
   pool: &sqlx::AnyPool,
   authorization_string: &str,
-) -> Result<(TenentRow, jsonwebtoken::TokenData<T>), Errors>
+) -> Result<(TenantRow, jsonwebtoken::TokenData<T>), Errors>
 where
   T: DeserializeOwned,
 {
@@ -66,14 +66,14 @@ where
       return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
-  let tenent_id = match maybe_invalid_token
+  let tenant_id = match maybe_invalid_token
     .header
     .kid
     .as_ref()
     .map(String::as_str)
     .map(str::parse::<i64>)
   {
-    Some(Ok(tenent_id)) => tenent_id,
+    Some(Ok(tenant_id)) => tenant_id,
     Some(Err(e)) => {
       log::error!("invalid authorization failed to parse kid: {}", e);
       return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
@@ -83,10 +83,10 @@ where
       return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
-  let tenent = match get_tenent_by_id(pool, tenent_id).await {
-    Ok(Some(tenent)) => tenent,
+  let tenant = match get_tenant_by_id(pool, tenant_id).await {
+    Ok(Some(tenant)) => tenant,
     Ok(None) => {
-      log::error!("invalid authorization tenent not found by app");
+      log::error!("invalid authorization tenant not found by app");
       return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
     Err(e) => {
@@ -94,12 +94,12 @@ where
       return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
-  let token_data = match parse_jwt::<T>(authorization_string, &tenent) {
+  let token_data = match parse_jwt::<T>(authorization_string, &tenant) {
     Ok(token_data) => token_data,
     Err(e) => {
       log::error!("invalid authorization failed to parse claims: {}", e);
       return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
-  Ok((tenent, token_data))
+  Ok((tenant, token_data))
 }
