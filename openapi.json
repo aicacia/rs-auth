@@ -765,7 +765,7 @@
             }
           }
         },
-        "security": [{ "Authorization": [] }]
+        "security": [{ "TenantUUID": [] }, { "Authorization": [] }]
       },
       "post": {
         "tags": ["jwt"],
@@ -2451,7 +2451,7 @@
       },
       "CreateTenant": {
         "type": "object",
-        "required": ["issuer", "audience", "private_key"],
+        "required": ["issuer", "audience"],
         "properties": {
           "algorithm": {
             "oneOf": [
@@ -2459,7 +2459,7 @@
               { "$ref": "#/components/schemas/Algorithm" }
             ]
           },
-          "audience": { "type": "string", "example": "example.com" },
+          "audience": { "type": "string", "example": "https://example.com" },
           "client_id": { "type": ["string", "null"], "format": "uuid" },
           "expires_in_seconds": {
             "type": ["integer", "null"],
@@ -2467,7 +2467,7 @@
             "example": "86400"
           },
           "issuer": { "type": "string", "example": "Example" },
-          "private_key": { "type": "string" },
+          "private_key": { "type": ["string", "null"] },
           "public_key": { "type": ["string", "null"] },
           "refresh_expires_in_seconds": {
             "type": ["integer", "null"],
