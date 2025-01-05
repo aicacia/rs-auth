@@ -14,9 +14,12 @@ pub struct Tenant {
   pub id: i64,
   pub client_id: uuid::Uuid,
   pub issuer: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub audience: Option<String>,
   pub algorithm: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub public_key: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub private_key: Option<String>,
   pub expires_in_seconds: i64,
   pub refresh_expires_in_seconds: i64,
