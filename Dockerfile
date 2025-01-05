@@ -36,4 +36,4 @@ COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/auth /usr/loca
 
 ENV RUN_MODE=production
 
-CMD ["auth"]
+CMD ["auth", "-c", "/app/config.json"]

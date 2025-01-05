@@ -20,6 +20,8 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Args {
+  #[arg(short, long, default_value = "./config.json")]
+  config: String,
   #[arg(short, long, default_value = "false")]
   create_new_admin: bool,
 }
@@ -29,7 +31,9 @@ async fn main() -> Result<(), Errors> {
   dotenv::dotenv().ok();
   sqlx::any::install_default_drivers();
 
-  let config = init_config().await?;
+  let args = Args::parse();
+
+  let config = init_config(&args.config).await?;
 
   let level = tracing::Level::from_str(&config.log_level).unwrap_or(tracing::Level::DEBUG);
   tracing_subscriber::registry()
@@ -48,7 +52,6 @@ async fn main() -> Result<(), Errors> {
 
   let pool = init_pool().await?;
 
-  let args = Args::parse();
   if args.create_new_admin {
     return create_new_admin_service_account(&pool).await;
   }

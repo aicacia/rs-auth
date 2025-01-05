@@ -153,8 +153,9 @@ To build and deploy the service using Docker and Helm:
    ```bash
    docker run -it \
     -p 3000:3000 \
-    -v $(pwd)/config.json:/app/config.json \
-    -v $(pwd)/auth-dev.db:/app/auth-dev.db \
+    -v ${PWD}/.env:/app/.env \
+    -v ${PWD}/config.json:/app/config.json \
+    -v ${PWD}/auth-dev.db:/app/auth-dev.db \
     aicacia/auth-api:latest
    ```
 

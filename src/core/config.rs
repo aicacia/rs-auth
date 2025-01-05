@@ -8,8 +8,8 @@ use std::{
 
 static CONFIG: AtomicOption<Arc<Config>> = AtomicOption::none();
 
-pub async fn init_config() -> Result<Arc<Config>, ConfigError> {
-  let config = Arc::new(Config::new().await?);
+pub async fn init_config(config_path: &str) -> Result<Arc<Config>, ConfigError> {
+  let config = Arc::new(Config::new(config_path).await?);
   CONFIG.store(Ordering::SeqCst, config.clone());
   Ok(config)
 }
@@ -75,7 +75,7 @@ pub struct Config {
 }
 
 impl Config {
-  pub async fn new() -> Result<Self, ConfigError> {
+  pub async fn new(config_path: &str) -> Result<Self, ConfigError> {
     let config_builder = config::Config::builder()
       // Server Defaults
       .set_default("server.address", "0.0.0.0")?
@@ -110,7 +110,7 @@ impl Config {
       .set_default("oauth2.code_timeout_in_seconds", 60 * 5)?
       // Defaults
       .set_default("log_level", "debug")?
-      .add_source(config::File::with_name("./config.json"))
+      .add_source(config::File::with_name(config_path))
       .add_source(config::Environment::with_prefix("APP"))
       .build()?;
 
