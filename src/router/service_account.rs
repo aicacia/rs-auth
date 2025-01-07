@@ -14,33 +14,18 @@ use crate::{
 use axum::{
   extract::{Path, Query, State},
   response::IntoResponse,
-  routing::{delete, get, post, put},
-  Router,
 };
 use http::StatusCode;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
 
-#[derive(OpenApi)]
-#[openapi(
-  paths(
-    all_service_accounts,
-    get_service_account_by_id,
-    create_service_account,
-    update_service_account,
-    delete_service_account
-  ),
-  tags(
-    (name = "service-account", description = "Service Account endpoints"),
-  )
-)]
-pub struct ApiDoc;
+pub const SERVICE_ACCOUNT_TAG: &str = "service-account";
 
 #[utoipa::path(
   get,
-  path = "service-accounts",
-  tags = ["service-account"],
+  path = "/service-accounts",
+  tags = [SERVICE_ACCOUNT_TAG],
   params(
     OffsetAndLimit,
   ),
@@ -87,8 +72,8 @@ pub async fn all_service_accounts(
 
 #[utoipa::path(
   get,
-  path = "service-accounts/{service_account_id}",
-  tags = ["service-account"],
+  path = "/service-accounts/{service_account_id}",
+  tags = [SERVICE_ACCOUNT_TAG],
   params(
     ("service_account_id" = i64, Path, description = "ServiceAccount ID"),
   ),
@@ -130,8 +115,8 @@ pub async fn get_service_account_by_id(
 
 #[utoipa::path(
   post,
-  path = "service-accounts",
-  tags = ["service-account"],
+  path = "/service-accounts",
+  tags = [SERVICE_ACCOUNT_TAG],
   request_body = CreateServiceAccount,
   responses(
     (status = 201, content_type = "application/json", body = ServiceAccount),
@@ -184,8 +169,8 @@ pub async fn create_service_account(
 
 #[utoipa::path(
   put,
-  path = "service-accounts/{service_account_id}",
-  tags = ["service-account"],
+  path = "/service-accounts/{service_account_id}",
+  tags = [SERVICE_ACCOUNT_TAG],
   request_body = UpdateServiceAccount,
   params(
     ("service_account_id" = i64, Path, description = "ServiceAccount ID")
@@ -232,7 +217,7 @@ pub async fn update_service_account(
     Ok(Some(row)) => row,
     Ok(None) => {
       return Errors::not_found()
-        .with_error("service-account", NOT_FOUND_ERROR)
+        .with_error(SERVICE_ACCOUNT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
@@ -251,8 +236,8 @@ pub async fn update_service_account(
 
 #[utoipa::path(
   delete,
-  path = "service-accounts/{service_account_id}",
-  tags = ["service-account"],
+  path = "/service-accounts/{service_account_id}",
+  tags = [SERVICE_ACCOUNT_TAG],
   params(
     ("service_account_id" = i64, Path, description = "ServiceAccount ID")
   ),
@@ -275,7 +260,7 @@ pub async fn delete_service_account(
     Ok(Some(_)) => {}
     Ok(None) => {
       return Errors::not_found()
-        .with_error("service-account", NOT_FOUND_ERROR)
+        .with_error(SERVICE_ACCOUNT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
@@ -288,21 +273,11 @@ pub async fn delete_service_account(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/service-accounts", get(all_service_accounts))
-    .route(
-      "/service-accounts/{service_account_id}",
-      get(get_service_account_by_id),
-    )
-    .route("/service-accounts", post(create_service_account))
-    .route(
-      "/service-accounts/{service_account_id}",
-      put(update_service_account),
-    )
-    .route(
-      "/service-accounts/{service_account_id}",
-      delete(delete_service_account),
-    )
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(all_service_accounts))
+    .routes(routes!(get_service_account_by_id))
+    .routes(routes!(create_service_account))
+    .routes(routes!(update_service_account))
     .with_state(state)
 }

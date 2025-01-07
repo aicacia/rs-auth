@@ -33,8 +33,7 @@ utoipa = { version = "5.3", default-features = false, features = [
   "uuid",
   "macros",
 ] }
-# TODO: use when supports 8.0
-# utoipa-axum = { version = "0.2", default-features = false }
+utoipa-axum = { version = "0.1", default-features = false }
 expiringmap = "0.1"
 lazy_static = "1.5"
 reqwest = { version = "0.12", default-features = false, features = [
@@ -83,7 +82,7 @@ uuid = { version = "1.11", default-features = false, features = [
   "v4",
 ] }
 base64 = { version = "0.22", default-features = false }
-atomicoption = { git = "https://github.com/aicacia/rs-atomic-option.git", rev = "f5cc802" }
+atomicoption = "0"
 
 [dev-dependencies]
 

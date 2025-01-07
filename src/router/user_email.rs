@@ -1,11 +1,9 @@
 use axum::{
   extract::{Path, State},
   response::IntoResponse,
-  routing::{delete, post, put},
-  Router,
 };
 use http::StatusCode;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
   core::error::{Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
@@ -16,16 +14,12 @@ use crate::{
   repository,
 };
 
-use super::RouterState;
-
-#[derive(OpenApi)]
-#[openapi(paths(create_user_email, update_user_email, delete_user_email))]
-pub struct ApiDoc;
+use super::{user::USER_TAG, RouterState};
 
 #[utoipa::path(
   post,
-  path = "users/{user_id}/emails",
-  tags = ["users"],
+  path = "/users/{user_id}/emails",
+  tags = [USER_TAG],
   request_body = ServiceAccountCreateUserEmail,
   params(
     ("user_id" = i64, Path, description = "User id")
@@ -76,8 +70,8 @@ pub async fn create_user_email(
 
 #[utoipa::path(
   put,
-  path = "users/{user_id}/emails/{email_id}",
-  tags = ["users"],
+  path = "/users/{user_id}/emails/{email_id}",
+  tags = [USER_TAG],
   request_body = ServiceAccountUpdateUserEmail,
   params(
     ("user_id" = i64, Path, description = "User id"),
@@ -128,8 +122,8 @@ pub async fn update_user_email(
 
 #[utoipa::path(
   delete,
-  path = "users/{user_id}/emails/{email_id}",
-  tags = ["users"],
+  path = "/users/{user_id}/emails/{email_id}",
+  tags = [USER_TAG],
   params(
     ("user_id" = i64, Path, description = "User id"),
     ("email_id" = i64, Path, description = "Email id"),
@@ -166,13 +160,12 @@ pub async fn delete_user_email(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/users/{user_id}/emails", post(create_user_email))
-    .route("/users/{user_id}/emails/{email_id}", put(update_user_email))
-    .route(
-      "/users/{user_id}/emails/{email_id}",
-      delete(delete_user_email),
-    )
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(
+      create_user_email,
+      update_user_email,
+      delete_user_email
+    ))
     .with_state(state)
 }

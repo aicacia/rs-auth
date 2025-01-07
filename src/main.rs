@@ -22,7 +22,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 struct Args {
   #[arg(short, long, default_value = "./config.json")]
   config: String,
-  #[arg(short, long, default_value = "false")]
+  #[arg(long = "create-new-admin", default_value = "false")]
   create_new_admin: bool,
 }
 

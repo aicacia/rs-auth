@@ -1,5 +1,5 @@
-use axum::{extract::State, response::IntoResponse, routing::post, Router};
-use utoipa::OpenApi;
+use axum::{extract::State, response::IntoResponse};
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
   core::{
@@ -26,21 +26,12 @@ use crate::{
 
 use super::{token::create_user_token, RouterState};
 
-#[derive(OpenApi)]
-#[openapi(
-  paths(
-    mfa,
-  ),
-  tags(
-    (name = "mfa", description = "Multi-factor authentication endpoints"),
-  )
-)]
-pub struct ApiDoc;
+pub const MFA_TAG: &str = "mfa";
 
 #[utoipa::path(
   post,
-  path = "mfa",
-  tags = ["mfa"],
+  path = "/mfa",
+  tags = [MFA_TAG],
   request_body = MFARequest,
   responses(
     (status = 201, content_type = "application/json", body = Token),
@@ -172,6 +163,6 @@ async fn service_account_request(
   .into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new().route("/mfa", post(mfa)).with_state(state)
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new().routes(routes!(mfa)).with_state(state)
 }

@@ -1,6 +1,6 @@
-use axum::{extract::State, response::IntoResponse, routing::put, Router};
+use axum::{extract::State, response::IntoResponse};
 use http::StatusCode;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
   core::error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
@@ -9,16 +9,12 @@ use crate::{
   repository::user_config::{update_user_config, UserConfigUpdate},
 };
 
-use super::RouterState;
-
-#[derive(OpenApi)]
-#[openapi(paths(update_current_user_config))]
-pub struct ApiDoc;
+use super::{current_user::CURRENT_USER_TAG, RouterState};
 
 #[utoipa::path(
   put,
-  path = "current-user/config",
-  tags = ["current-user"],
+  path = "/current-user/config",
+  tags = [CURRENT_USER_TAG],
   request_body = UpdateUserConfigRequest,
   responses(
     (status = 204),
@@ -62,8 +58,8 @@ pub async fn update_current_user_config(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/current-user/config", put(update_current_user_config))
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(update_current_user_config))
     .with_state(state)
 }

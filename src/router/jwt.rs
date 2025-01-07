@@ -1,13 +1,8 @@
 use std::str::FromStr;
 
-use axum::{
-  extract::State,
-  response::IntoResponse,
-  routing::{get, post},
-  Router,
-};
+use axum::{extract::State, response::IntoResponse};
 use http::{HeaderMap, StatusCode};
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
   core::{
@@ -28,14 +23,12 @@ use crate::{
 
 use super::RouterState;
 
-#[derive(OpenApi)]
-#[openapi(paths(create_jwt, jwt_is_valid))]
-pub struct ApiDoc;
+pub const JWT_TAG: &str = "jwt";
 
 #[utoipa::path(
   post,
-  path = "jwt",
-  tags = ["jwt"],
+  path = "/jwt",
+  tags = [JWT_TAG],
   request_body = JWTRequest,
   responses(
     (status = 201, content_type = "text/plain", body = String),
@@ -101,8 +94,8 @@ pub async fn create_jwt(
 
 #[utoipa::path(
   get,
-  path = "jwt",
-  tags = ["jwt"],
+  path = "/jwt",
+  tags = [JWT_TAG],
   responses(
     (status = 200, content_type = "application/json", body = serde_json::Map<String, serde_json::Value>),
     (status = 400, content_type = "application/json", body = Errors),
@@ -200,9 +193,8 @@ pub async fn jwt_is_valid(
   axum::Json(token.claims).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/jwt", get(jwt_is_valid))
-    .route("/jwt", post(create_jwt))
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(jwt_is_valid, create_jwt))
     .with_state(state)
 }

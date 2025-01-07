@@ -31,13 +31,14 @@ use crate::{
 use axum::{
   extract::{Path, Query, State},
   response::IntoResponse,
-  routing::{get, post},
-  Router,
 };
 use http::StatusCode;
 use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::{token, RouterState};
+
+pub const USER_TAG: &str = "user";
 
 #[derive(OpenApi)]
 #[openapi(
@@ -55,7 +56,7 @@ pub struct ApiDoc;
 
 #[utoipa::path(
   get,
-  path = "users",
+  path = "/users",
   tags = ["users"],
   params(
     OffsetAndLimit,
@@ -191,7 +192,7 @@ pub async fn all_users(
 
 #[utoipa::path(
   get,
-  path = "users/{user_id}",
+  path = "/users/{user_id}",
   tags = ["users"],
   params(
     ("user_id" = i64, Path, description = "User id"),
@@ -273,7 +274,7 @@ pub async fn get_user_by_id(
 
 #[utoipa::path(
   post,
-  path = "users",
+  path = "/users",
   tags = ["users"],
   request_body = CreateUser,
   responses(
@@ -314,7 +315,7 @@ pub async fn create_user(
 
 #[utoipa::path(
   post,
-  path = "users/{user_id}/reset-password",
+  path = "/users/{user_id}/reset-password",
   tags = ["users"],
   request_body = UserResetPassword,
   params(
@@ -364,14 +365,11 @@ pub async fn create_user_reset_password_token(
     .into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/users", get(all_users))
-    .route("/users/{user_id}", get(get_user_by_id))
-    .route("/users", post(create_user))
-    .route(
-      "/users/{user_id}/reset-password",
-      post(create_user_reset_password_token),
-    )
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(all_users))
+    .routes(routes!(get_user_by_id))
+    .routes(routes!(create_user))
+    .routes(routes!(create_user_reset_password_token))
     .with_state(state)
 }

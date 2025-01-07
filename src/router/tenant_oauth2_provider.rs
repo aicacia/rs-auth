@@ -10,31 +10,18 @@ use crate::{
 use axum::{
   extract::{Path, State},
   response::IntoResponse,
-  routing::{delete, post, put},
-  Router,
 };
 use http::StatusCode;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
 
-#[derive(OpenApi)]
-#[openapi(
-  paths(
-    create_tenant_oauth2_provider, 
-    update_tenant_oauth2_provider,
-    delete_tenant_oauth2_provider
-  ),
-  tags(
-    (name = "oauth2-provider", description = "OAuth2 Provider endpoints"),
-  )
-)]
-pub struct ApiDoc;
+pub const OAUTH2_PROVIDER_TAG: &str = "oauth2-provider";
 
 #[utoipa::path(
   post,
-  path = "tenants/{tenant_id}/oauth2-providers",
-  tags = ["oauth2-provider"],
+  path = "/tenants/{tenant_id}/oauth2-providers",
+  tags = [OAUTH2_PROVIDER_TAG],
   request_body = CreateTenantOAuth2Provider,
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID")
@@ -83,12 +70,18 @@ pub async fn create_tenant_oauth2_provider(
     params.callback_url = Some(callback_url);
   }
 
-  let tenant = match repository::tenant_oauth2_provider::create_tenant_oauth2_provider(&state.pool, tenant_id, params).await {
+  let tenant = match repository::tenant_oauth2_provider::create_tenant_oauth2_provider(
+    &state.pool,
+    tenant_id,
+    params,
+  )
+  .await
+  {
     Ok(tenant) => tenant,
     Err(e) => {
       if e.to_string().to_lowercase().contains("unique constraint") {
         return Errors::from(StatusCode::CONFLICT)
-          .with_error("oauth2-provider", ALREADY_EXISTS_ERROR)
+          .with_error(OAUTH2_PROVIDER_TAG, ALREADY_EXISTS_ERROR)
           .into_response();
       }
       log::error!("error creating tenant OAuth2 provider: {}", e);
@@ -102,8 +95,8 @@ pub async fn create_tenant_oauth2_provider(
 
 #[utoipa::path(
   put,
-  path = "tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
-  tags = ["oauth2-provider"],
+  path = "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
+  tags = [OAUTH2_PROVIDER_TAG],
   request_body = UpdateTenantOAuth2Provider,
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID"),
@@ -143,9 +136,11 @@ pub async fn update_tenant_oauth2_provider(
   )
   .await
   {
-    Ok(Some(_)) => {},
+    Ok(Some(_)) => {}
     Ok(None) => {
-      return Errors::not_found().with_error("tenant-oauth2-provider", NOT_FOUND_ERROR).into_response();
+      return Errors::not_found()
+        .with_error("tenant-oauth2-provider", NOT_FOUND_ERROR)
+        .into_response();
     }
     Err(e) => {
       log::error!("error updating tenant OAuth2 provider: {}", e);
@@ -159,8 +154,8 @@ pub async fn update_tenant_oauth2_provider(
 
 #[utoipa::path(
   delete,
-  path = "tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
-  tags = ["oauth2-provider"],
+  path = "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
+  tags = [OAUTH2_PROVIDER_TAG],
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID"),
     ("tenant_oauht2_provider_id" = i64, Path, description = "OAuth2 Provider ID"),
@@ -179,12 +174,20 @@ pub async fn update_tenant_oauth2_provider(
 pub async fn delete_tenant_oauth2_provider(
   State(state): State<RouterState>,
   ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Path((tenant_id, tenant_oauht2_provider_id)): Path<(i64, i64)>
+  Path((tenant_id, tenant_oauht2_provider_id)): Path<(i64, i64)>,
 ) -> impl IntoResponse {
-  match repository::tenant_oauth2_provider::delete_tenant_oauth2_provider(&state.pool, tenant_id, tenant_oauht2_provider_id).await {
-    Ok(Some(_)) => {},
+  match repository::tenant_oauth2_provider::delete_tenant_oauth2_provider(
+    &state.pool,
+    tenant_id,
+    tenant_oauht2_provider_id,
+  )
+  .await
+  {
+    Ok(Some(_)) => {}
     Ok(None) => {
-      return Errors::not_found().with_error("tenant-oauth2-provider", NOT_FOUND_ERROR).into_response();
+      return Errors::not_found()
+        .with_error("tenant-oauth2-provider", NOT_FOUND_ERROR)
+        .into_response();
     }
     Err(e) => {
       log::error!("error deleting tenant OAuth2 provider: {}", e);
@@ -196,19 +199,12 @@ pub async fn delete_tenant_oauth2_provider(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route(
-      "/tenants/{tenant_id}/oauth2-providers",
-      post(create_tenant_oauth2_provider),
-    )
-    .route(
-      "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
-      put(update_tenant_oauth2_provider),
-    )
-    .route(
-      "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
-      delete(delete_tenant_oauth2_provider),
-    )
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(
+      create_tenant_oauth2_provider,
+      update_tenant_oauth2_provider,
+      delete_tenant_oauth2_provider
+    ))
     .with_state(state)
 }

@@ -33,14 +33,12 @@ use crate::{
 use axum::{
   extract::{Path, Query, State},
   response::IntoResponse,
-  routing::{get, post},
-  Router,
 };
 use chrono::DateTime;
 use expiringmap::ExpiringMap;
 use http::{header::LOCATION, HeaderValue, StatusCode};
 use reqwest::Url;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
 
@@ -49,22 +47,12 @@ lazy_static! {
     RwLock::new(ExpiringMap::new());
 }
 
-#[derive(OpenApi)]
-#[openapi(
-  paths(
-    create_oauth2_url,
-    oauth2_callback,
-  ),
-  tags(
-    (name = "oauth2", description = "OAuth2 endpoints"),
-  )
-)]
-pub struct ApiDoc;
+pub const OAUTH2_TAG: &str = "oauth2";
 
 #[utoipa::path(
   post,
-  path = "oauth2/{provider}",
-  tags = ["oauth2"],
+  path = "/oauth2/{provider}",
+  tags = [OAUTH2_TAG],
   params(
     ("provider" = String, Path, description = "OAuth2 provider", example = "google"),
     OAuth2Query,
@@ -148,8 +136,8 @@ pub async fn create_oauth2_url(
 
 #[utoipa::path(
   get,
-  path = "oauth2/{provider}/callback",
-  tags = ["oauth2"],
+  path = "/oauth2/{provider}/callback",
+  tags = [OAUTH2_TAG],
   params(
     ("provider" = String, Path, description = "OAuth2 provider", example = "google"),
     OAuth2CallbackQuery,
@@ -449,10 +437,9 @@ pub async fn oauth2_callback(
   redirect(redirect_url).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/oauth2/{provider}", post(create_oauth2_url))
-    .route("/oauth2/{provider}/callback", get(oauth2_callback))
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(create_oauth2_url, oauth2_callback))
     .with_state(state)
 }
 

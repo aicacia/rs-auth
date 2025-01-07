@@ -1,7 +1,12 @@
 use utoipa::{
-  openapi::security::{ApiKey, ApiKeyValue, HttpAuthScheme, HttpBuilder, SecurityScheme},
+  openapi::{
+    security::{ApiKey, ApiKeyValue, HttpAuthScheme, HttpBuilder, SecurityScheme},
+    Server,
+  },
   Modify,
 };
+
+use super::config::get_config;
 
 pub const AUTHORIZATION_HEADER: &str = "Authorization";
 pub const TENENT_ID_HEADER: &str = "Tenant-ID";
@@ -24,5 +29,17 @@ impl Modify for SecurityAddon {
       "TenantUUID",
       SecurityScheme::ApiKey(ApiKey::Header(ApiKeyValue::new(TENENT_ID_HEADER))),
     );
+  }
+}
+
+pub struct ServersAddon;
+
+impl Modify for ServersAddon {
+  fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+    let config = get_config();
+    openapi
+      .servers
+      .get_or_insert(Vec::default())
+      .push(Server::new(config.server.url.clone()));
   }
 }

@@ -135,6 +135,8 @@ To build and deploy the service using Docker and Helm:
 
    ```bash
    docker build -t aicacia/auth-api:latest .
+   docker buildx build -o type=docker --platform linux/amd64 -t aicacia/auth-api:latest .
+   docker buildx build -o type=docker --platform linux/arm/v7 -t aicacia/auth-api:latest -f Dockerfile.armv7 .
    ```
 
 2. **Push the image to the registry:**

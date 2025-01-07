@@ -1,11 +1,6 @@
-use axum::{
-  extract::State,
-  response::IntoResponse,
-  routing::{delete, post},
-  Router,
-};
+use axum::{extract::State, response::IntoResponse};
 use http::StatusCode;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
   core::error::{Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
@@ -14,16 +9,12 @@ use crate::{
   repository::user_totp::{create_user_totp, delete_user_totp, CreateUserTOTP},
 };
 
-use super::RouterState;
-
-#[derive(OpenApi)]
-#[openapi(paths(create_current_user_totp, delete_current_user_totp))]
-pub struct ApiDoc;
+use super::{current_user::CURRENT_USER_TAG, RouterState};
 
 #[utoipa::path(
   post,
-  path = "current-user/totp",
-  tags = ["current-user"],
+  path = "/current-user/totp",
+  tags = [CURRENT_USER_TAG],
   request_body = CreateTOTPRequest,
   responses(
     (status = 201, content_type = "application/json", body = UserTOTP),
@@ -72,8 +63,8 @@ pub async fn create_current_user_totp(
 
 #[utoipa::path(
   delete,
-  path = "current-user/totp",
-  tags = ["current-user"],
+  path = "/current-user/totp",
+  tags = [CURRENT_USER_TAG],
   responses(
     (status = 204),
     (status = 401, content_type = "application/json", body = Errors),
@@ -106,9 +97,8 @@ pub async fn delete_current_user_totp(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/current-user/totp", post(create_current_user_totp))
-    .route("/current-user/totp", delete(delete_current_user_totp))
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(create_current_user_totp, delete_current_user_totp))
     .with_state(state)
 }

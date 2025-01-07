@@ -20,34 +20,18 @@ use crate::{
 use axum::{
   extract::{Path, Query, State},
   response::IntoResponse,
-  routing::{delete, get, post, put},
-  Router,
 };
 use http::StatusCode;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
 
-#[derive(OpenApi)]
-#[openapi(
-  paths(
-    all_tenants,
-    get_tenant_by_id,
-    get_tenant_by_client_id,
-    create_tenant,
-    update_tenant,
-    delete_tenant
-  ),
-  tags(
-    (name = "tenant", description = "Tenant endpoints"),
-  )
-)]
-pub struct ApiDoc;
+pub const TENANT_TAG: &str = "tenant";
 
 #[utoipa::path(
   get,
-  path = "tenants",
-  tags = ["tenant"],
+  path = "/tenants",
+  tags = [TENANT_TAG],
   params(
     OffsetAndLimit,
     TenantQuery
@@ -117,8 +101,8 @@ pub async fn all_tenants(
 
 #[utoipa::path(
   get,
-  path = "tenants/by-client-id/{tenant_client_id}",
-  tags = ["tenant"],
+  path = "/tenants/by-client-id/{tenant_client_id}",
+  tags = [TENANT_TAG],
   params(
     ("tenant_client_id" = uuid::Uuid, Path, description = "Tenant ID"),
     TenantQuery,
@@ -155,7 +139,7 @@ pub async fn get_tenant_by_client_id(
     Some(row) => row,
     None => {
       return Errors::not_found()
-        .with_error("tenant", NOT_FOUND_ERROR)
+        .with_error(TENANT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
   };
@@ -182,8 +166,8 @@ pub async fn get_tenant_by_client_id(
 
 #[utoipa::path(
   get,
-  path = "tenants/{tenant_id}",
-  tags = ["tenant"],
+  path = "/tenants/{tenant_id}",
+  tags = [TENANT_TAG],
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID"),
     TenantQuery,
@@ -220,7 +204,7 @@ pub async fn get_tenant_by_id(
     Some(row) => row,
     None => {
       return Errors::not_found()
-        .with_error("tenant", NOT_FOUND_ERROR)
+        .with_error(TENANT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
   };
@@ -237,8 +221,8 @@ pub async fn get_tenant_by_id(
 
 #[utoipa::path(
   post,
-  path = "tenants",
-  tags = ["tenant"],
+  path = "/tenants",
+  tags = [TENANT_TAG],
   request_body = CreateTenant,
   responses(
     (status = 201, content_type = "application/json", body = Tenant),
@@ -291,8 +275,8 @@ pub async fn create_tenant(
 
 #[utoipa::path(
   put,
-  path = "tenants/{tenant_id}",
-  tags = ["tenant"],
+  path = "/tenants/{tenant_id}",
+  tags = [TENANT_TAG],
   request_body = UpdateTenant,
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID")
@@ -332,7 +316,7 @@ pub async fn update_tenant(
     Ok(Some(tenant)) => tenant,
     Ok(None) => {
       return Errors::not_found()
-        .with_error("tenant", NOT_FOUND_ERROR)
+        .with_error(TENANT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
@@ -347,8 +331,8 @@ pub async fn update_tenant(
 
 #[utoipa::path(
   delete,
-  path = "tenants/{tenant_id}",
-  tags = ["tenant"],
+  path = "/tenants/{tenant_id}",
+  tags = [TENANT_TAG],
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID")
   ),
@@ -371,7 +355,7 @@ pub async fn delete_tenant(
     Ok(Some(_)) => {}
     Ok(None) => {
       return Errors::not_found()
-        .with_error("tenant", NOT_FOUND_ERROR)
+        .with_error(TENANT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
@@ -384,16 +368,13 @@ pub async fn delete_tenant(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/tenants", get(all_tenants))
-    .route(
-      "/tenants/by-client-id/{tenant_client_id}",
-      get(get_tenant_by_client_id),
-    )
-    .route("/tenants/{tenant_id}", get(get_tenant_by_id))
-    .route("/tenants", post(create_tenant))
-    .route("/tenants/{tenant_id}", put(update_tenant))
-    .route("/tenants/{tenant_id}", delete(delete_tenant))
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(all_tenants))
+    .routes(routes!(get_tenant_by_client_id))
+    .routes(routes!(get_tenant_by_id))
+    .routes(routes!(create_tenant))
+    .routes(routes!(update_tenant))
+    .routes(routes!(delete_tenant))
     .with_state(state)
 }

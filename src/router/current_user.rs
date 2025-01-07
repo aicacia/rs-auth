@@ -37,36 +37,20 @@ use crate::{
 use axum::{
   extract::{Path, State},
   response::IntoResponse,
-  routing::{delete, get, post, put},
-  Router,
 };
 use chrono::{DateTime, Utc};
 use http::StatusCode;
 use serde_json::json;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::{oauth2::PKCE_CODE_VERIFIERS, RouterState};
 
-#[derive(OpenApi)]
-#[openapi(
-  paths(
-    get_current_user,
-    reset_current_user_password,
-    create_current_user_add_oauth2_provider_url,
-    update_current_user_info,
-    update_current_user,
-    deactivate_current_user,
-  ),
-  tags(
-    (name = "current-user", description = "Current user endpoints"),
-  )
-)]
-pub struct ApiDoc;
+pub const CURRENT_USER_TAG: &str = "current-user";
 
 #[utoipa::path(
   get,
-  path = "current-user",
-  tags = ["current-user"],
+  path = "/current-user",
+  tags = [CURRENT_USER_TAG],
   responses(
     (status = 200, content_type = "application/json", body = User),
     (status = 401, content_type = "application/json", body = Errors),
@@ -212,8 +196,8 @@ pub async fn get_current_user(
 
 #[utoipa::path(
   post,
-  path = "current-user/oauth2/{provider}",
-  tags = ["current-user"],
+  path = "/current-user/oauth2/{provider}",
+  tags = [CURRENT_USER_TAG],
   params(
     ("provider" = String, Path, description = "OAuth2 provider", example = "google"),
   ),
@@ -295,8 +279,8 @@ pub async fn create_current_user_add_oauth2_provider_url(
 
 #[utoipa::path(
   post,
-  path = "current-user/reset-password",
-  tags = ["current-user"],
+  path = "/current-user/reset-password",
+  tags = [CURRENT_USER_TAG],
   request_body = ResetPasswordRequest,
   responses(
     (status = 204),
@@ -380,8 +364,8 @@ pub async fn reset_current_user_password(
 
 #[utoipa::path(
   put,
-  path = "current-user",
-  tags = ["current-user"],
+  path = "/current-user",
+  tags = [CURRENT_USER_TAG],
   request_body = UpdateUsername,
   responses(
     (status = 204),
@@ -422,8 +406,8 @@ pub async fn update_current_user(
 
 #[utoipa::path(
   put,
-  path = "current-user/info",
-  tags = ["current-user"],
+  path = "/current-user/info",
+  tags = [CURRENT_USER_TAG],
   request_body = UpdateUserInfoRequest,
   responses(
     (status = 204),
@@ -474,8 +458,8 @@ pub async fn update_current_user_info(
 
 #[utoipa::path(
   delete,
-  path = "current-user",
-  tags = ["current-user"],
+  path = "/current-user",
+  tags = [CURRENT_USER_TAG],
   responses(
     (status = 204),
     (status = 400, content_type = "application/json", body = Errors),
@@ -512,19 +496,13 @@ pub async fn deactivate_current_user(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route(
-      "/current-user/oauth2/{provider}",
-      post(create_current_user_add_oauth2_provider_url),
-    )
-    .route("/current-user", get(get_current_user))
-    .route(
-      "/current-user/reset-password",
-      post(reset_current_user_password),
-    )
-    .route("/current-user/info", put(update_current_user_info))
-    .route("/current-user", put(update_current_user))
-    .route("/current-user", delete(deactivate_current_user))
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(create_current_user_add_oauth2_provider_url))
+    .routes(routes!(get_current_user))
+    .routes(routes!(update_current_user_info))
+    .routes(routes!(update_current_user))
+    .routes(routes!(deactivate_current_user))
+    .routes(routes!(reset_current_user_password))
     .with_state(state)
 }

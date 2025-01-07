@@ -8,27 +8,18 @@ use crate::{
   repository::user::{create_user_with_password, CreateUserWithPassword},
 };
 
-use axum::{extract::State, response::IntoResponse, routing::post, Router};
+use axum::{extract::State, response::IntoResponse};
 use http::StatusCode;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::{token::create_user_token, RouterState};
 
-#[derive(OpenApi)]
-#[openapi(
-  paths(
-    register_user,
-  ),
-  tags(
-    (name = "register", description = "Register endpoints"),
-  )
-)]
-pub struct ApiDoc;
+pub const REGISTER_TAG: &str = "register";
 
 #[utoipa::path(
   post,
-  path = "register",
-  tags = ["register"],
+  path = "/register",
+  tags = [REGISTER_TAG],
   request_body = RegisterUser,
   responses(
     (status = 201, content_type = "application/json", body = User),
@@ -79,8 +70,8 @@ pub async fn register_user(
   .into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/register", post(register_user))
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(register_user))
     .with_state(state)
 }

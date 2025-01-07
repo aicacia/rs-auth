@@ -32,28 +32,19 @@ use crate::{
   },
 };
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::post, Router};
+use axum::{extract::State, http::StatusCode, response::IntoResponse};
 use chrono::{DateTime, Utc};
 use sqlx::AnyPool;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
 
-#[derive(OpenApi)]
-#[openapi(
-  paths(
-    token,
-  ),
-  tags(
-    (name = "token", description = "Token endpoints"),
-  )
-)]
-pub struct ApiDoc;
+pub const TOKEN_TAG: &str = "token";
 
 #[utoipa::path(
   post,
-  path = "token",
-  tags = ["token"],
+  path = "/token",
+  tags = [TOKEN_TAG],
   request_body = TokenRequest,
   responses(
     (status = 201, content_type = "application/json", body = Token),
@@ -98,8 +89,10 @@ pub async fn token(
   }
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new().route("/token", post(token)).with_state(state)
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(token))
+    .with_state(state)
 }
 
 async fn password_request(

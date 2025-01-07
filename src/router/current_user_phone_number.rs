@@ -1,11 +1,9 @@
 use axum::{
   extract::{Path, State},
   response::IntoResponse,
-  routing::{delete, post, put},
-  Router,
 };
 use http::StatusCode;
-use utoipa::OpenApi;
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
   core::error::{Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR},
@@ -19,20 +17,12 @@ use crate::{
   },
 };
 
-use super::RouterState;
-
-#[derive(OpenApi)]
-#[openapi(paths(
-  create_current_user_phone_number,
-  set_current_user_phone_number_as_primary,
-  delete_current_user_phone_number
-))]
-pub struct ApiDoc;
+use super::{current_user::CURRENT_USER_TAG, RouterState};
 
 #[utoipa::path(
   post,
-  path = "current-user/phone-numbers",
-  tags = ["current-user"],
+  path = "/current-user/phone-numbers",
+  tags = [CURRENT_USER_TAG],
   request_body = CreateUserPhoneNumber,
   responses(
     (status = 201, content_type = "application/json", body = UserPhoneNumber),
@@ -83,8 +73,8 @@ pub async fn create_current_user_phone_number(
 
 #[utoipa::path(
   put,
-  path = "current-user/phone-numbers/{phone_number_id}/set-as-primary",
-  tags = ["current-user"],
+  path = "/current-user/phone-numbers/{phone_number_id}/set-as-primary",
+  tags = [CURRENT_USER_TAG],
   params(
     ("phone_number_id" = i64, Path, description = "PhoneNumber ID to set as primary"),
   ),
@@ -123,8 +113,8 @@ pub async fn set_current_user_phone_number_as_primary(
 
 #[utoipa::path(
   delete,
-  path = "current-user/phone-numbers/{phone_number_id}",
-  tags = ["current-user"],
+  path = "/current-user/phone-numbers/{phone_number_id}",
+  tags = [CURRENT_USER_TAG],
   params(
     ("phone_number_id" = i64, Path, description = "PhoneNumber ID to delete"),
   ),
@@ -156,19 +146,12 @@ pub async fn delete_current_user_phone_number(
   (StatusCode::NO_CONTENT, ()).into_response()
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route(
-      "/current-user/phone-numbers",
-      post(create_current_user_phone_number),
-    )
-    .route(
-      "/current-user/phone-numbers/{phone_number_id}/set-as-primary",
-      put(set_current_user_phone_number_as_primary),
-    )
-    .route(
-      "/current-user/phone-numbers/{phone_number_id}",
-      delete(delete_current_user_phone_number),
-    )
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(
+      create_current_user_phone_number,
+      set_current_user_phone_number_as_primary,
+      delete_current_user_phone_number
+    ))
     .with_state(state)
 }

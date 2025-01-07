@@ -1,26 +1,16 @@
 use crate::model::util::{Health, Version};
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Router};
-use utoipa::OpenApi;
+use axum::{extract::State, http::StatusCode, response::IntoResponse};
+use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
 
-#[derive(OpenApi)]
-#[openapi(
-  paths(
-    health,
-    version,
-  ),
-  tags(
-    (name = "util", description = "Utility endpoints"),
-  )
-)]
-pub struct ApiDoc;
+pub const UTIL_TAG: &str = "util";
 
 #[utoipa::path(
   get,
-  path = "health",
-  tags = ["util"],
+  path = "/health",
+  tags = [UTIL_TAG],
   responses(
     (status = 200, description = "Health check response", body = Health),
     (status = 500, description = "Health check response", body = Health),
@@ -42,8 +32,8 @@ pub async fn health(State(state): State<RouterState>) -> impl IntoResponse {
 
 #[utoipa::path(
   get,
-  path = "version",
-  tags = ["util"],
+  path = "/version",
+  tags = [UTIL_TAG],
   responses(
     (status = 200, description = "Version response", body = Version),
   )
@@ -52,9 +42,9 @@ pub async fn version() -> axum::Json<Version> {
   axum::Json(Version::default())
 }
 
-pub fn create_router(state: RouterState) -> Router {
-  Router::new()
-    .route("/health", get(health))
-    .route("/version", get(version))
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(health))
+    .routes(routes!(version))
     .with_state(state)
 }
