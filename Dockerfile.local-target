@@ -1,11 +1,11 @@
-FROM scratch
+FROM alpine:3.21
 LABEL org.opencontainers.image.source=https://github.com/aicacia/rs-auth
 
 WORKDIR /app
 
 ARG TARGET=x86_64-unknown-linux-musl
-COPY target/${TARGET}/release/auth /app/auth
+COPY ./target/${TARGET}/release/auth /usr/local/bin
 
 ENV RUN_MODE=production
 
-CMD ["/app/auth", "-c", "/app/config.json"]
+CMD ["auth", "-c", "/app/config.json"]
