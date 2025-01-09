@@ -13,7 +13,7 @@ replicas:
 
 image:
   repository: aicacia/auth-api
-  tag: latest
+  tag: 0.1-x86_64
   pullPolicy: Always
   hash: sha256:41dc5087ec321069388b13f6f84535367df94b8691fe63fd043ba8832afbeb8b
 

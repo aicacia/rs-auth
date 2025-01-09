@@ -134,21 +134,24 @@ To build and deploy the service using Docker and Helm:
 1. **Build the Docker image:**
 
    ```bash
-   docker build -t aicacia/auth-api:latest .
-   docker buildx build -o type=docker --platform linux/amd64 -t aicacia/auth-api:latest .
-   docker buildx build -o type=docker --platform linux/arm/v7 -t aicacia/auth-api:latest -f Dockerfile.armv7 .
+   # build for x86_64
+   docker build -t aicacia/auth-api:0.1-x86_64 .
+
+   # build for armv7
+   cross build --target armv7-unknown-linux-musleabihf --release
+   docker buildx build --no-cache -o type=docker --push --platform linux/arm/v7 --build-arg=TARGET=armv7-unknown-linux-musleabihf -t aicacia/auth-api:0.1-armv7 -f Dockerfile.local-target .
    ```
 
 2. **Push the image to the registry:**
 
    ```bash
-   docker push aicacia/auth-api:latest
+   docker push aicacia/auth-api:0.1-x86_64
    ```
 
 3. **Deploy with Helm:**
 
    ```bash
-   helm upgrade auth-api helm/auth-api -n api --install -f values.yaml --set image.hash="$(docker inspect --format='{{index .Id}}' aicacia/auth-api:latest)"
+   helm upgrade auth-api helm/auth-api -n api --install -f values.yaml --set image.hash="$(docker inspect --format='{{index .Id}}' aicacia/auth-api:0.1-x86_64)"
    ```
 
 4. **Deploy locally**
@@ -158,7 +161,7 @@ To build and deploy the service using Docker and Helm:
     -v ${PWD}/.env:/app/.env \
     -v ${PWD}/config.json:/app/config.json \
     -v ${PWD}/auth-dev.db:/app/auth-dev.db \
-    aicacia/auth-api:latest
+    aicacia/auth-api:0.1-x86_64
    ```
 
 ### Undeployment

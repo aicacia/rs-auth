@@ -2,7 +2,8 @@
 /.github
 /.vscode
 /helm
-/target
+/target/debug
+/target/release
 /.env*
 /config.json
 /!config.json.example
