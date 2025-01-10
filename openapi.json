@@ -969,7 +969,6 @@
     "/openapi.json": {
       "get": {
         "tags": ["openapi"],
-        "operationId": "get_openapi",
         "responses": { "200": { "description": "OpenApi documenation" } }
       }
     },
@@ -1205,47 +1204,6 @@
             }
           },
           "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
-              }
-            }
-          }
-        },
-        "security": [{ "Authorization": [] }]
-      },
-      "delete": {
-        "tags": ["service-account"],
-        "operationId": "delete_service_account",
-        "parameters": [
-          {
-            "name": "service_account_id",
-            "in": "path",
-            "description": "ServiceAccount ID",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
-              }
-            }
-          },
-          "404": {
             "description": "",
             "content": {
               "application/json": {
@@ -1979,7 +1937,7 @@
     },
     "/users/{user_id}/emails": {
       "post": {
-        "tags": ["users"],
+        "tags": ["user"],
         "operationId": "create_user_email",
         "parameters": [
           {
@@ -2047,7 +2005,7 @@
     },
     "/users/{user_id}/emails/{email_id}": {
       "put": {
-        "tags": ["users"],
+        "tags": ["user"],
         "operationId": "update_user_email",
         "parameters": [
           {
@@ -2105,7 +2063,7 @@
         "security": [{ "Authorization": [] }]
       },
       "delete": {
-        "tags": ["users"],
+        "tags": ["user"],
         "operationId": "delete_user_email",
         "parameters": [
           {
@@ -2155,7 +2113,7 @@
     },
     "/users/{user_id}/phone-numbers/{phone_number_id}": {
       "put": {
-        "tags": ["users"],
+        "tags": ["user"],
         "operationId": "update_user_phone_number",
         "parameters": [
           {
@@ -2213,7 +2171,7 @@
         "security": [{ "Authorization": [] }]
       },
       "delete": {
-        "tags": ["users"],
+        "tags": ["user"],
         "operationId": "delete_user_phone_number",
         "parameters": [
           {
@@ -2263,7 +2221,7 @@
     },
     "/users/{user_id}/phone_numbers": {
       "post": {
-        "tags": ["users"],
+        "tags": ["user"],
         "operationId": "create_user_phone_number",
         "parameters": [
           {
@@ -3174,7 +3132,9 @@
   },
   "tags": [
     { "name": "current-user", "description": "Current user endpoints" },
+    { "name": "jwt", "description": "JSON Web Token endpoints" },
     { "name": "mfa", "description": "Multi-factor authentication endpoints" },
+    { "name": "util", "description": "Utility endpoints" },
     { "name": "oauth2", "description": "OAuth2 endpoints" },
     { "name": "openapi", "description": "OpenApi endpoints" },
     { "name": "register", "description": "Register endpoints" },
@@ -3182,7 +3142,6 @@
     { "name": "oauth2-provider", "description": "OAuth2 Provider endpoints" },
     { "name": "tenant", "description": "Tenant endpoints" },
     { "name": "token", "description": "Token endpoints" },
-    { "name": "users", "description": "User's endpoints" },
-    { "name": "util", "description": "Utility endpoints" }
+    { "name": "user", "description": "User endpoints" }
   ]
 }
