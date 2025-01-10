@@ -29,7 +29,7 @@ use sqlx::AnyPool;
 use tenant::TENANT_TAG;
 use tenant_oauth2_provider::OAUTH2_PROVIDER_TAG;
 use token::TOKEN_TAG;
-use tower_http::cors::CorsLayer;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use user::USER_TAG;
 use util::UTIL_TAG;
 use utoipa::OpenApi;
@@ -90,16 +90,6 @@ pub fn create_router(state: RouterState) -> Router {
   open_api_router
     .merge(openapi::create_router(openapi))
     .layer(CorsLayer::very_permissive())
-    .layer(
-      tower_http::trace::TraceLayer::new_for_http().make_span_with(
-        |request: &axum::http::Request<_>| {
-          tracing::info_span!(
-            "http",
-            method = ?request.method(),
-            path = ?request.uri(),
-          )
-        },
-      ),
-    )
+    .layer(TraceLayer::new_for_http())
     .into()
 }

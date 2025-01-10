@@ -6,7 +6,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 name = "auth"
 repository = "https://github.com/aicacia/rs-auth"
-rust-version = "1.82"
+rust-version = "1.75"
 version = "0.1.0"
 
 [lib]
@@ -16,10 +16,28 @@ name = "auth"
 name = "auth"
 
 [dependencies]
-dotenv = "0.15"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-urlencoding = "2.1"
+dotenv = { version = "0.15", default-features = false }
+config = { version = "0.15", default-features = false, features = ["json"] }
+
+clap = { version = "4.5", default-features = false, features = [
+  "std",
+  "derive",
+  "help",
+] }
+
+log = { version = "0.4", default-features = false }
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "ansi",
+  "fmt",
+  "std",
+  "tracing-log",
+  "env-filter",
+] }
+
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0", default-features = false }
+
 axum = { version = "0.8", default-features = false, features = [
   "tokio",
   "http1",
@@ -34,40 +52,25 @@ utoipa = { version = "5.3", default-features = false, features = [
   "macros",
 ] }
 utoipa-axum = { version = "0.1", default-features = false }
-expiringmap = "0.1"
-lazy_static = "1.5"
+
+http = { version = "1.2", default-features = false }
+tower-http = { version = "0.6", default-features = false, features = [
+  "cors",
+  "trace",
+] }
 reqwest = { version = "0.12", default-features = false, features = [
   "rustls-tls",
   "json",
 ] }
-clap = { version = "4.5", default-features = false, features = [
-  "std",
-  "derive",
-  "help",
-] }
-config = "0.15"
-rust-argon2 = "2.1"
-oauth2 = { version = "4.4" }
-http = "1.2"
-totp-rs = { version = "5.6", default-features = false, features = [
-  "gen_secret",
-] }
-rand = "0.8"
-tokio = { version = "1.42", default-features = false, features = [
+
+tokio = { version = "1.43", default-features = false, features = [
   "rt",
   "rt-multi-thread",
   "macros",
   "signal",
 ] }
-tokio-util = { version = "0.7", default-features = false }
-validator = { version = "0.19", features = ["derive"] }
-log = "0.4"
-jsonwebtoken = "9.3"
-build-time = "0.1"
-chrono = { version = "0.4", features = ["serde"] }
-tower-http = { version = "0.6", features = ["cors", "trace"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio-util = { version = "0.7", default-features = false, features = ["io"] }
+
 sqlx = { version = "0.8", default-features = false, features = [
   "uuid",
   "chrono",
@@ -77,12 +80,26 @@ sqlx = { version = "0.8", default-features = false, features = [
   "runtime-tokio-rustls",
   "all-databases",
 ] }
-uuid = { version = "1.11", default-features = false, features = [
-  "serde",
-  "v4",
+
+validator = { version = "0.19", default-features = false, features = [
+  "derive",
 ] }
+lazy_static = { version = "1.5", default-features = false }
+build-time = { version = "0.1", default-features = false }
+chrono = { version = "0.4", default-features = false, features = ["serde"] }
+uuid = { version = "1.11", features = ["serde", "v4"] }
+atomicoption = "0.1"
+urlencoding = { version = "2.1", default-features = false }
+expiringmap = { version = "0.1", default-features = false }
+rust-argon2 = { version = "2.1", default-features = false }
+rand = { version = "0.8", default-features = false }
+jsonwebtoken = { version = "9.3", default-features = false }
 base64 = { version = "0.22", default-features = false }
-atomicoption = "0"
+
+oauth2 = { version = "4.4" }
+totp-rs = { version = "5.6", default-features = false, features = [
+  "gen_secret",
+] }
 
 [dev-dependencies]
 
