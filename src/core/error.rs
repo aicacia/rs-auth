@@ -148,6 +148,30 @@ impl From<oauth2::url::ParseError> for Errors {
   }
 }
 
+impl From<webrtc::Error> for Errors {
+  fn from(error: webrtc::Error) -> Self {
+    Self::internal_error().with_application_error(error.to_string())
+  }
+}
+
+impl From<reqwest::Error> for Errors {
+  fn from(error: reqwest::Error) -> Self {
+    Self::internal_error().with_application_error(error.to_string())
+  }
+}
+
+impl From<async_tungstenite::tungstenite::Error> for Errors {
+  fn from(error: async_tungstenite::tungstenite::Error) -> Self {
+    Self::internal_error().with_application_error(error.to_string())
+  }
+}
+
+impl From<serde_json::Error> for Errors {
+  fn from(error: serde_json::Error) -> Self {
+    Self::internal_error().with_application_error(error.to_string())
+  }
+}
+
 impl IntoResponse for Errors {
   fn into_response(self) -> Response {
     match StatusCode::from_u16(self.status_code) {

@@ -1,19 +1,19 @@
-use std::{fs, net::SocketAddr, str::FromStr};
+use std::{net::SocketAddr, str::FromStr};
 
 use auth::{
   core::{
     config::{get_config, init_config},
-    database::init_pool,
-    encryption,
-    error::{Errors, DATEBASE_ERROR, INTERNAL_ERROR},
+    database::{close_pool, init_pool},
+    error::Errors,
   },
-  model::service_account::ServiceAccount,
-  repository::{self, service_account::get_service_accounts},
   router::{create_router, RouterState},
+  service::{
+    peer::serve_peer,
+    start_up::{create_new_admin_service_account, init_service_accounts},
+  },
 };
 use axum::Router;
 use clap::Parser;
-use sqlx::Executor;
 use tokio_util::sync::CancellationToken;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -61,7 +61,12 @@ async fn main() -> Result<(), Errors> {
   let cancellation_token = CancellationToken::new();
 
   let router = create_router(RouterState { pool: pool.clone() });
-  let serve_handle = tokio::spawn(serve(router, cancellation_token.clone()));
+  let serve_handle = tokio::spawn(serve(router.clone(), cancellation_token.clone()));
+  let serve_peer_handle = if config.p2p.enabled {
+    Some(tokio::spawn(serve_peer(router, cancellation_token.clone())))
+  } else {
+    None
+  };
 
   shutdown_signal(cancellation_token).await;
 
@@ -71,35 +76,22 @@ async fn main() -> Result<(), Errors> {
       log::error!("Error serving: {}", e);
     }
   }
-  cleanup_pool(pool).await;
-
-  Ok(())
-}
-
-async fn cleanup_pool(pool: sqlx::AnyPool) {
-  match pool.acquire().await {
-    Ok(conn) => match conn.backend_name().to_lowercase().as_str() {
-      "sqlite" => {
-        log::info!("Optimizing database");
-        match pool
-          .execute("PRAGMA analysis_limit=400; PRAGMA optimize;")
-          .await
-        {
-          Ok(_) => {
-            log::info!("Optimized database");
-          }
-          Err(e) => {
-            log::error!("Error optimizing database: {}", e);
-          }
-        }
+  if let Some(handle) = serve_peer_handle {
+    match handle.await {
+      Ok(_) => {}
+      Err(e) => {
+        log::error!("Error serving peer: {}", e);
       }
-      _ => {}
-    },
-    Err(e) => {
-      log::error!("Error acquiring connection: {}", e);
     }
   }
-  pool.close().await;
+  match close_pool().await {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("Error closing pool: {}", e);
+    }
+  }
+
+  Ok(())
 }
 
 async fn serve(router: Router, cancellation_token: CancellationToken) -> Result<(), Errors> {
@@ -156,68 +148,4 @@ async fn shutdown_signal(cancellation_token: CancellationToken) {
   }
 
   cancellation_token.cancel();
-}
-
-async fn init_service_accounts(pool: &sqlx::AnyPool) -> Result<(), Errors> {
-  let service_accounts = match get_service_accounts(pool, None, None).await {
-    Ok(service_accounts) => service_accounts,
-    Err(e) => {
-      log::error!("Error getting service accounts: {}", e);
-      return Err(Errors::internal_error().with_application_error(DATEBASE_ERROR));
-    }
-  };
-  if !service_accounts.is_empty() {
-    return Ok(());
-  }
-  log::info!("No service accounts found, creating initial admin service account");
-  create_new_admin_service_account(pool).await
-}
-
-async fn create_new_admin_service_account(pool: &sqlx::AnyPool) -> Result<(), Errors> {
-  let client_id = uuid::Uuid::new_v4();
-  let client_secret = uuid::Uuid::new_v4();
-  let encrypted_client_secret = match encryption::encrypt_password(&client_secret.to_string()) {
-    Ok(encrypted_client_secret) => encrypted_client_secret,
-    Err(e) => {
-      log::error!("Error encrypting client secret: {}", e);
-      return Err(Errors::internal_error().with_application_error(DATEBASE_ERROR));
-    }
-  };
-  let service_account_row = match repository::service_account::create_service_account(
-    pool,
-    repository::service_account::CreateServiceAccount {
-      client_id: client_id.to_string(),
-      encrypted_client_secret,
-      name: "Admin".to_owned(),
-    },
-  )
-  .await
-  {
-    Ok(row) => row,
-    Err(e) => {
-      log::error!("Error creating service account: {}", e);
-      return Err(Errors::internal_error().with_application_error(DATEBASE_ERROR));
-    }
-  };
-  let mut service_account = ServiceAccount::from(service_account_row);
-  service_account.client_secret = Some(client_secret.clone());
-  let service_account_json_string = match serde_json::to_string_pretty(&service_account) {
-    Ok(json) => json,
-    Err(e) => {
-      log::error!("Error serializing service account: {}", e);
-      return Err(Errors::internal_error().with_application_error(INTERNAL_ERROR));
-    }
-  };
-  match fs::write(
-    "./auth-admin-service-account.json",
-    service_account_json_string,
-  ) {
-    Ok(_) => {}
-    Err(e) => {
-      log::error!("Error writing service account to file: {}", e);
-      return Err(Errors::internal_error().with_application_error(INTERNAL_ERROR));
-    }
-  }
-  log::info!("Service account created, see auth-admin-service-account.json");
-  Ok(())
 }

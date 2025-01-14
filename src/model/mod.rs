@@ -2,6 +2,7 @@ pub mod current_user;
 pub mod jwt;
 pub mod mfa;
 pub mod oauth2;
+pub mod p2p;
 pub mod register;
 pub mod service_account;
 pub mod tenant;
