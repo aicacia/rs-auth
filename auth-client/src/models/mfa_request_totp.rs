@@ -12,16 +12,16 @@ use crate::models;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct MfaRequestOneOf1 {
+pub struct MfaRequestTotp {
     #[serde(rename = "code")]
     pub code: String,
     #[serde(rename = "type")]
     pub r#type: Type,
 }
 
-impl MfaRequestOneOf1 {
-    pub fn new(code: String, r#type: Type) -> MfaRequestOneOf1 {
-        MfaRequestOneOf1 {
+impl MfaRequestTotp {
+    pub fn new(code: String, r#type: Type) -> MfaRequestTotp {
+        MfaRequestTotp {
             code,
             r#type,
         }
@@ -30,13 +30,13 @@ impl MfaRequestOneOf1 {
 /// 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Type {
-    #[serde(rename = "service-account")]
-    ServiceAccount,
+    #[serde(rename = "totp")]
+    Totp,
 }
 
 impl Default for Type {
     fn default() -> Type {
-        Self::ServiceAccount
+        Self::Totp
     }
 }
 

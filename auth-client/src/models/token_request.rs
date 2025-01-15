@@ -14,15 +14,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum TokenRequest {
-    TokenRequestOneOf(models::TokenRequestOneOf),
-    TokenRequestOneOf1(models::TokenRequestOneOf1),
-    TokenRequestOneOf2(models::TokenRequestOneOf2),
-    TokenRequestOneOf3(models::TokenRequestOneOf3),
+    TokenRequestPassword(models::TokenRequestPassword),
+    TokenRequestRefreshToken(models::TokenRequestRefreshToken),
+    TokenRequestServiceAccount(models::TokenRequestServiceAccount),
+    TokenRequestAuthorizationCode(models::TokenRequestAuthorizationCode),
 }
 
 impl Default for TokenRequest {
     fn default() -> Self {
-        Self::TokenRequestOneOf(Default::default())
+        Self::TokenRequestPassword(Default::default())
     }
 }
 /// 

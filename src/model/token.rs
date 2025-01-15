@@ -29,6 +29,7 @@ pub struct Token {
 #[serde(tag = "grant_type")]
 pub enum TokenRequest {
   #[serde(rename = "password")]
+  #[schema(title = "TokenRequestPassword")]
   Password {
     #[schema(example = "username")]
     username: String,
@@ -38,13 +39,16 @@ pub enum TokenRequest {
     scope: Option<String>,
   },
   #[serde(rename = "refresh-token")]
+  #[schema(title = "TokenRequestRefreshToken")]
   RefreshToken { refresh_token: String },
   #[serde(rename = "service-account")]
+  #[schema(title = "TokenRequestServiceAccount")]
   ServiceAccount {
     client_id: uuid::Uuid,
     client_secret: uuid::Uuid,
   },
   #[serde(rename = "authorization-code")]
+  #[schema(title = "TokenRequestAuthorizationCode")]
   AuthorizationCode {
     code: String,
     #[schema(example = "openid")]

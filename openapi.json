@@ -2559,6 +2559,7 @@
         "oneOf": [
           {
             "type": "object",
+            "title": "MFARequestTOTP",
             "required": ["code", "type"],
             "properties": {
               "code": { "type": "string" },
@@ -2567,6 +2568,7 @@
           },
           {
             "type": "object",
+            "title": "MFARequestServiceAccount",
             "required": ["code", "type"],
             "properties": {
               "code": { "type": "string" },
@@ -2898,6 +2900,7 @@
         "oneOf": [
           {
             "type": "object",
+            "title": "TokenRequestPassword",
             "required": ["username", "password", "grant_type"],
             "properties": {
               "grant_type": { "type": "string", "enum": ["password"] },
@@ -2908,6 +2911,7 @@
           },
           {
             "type": "object",
+            "title": "TokenRequestRefreshToken",
             "required": ["refresh_token", "grant_type"],
             "properties": {
               "grant_type": { "type": "string", "enum": ["refresh-token"] },
@@ -2916,6 +2920,7 @@
           },
           {
             "type": "object",
+            "title": "TokenRequestServiceAccount",
             "required": ["client_id", "client_secret", "grant_type"],
             "properties": {
               "client_id": { "type": "string", "format": "uuid" },
@@ -2925,6 +2930,7 @@
           },
           {
             "type": "object",
+            "title": "TokenRequestAuthorizationCode",
             "required": ["code", "grant_type"],
             "properties": {
               "code": { "type": "string" },

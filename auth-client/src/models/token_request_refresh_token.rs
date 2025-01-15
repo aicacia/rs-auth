@@ -12,34 +12,31 @@ use crate::models;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct TokenRequestOneOf2 {
-    #[serde(rename = "client_id")]
-    pub client_id: uuid::Uuid,
-    #[serde(rename = "client_secret")]
-    pub client_secret: uuid::Uuid,
+pub struct TokenRequestRefreshToken {
     #[serde(rename = "grant_type")]
     pub grant_type: GrantType,
+    #[serde(rename = "refresh_token")]
+    pub refresh_token: String,
 }
 
-impl TokenRequestOneOf2 {
-    pub fn new(client_id: uuid::Uuid, client_secret: uuid::Uuid, grant_type: GrantType) -> TokenRequestOneOf2 {
-        TokenRequestOneOf2 {
-            client_id,
-            client_secret,
+impl TokenRequestRefreshToken {
+    pub fn new(grant_type: GrantType, refresh_token: String) -> TokenRequestRefreshToken {
+        TokenRequestRefreshToken {
             grant_type,
+            refresh_token,
         }
     }
 }
 /// 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum GrantType {
-    #[serde(rename = "service-account")]
-    ServiceAccount,
+    #[serde(rename = "refresh-token")]
+    RefreshToken,
 }
 
 impl Default for GrantType {
     fn default() -> GrantType {
-        Self::ServiceAccount
+        Self::RefreshToken
     }
 }
 

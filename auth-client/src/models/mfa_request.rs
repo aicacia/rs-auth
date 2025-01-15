@@ -14,13 +14,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MfaRequest {
-    MfaRequestOneOf(models::MfaRequestOneOf),
-    MfaRequestOneOf1(models::MfaRequestOneOf1),
+    MfaRequestTotp(models::MfaRequestTotp),
+    MfaRequestServiceAccount(models::MfaRequestServiceAccount),
 }
 
 impl Default for MfaRequest {
     fn default() -> Self {
-        Self::MfaRequestOneOf(Default::default())
+        Self::MfaRequestTotp(Default::default())
     }
 }
 /// 

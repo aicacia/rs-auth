@@ -12,34 +12,37 @@ use crate::models;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct TokenRequestOneOf3 {
-    #[serde(rename = "code")]
-    pub code: String,
+pub struct TokenRequestPassword {
     #[serde(rename = "grant_type")]
     pub grant_type: GrantType,
+    #[serde(rename = "password")]
+    pub password: String,
     #[serde(rename = "scope", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub scope: Option<Option<String>>,
+    #[serde(rename = "username")]
+    pub username: String,
 }
 
-impl TokenRequestOneOf3 {
-    pub fn new(code: String, grant_type: GrantType) -> TokenRequestOneOf3 {
-        TokenRequestOneOf3 {
-            code,
+impl TokenRequestPassword {
+    pub fn new(grant_type: GrantType, password: String, username: String) -> TokenRequestPassword {
+        TokenRequestPassword {
             grant_type,
+            password,
             scope: None,
+            username,
         }
     }
 }
 /// 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum GrantType {
-    #[serde(rename = "authorization-code")]
-    AuthorizationCode,
+    #[serde(rename = "password")]
+    Password,
 }
 
 impl Default for GrantType {
     fn default() -> GrantType {
-        Self::AuthorizationCode
+        Self::Password
     }
 }
 
