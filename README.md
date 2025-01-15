@@ -171,3 +171,10 @@ To undeploy the service:
 ```bash
 helm delete -n api auth-api
 ```
+
+## OpenAPI Client
+
+```bash
+rm -rf client
+openapi-generator-cli generate -i ./openapi.json -g rust -o 'client' --additional-properties=library=hyper,bestFitInt=true,avoidBoxedModels=true
+```

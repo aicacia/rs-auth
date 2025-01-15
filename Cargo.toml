@@ -114,6 +114,9 @@ totp-rs = { version = "5.6", default-features = false, features = [
 
 [dev-dependencies]
 
+[workspace]
+members = ["client"]
+
 [profile.dev]
 opt-level = 1
 

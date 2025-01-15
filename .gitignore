@@ -8,3 +8,10 @@
 /auth-dev.*
 /auth-admin-service-account.json
 /values.yaml
+
+# client
+/client/.openapi-generator
+/client/.openapi-generator-ignore
+/client/.travis.yml
+/client/git_push.sh
+/openapitools.json
