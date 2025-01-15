@@ -9,9 +9,9 @@
 /auth-admin-service-account.json
 /values.yaml
 
-# client
-/client/.openapi-generator
-/client/.openapi-generator-ignore
-/client/.travis.yml
-/client/git_push.sh
+# auth-client
+/auth-client/.openapi-generator
+/auth-client/.openapi-generator-ignore
+/auth-client/.travis.yml
+/auth-client/git_push.sh
 /openapitools.json

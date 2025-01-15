@@ -42,7 +42,7 @@ impl Configuration<HttpConnector> {
     /// # Example
     ///
     /// ```
-    /// # use openapi::apis::configuration::Configuration;
+    /// # use auth_client::apis::configuration::Configuration;
     /// let api_config = Configuration {
     ///   basic_auth: Some(("user".into(), None)),
     ///   ..Configuration::new()
@@ -62,7 +62,7 @@ impl<C: Connect> Configuration<C>
     ///
     /// ```
     /// # use core::time::Duration;
-    /// # use openapi::apis::configuration::Configuration;
+    /// # use auth_client::apis::configuration::Configuration;
     /// use hyper_util::client::legacy::Client;
     /// use hyper_util::rt::TokioExecutor;
     ///

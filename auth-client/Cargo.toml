@@ -1,5 +1,5 @@
 [package]
-name = "openapi"
+name = "auth-client"
 version = "0.1.0"
 authors = ["OpenAPI Generator team and contributors"]
 description = "Aicacia Auth API provides authentication services for applications."

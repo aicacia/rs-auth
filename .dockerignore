@@ -1,6 +1,7 @@
 /.cargo/config.toml
 /.github
 /.vscode
+/auth-client
 /helm
 /target/debug
 /target/release
