@@ -1,7 +1,5 @@
 use axum::extract::State;
-use utoipa::openapi::{
-  path::OperationBuilder, HttpMethod, OpenApi as OpenApiSpec, ResponseBuilder,
-};
+use utoipa::openapi::{OpenApi as OpenApiSpec, RefOr, Schema};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 pub const OPENAPI_TAG: &str = "openapi";
@@ -19,20 +17,9 @@ pub async fn get_openapi(State(openapi): State<OpenApiSpec>) -> axum::Json<OpenA
 }
 
 pub fn create_router(mut openapi_spec: OpenApiSpec) -> OpenApiRouter {
-  // TODO: use the description from get_openapi
-  openapi_spec.paths.add_path_operation(
-    "/openapi.json",
-    vec![HttpMethod::Get],
-    OperationBuilder::new()
-      .tag(OPENAPI_TAG)
-      .response(
-        "200",
-        ResponseBuilder::new()
-          .description("OpenApi documenation")
-          .build(),
-      )
-      .build(),
-  );
+  let mut schemas = Vec::<(String, RefOr<Schema>)>::new();
+  let (path, item, types) = routes!(@resolve_types get_openapi : schemas);
+  openapi_spec.paths.add_path_operation(path, types, item);
 
   OpenApiRouter::new()
     .routes(routes!(get_openapi))

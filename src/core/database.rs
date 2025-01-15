@@ -116,16 +116,18 @@ where
 
 pub async fn close_pool() -> Result<(), sqlx::Error> {
   let pool = POOL.take(Ordering::SeqCst).expect("Pool not initialized");
-  let conn = pool.acquire().await?;
-  match conn.backend_name().to_lowercase().as_str() {
-    "sqlite" => {
-      log::info!("Optimizing database");
-      pool
-        .execute("PRAGMA analysis_limit=400; PRAGMA optimize;")
-        .await?;
-      log::info!("Optimized database");
+  {
+    let conn = pool.acquire().await?;
+    match conn.backend_name().to_lowercase().as_str() {
+      "sqlite" => {
+        log::info!("Optimizing database");
+        pool
+          .execute("PRAGMA analysis_limit=400; PRAGMA optimize;")
+          .await?;
+        log::info!("Optimized database");
+      }
+      _ => {}
     }
-    _ => {}
   }
   pool.close().await;
   Ok(())
