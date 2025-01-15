@@ -969,7 +969,49 @@
     "/openapi.json": {
       "get": {
         "tags": ["openapi"],
+        "operationId": "get_openapi",
         "responses": { "200": { "description": "OpenApi documenation" } }
+      }
+    },
+    "/p2p": {
+      "get": {
+        "tags": ["p2p"],
+        "operationId": "p2p",
+        "responses": {
+          "200": {
+            "description": "P2P response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/P2P" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Errors" }
+              }
+            }
+          }
+        },
+        "security": [{ "Authorization": [] }]
       }
     },
     "/register": {
@@ -2533,6 +2575,25 @@
           }
         ]
       },
+      "P2P": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "tenant_id",
+          "ws_uri",
+          "api_uri",
+          "id",
+          "password"
+        ],
+        "properties": {
+          "api_uri": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "id": { "type": "string" },
+          "password": { "type": "string" },
+          "tenant_id": { "type": "integer", "format": "int64" },
+          "ws_uri": { "type": "string" }
+        }
+      },
       "Pagination_ServiceAccount": {
         "type": "object",
         "required": ["has_more", "items"],
@@ -3137,6 +3198,7 @@
     { "name": "util", "description": "Utility endpoints" },
     { "name": "oauth2", "description": "OAuth2 endpoints" },
     { "name": "openapi", "description": "OpenApi endpoints" },
+    { "name": "p2p", "description": "P2P endpoints" },
     { "name": "register", "description": "Register endpoints" },
     { "name": "service-account", "description": "Service Account endpoints" },
     { "name": "oauth2-provider", "description": "OAuth2 Provider endpoints" },
