@@ -51,7 +51,7 @@ utoipa = { version = "5.3", default-features = false, features = [
   "uuid",
   "macros",
 ] }
-utoipa-axum = { version = "0.1", default-features = false }
+utoipa-axum = { version = "0.2", default-features = false }
 
 http = { version = "1.2", default-features = false }
 tower-http = { version = "0.6", default-features = false, features = [
