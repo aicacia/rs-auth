@@ -11,6 +11,7 @@ RUN rustup target add ${TARGET}
 WORKDIR /
 RUN cargo new app && touch /app/src/lib.rs
 WORKDIR /app
+RUN cargo new auth-client && touch /app/auth-client/src/lib.rs
 
 COPY Cargo.toml Cargo.lock ./
 RUN cargo build --target ${TARGET} --release
