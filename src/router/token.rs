@@ -435,7 +435,7 @@ pub(crate) async fn create_user_token(
   let mut refresh_claims = claims.clone();
   refresh_claims.kind = TOKEN_TYPE_REFRESH.to_owned();
   refresh_claims.exp = refresh_claims.iat + tenant.refresh_expires_in_seconds;
-  let refresh_token = match claims.encode(&tenant) {
+  let refresh_token = match refresh_claims.encode(&tenant) {
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
