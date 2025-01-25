@@ -1,6 +1,6 @@
 use rand::distributions::{Alphanumeric, DistString};
 
-use crate::core::{database::run_transaction, encryption::encrypt_password};
+use crate::core::{config::Config, database::run_transaction, encryption::encrypt_password};
 
 use super::user_info::UserInfoUpdate;
 
@@ -140,9 +140,10 @@ pub struct CreateUserWithPassword {
 
 pub async fn create_user_with_password(
   pool: &sqlx::AnyPool,
+  config: &Config,
   params: CreateUserWithPassword,
 ) -> sqlx::Result<UserRow> {
-  let encrypted_password = match encrypt_password(&params.password) {
+  let encrypted_password = match encrypt_password(config, &params.password) {
     Ok(encrypted_password) => encrypted_password,
     Err(e) => {
       return Err(sqlx::Error::Encode(

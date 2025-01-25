@@ -1,10 +1,10 @@
 use crate::{
-  core::{
-    config::get_config,
-    error::{Errors, INTERNAL_ERROR, NOT_ALLOWED_ERROR},
-  },
+  core::error::{Errors, INTERNAL_ERROR, NOT_ALLOWED_ERROR},
   middleware::{openid_claims::SCOPE_OPENID, tenant_id::TenantId, validated_json::ValidatedJson},
-  model::{register::RegisterUser, token::TOKEN_ISSUED_TYPE_REGISTER, user::User},
+  model::{
+    register::RegisterUser,
+    token::{Token, TOKEN_ISSUED_TYPE_REGISTER},
+  },
   repository::user::{create_user_with_password, CreateUserWithPassword},
 };
 
@@ -22,7 +22,7 @@ pub const REGISTER_TAG: &str = "register";
   tags = [REGISTER_TAG],
   request_body = RegisterUser,
   responses(
-    (status = 201, content_type = "application/json", body = User),
+    (status = 201, content_type = "application/json", body = Token),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -36,13 +36,14 @@ pub async fn register_user(
   TenantId(tenant): TenantId,
   ValidatedJson(payload): ValidatedJson<RegisterUser>,
 ) -> impl IntoResponse {
-  if !get_config().user.register_enabled {
+  if !state.config.user.register_enabled {
     return Errors::from(StatusCode::FORBIDDEN)
       .with_application_error(NOT_ALLOWED_ERROR)
       .into_response();
   }
   let new_user = match create_user_with_password(
     &state.pool,
+    state.config.as_ref(),
     CreateUserWithPassword {
       username: payload.username,
       password: payload.password,

@@ -135,15 +135,16 @@ pub async fn create_service_account(
 ) -> impl IntoResponse {
   let client_id = payload.client_id.unwrap_or_else(uuid::Uuid::new_v4);
   let client_secret = payload.client_secret.unwrap_or_else(uuid::Uuid::new_v4);
-  let encrypted_client_secret = match encryption::encrypt_password(&client_secret.to_string()) {
-    Ok(encrypted_client_secret) => encrypted_client_secret,
-    Err(e) => {
-      log::error!("error encrypting client_secret: {}", e);
-      return Errors::internal_error()
-        .with_application_error(INTERNAL_ERROR)
-        .into_response();
-    }
-  };
+  let encrypted_client_secret =
+    match encryption::encrypt_password(state.config.as_ref(), &client_secret.to_string()) {
+      Ok(encrypted_client_secret) => encrypted_client_secret,
+      Err(e) => {
+        log::error!("error encrypting client_secret: {}", e);
+        return Errors::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
   let row = match repository::service_account::create_service_account(
     &state.pool,
     repository::service_account::CreateServiceAccount {
@@ -196,15 +197,16 @@ pub async fn update_service_account(
     params.client_id = Some(client_id.to_string().to_owned());
   }
   if let Some(client_secret) = payload.client_secret {
-    let encrypted_client_secret = match encryption::encrypt_password(&client_secret.to_string()) {
-      Ok(encrypted_client_secret) => encrypted_client_secret,
-      Err(e) => {
-        log::error!("error encrypting client_secret: {}", e);
-        return Errors::internal_error()
-          .with_application_error(INTERNAL_ERROR)
-          .into_response();
-      }
-    };
+    let encrypted_client_secret =
+      match encryption::encrypt_password(state.config.as_ref(), &client_secret.to_string()) {
+        Ok(encrypted_client_secret) => encrypted_client_secret,
+        Err(e) => {
+          log::error!("error encrypting client_secret: {}", e);
+          return Errors::internal_error()
+            .with_application_error(INTERNAL_ERROR)
+            .into_response();
+        }
+      };
     params.encrypted_client_secret = Some(encrypted_client_secret);
   }
   let row = match repository::service_account::update_service_account(

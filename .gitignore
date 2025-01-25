@@ -1,12 +1,14 @@
+/.cargo/config.toml
 /.vscode
 /target
 /.cargo/config.toml
 /.env
-/!.env.example
+/!.env.test
 /config.json
-/!config.json.example
-/auth-dev.*
+/!config.test.json
+/tests/.dbs/
 /auth-admin-service-account.json
+/auth-*.db*
 /values.yaml
 
 # auth-client

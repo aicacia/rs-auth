@@ -5,10 +5,19 @@
 /helm
 /target/debug
 /target/release
-/.env*
+/.env
+/!.env.test
 /config.json
-/!config.json.example
-/auth-dev.*
+/!config.test.json
+/tests/.dbs/
 /auth-admin-service-account.json
+/auth-*.db*
 /docker-compose.yaml
 /values.yaml
+
+# auth-client
+/auth-client/.openapi-generator
+/auth-client/.openapi-generator-ignore
+/auth-client/.travis.yml
+/auth-client/git_push.sh
+/openapitools.json

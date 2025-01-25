@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 use crate::core::{
-  config::get_config,
+  config::Config,
   database::run_transaction,
   encryption::{encrypt_password, verify_password},
 };
@@ -40,10 +42,11 @@ pub async fn get_user_active_password_by_user_id(
 
 pub async fn create_user_password(
   pool: &sqlx::AnyPool,
+  config: Arc<Config>,
   user_id: i64,
   password: &str,
 ) -> sqlx::Result<UserPasswordRow> {
-  let encrypted_password = match encrypt_password(password) {
+  let encrypted_password = match encrypt_password(config.as_ref(), password) {
     Ok(encrypted_password) => encrypted_password,
     Err(e) => {
       return Err(sqlx::Error::Encode(
@@ -62,7 +65,7 @@ pub async fn create_user_password(
             LIMIT $2;"#,
       )
       .bind(user_id)
-      .bind(get_config().password.history as i64)
+      .bind(config.password.history as i64)
       .fetch_all(&mut **transaction)
       .await?;
 

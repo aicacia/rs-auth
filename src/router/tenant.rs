@@ -81,9 +81,10 @@ pub async fn all_tenants(
         .remove(&tenant.id)
         .unwrap_or_default()
       {
-        tenant
-          .oauth2_providers
-          .push(TenantOAuth2Provider::from(oauth2_provider));
+        tenant.oauth2_providers.push(TenantOAuth2Provider::from((
+          state.config.as_ref(),
+          oauth2_provider,
+        )));
       }
       if show_private_key {
         tenant.private_key = Some(private_key);
@@ -156,7 +157,9 @@ pub async fn get_tenant_by_client_id(
   let private_key = row.private_key.clone();
   let mut tenant = Tenant::from(row);
   for oauth2_provider in oauth2_providers {
-    tenant.oauth2_providers.push(oauth2_provider.into());
+    tenant
+      .oauth2_providers
+      .push((state.config.as_ref(), oauth2_provider).into());
   }
   if query.show_private_key.unwrap_or(false) {
     tenant.private_key = Some(private_key);
@@ -211,7 +214,9 @@ pub async fn get_tenant_by_id(
   let private_key = row.private_key.clone();
   let mut tenant = Tenant::from(row);
   for oauth2_provider in oauth2_providers {
-    tenant.oauth2_providers.push(oauth2_provider.into());
+    tenant
+      .oauth2_providers
+      .push((state.config.as_ref(), oauth2_provider).into());
   }
   if query.show_private_key.unwrap_or(false) {
     tenant.private_key = Some(private_key);

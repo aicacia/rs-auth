@@ -7,7 +7,7 @@ use crate::{
   model::p2p::P2P,
 };
 
-use axum::response::IntoResponse;
+use axum::{extract::State, response::IntoResponse};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
@@ -28,7 +28,10 @@ pub const P2P_TAG: &str = "p2p";
     ("Authorization" = [])
   )
 )]
-pub async fn p2p(Authorization { claims, .. }: Authorization) -> impl IntoResponse {
+pub async fn p2p(
+  State(state): State<RouterState>,
+  Authorization { claims, .. }: Authorization,
+) -> impl IntoResponse {
   if claims.kind != TOKEN_TYPE_BEARER
     || (claims.sub_kind != TOKEN_SUB_TYPE_USER && claims.sub_kind != TOKEN_SUB_TYPE_SERVICE_ACCOUNT)
   {
@@ -36,7 +39,7 @@ pub async fn p2p(Authorization { claims, .. }: Authorization) -> impl IntoRespon
       .with_error(AUTHORIZATION_HEADER, "invalid-token-type")
       .into_response();
   }
-  axum::Json(P2P::default()).into_response()
+  axum::Json(P2P::new(state.config.as_ref())).into_response()
 }
 
 pub fn create_router(state: RouterState) -> OpenApiRouter {

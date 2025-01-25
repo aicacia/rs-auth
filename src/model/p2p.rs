@@ -1,7 +1,7 @@
 use serde::Serialize;
 use utoipa::ToSchema;
 
-use crate::core::config::get_config;
+use crate::core::config::Config;
 
 #[derive(Serialize, ToSchema)]
 pub struct P2P {
@@ -13,9 +13,8 @@ pub struct P2P {
   pub password: String,
 }
 
-impl Default for P2P {
-  fn default() -> Self {
-    let config = get_config();
+impl P2P {
+  pub fn new(config: &Config) -> Self {
     Self {
       enabled: config.p2p.enabled,
       tenant_id: config.p2p.tenant_id,

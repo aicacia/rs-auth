@@ -1,25 +1,6 @@
-use atomicoption::AtomicOption;
 use config::ConfigError;
 use serde::Deserialize;
-use std::{
-  net::IpAddr,
-  sync::{atomic::Ordering, Arc},
-};
-
-static CONFIG: AtomicOption<Arc<Config>> = AtomicOption::none();
-
-pub async fn init_config(config_path: &str) -> Result<Arc<Config>, ConfigError> {
-  let config = Arc::new(Config::new(config_path).await?);
-  CONFIG.store(Ordering::SeqCst, config.clone());
-  Ok(config)
-}
-
-pub fn get_config() -> Arc<Config> {
-  CONFIG
-    .as_ref(Ordering::Relaxed)
-    .expect("Config not initialized")
-    .clone()
-}
+use std::net::IpAddr;
 
 #[derive(Debug, Deserialize)]
 pub struct ServerConfig {

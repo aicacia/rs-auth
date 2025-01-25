@@ -2,7 +2,6 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::{
   core::{
-    config::get_config,
     error::{Errors, ALREADY_USED_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
     openapi::AUTHORIZATION_HEADER,
   },
@@ -231,7 +230,7 @@ pub async fn create_current_user_add_oauth2_provider_url(
           .into_response();
       }
     };
-  let basic_client = match tenant_oauth2_provider.basic_client() {
+  let basic_client = match tenant_oauth2_provider.basic_client(state.config.as_ref()) {
     Ok(client) => client,
     Err(e) => {
       log::error!("Error getting basic client: {}", e);
@@ -241,6 +240,7 @@ pub async fn create_current_user_add_oauth2_provider_url(
     }
   };
   let (url, csrf_token, pkce_code_verifier) = match oauth2_authorize_url(
+    state.config.as_ref(),
     &basic_client,
     &tenant,
     false,
@@ -263,7 +263,7 @@ pub async fn create_current_user_add_oauth2_provider_url(
       map.insert(
         csrf_token.secret().to_owned(),
         pkce_code_verifier,
-        Duration::from_secs(get_config().oauth2.code_timeout_in_seconds),
+        Duration::from_secs(state.config.oauth2.code_timeout_in_seconds),
       );
     }
     Err(e) => {
@@ -330,7 +330,14 @@ pub async fn reset_current_user_password(
     }
   }
 
-  match create_user_password(&state.pool, user_id, &payload.password).await {
+  match create_user_password(
+    &state.pool,
+    state.config.clone(),
+    user_id,
+    &payload.password,
+  )
+  .await
+  {
     Ok(_) => {}
     Err(e) => {
       match &e {
@@ -343,7 +350,7 @@ pub async fn reset_current_user_password(
                   ALREADY_USED_ERROR,
                   HashMap::from([(
                     "password.history".to_owned(),
-                    json!(get_config().password.history),
+                    json!(state.config.password.history),
                   )]),
                 ),
               )

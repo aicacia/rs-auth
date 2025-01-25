@@ -3,7 +3,7 @@ use std::{io, str::FromStr};
 use utoipa::IntoParams;
 
 use crate::{
-  core::config::get_config,
+  core::config::Config,
   middleware::{claims::tenant_encoding_key, openid_claims::OpenIdProfile},
   repository::{tenant::TenantRow, tenant_oauth2_provider::TenantOAuth2ProviderRow},
 };
@@ -30,9 +30,9 @@ pub struct OAuth2State {
 }
 
 impl OAuth2State {
-  pub fn new(tenant_id: i64, register: bool, user_id: Option<i64>) -> Self {
+  pub fn new(config: &Config, tenant_id: i64, register: bool, user_id: Option<i64>) -> Self {
     Self {
-      exp: chrono::Utc::now().timestamp() + (get_config().oauth2.code_timeout_in_seconds as i64),
+      exp: chrono::Utc::now().timestamp() + (config.oauth2.code_timeout_in_seconds as i64),
       tenant_id,
       register: register,
       user_id: user_id,
@@ -52,6 +52,7 @@ impl OAuth2State {
 }
 
 pub fn oauth2_authorize_url<I>(
+  config: &Config,
   client: &oauth2::basic::BasicClient,
   tenant: &TenantRow,
   register: bool,
@@ -70,7 +71,7 @@ where
 {
   let (pkce_code_challenge, pkce_code_verifier) = oauth2::PkceCodeChallenge::new_random_sha256();
 
-  let oauth2_state = OAuth2State::new(tenant.id, register, user_id);
+  let oauth2_state = OAuth2State::new(config, tenant.id, register, user_id);
   let oauth2_state_token = match oauth2_state.encode(tenant) {
     Ok(t) => t,
     Err(err) => return Err(io::Error::new(io::ErrorKind::InvalidData, err)),

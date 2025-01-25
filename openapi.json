@@ -3,20 +3,14 @@
   "info": {
     "title": "auth",
     "description": "Aicacia Auth API provides authentication services for applications.",
-    "contact": {
-      "name": "nathanfaucett@gmail.com"
-    },
+    "contact": { "name": "nathanfaucett@gmail.com" },
     "license": {
       "name": "MIT OR Apache-2.0",
       "identifier": "https://spdx.org/licenses/MIT.html"
     },
     "version": "0.1.0"
   },
-  "servers": [
-    {
-      "url": "http://localhost:3000"
-    }
-  ],
+  "servers": [{ "url": "http://localhost:3000" }],
   "paths": {
     "/current-user": {
       "get": {
@@ -27,9 +21,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
+                "schema": { "$ref": "#/components/schemas/User" }
               }
             }
           },
@@ -37,9 +29,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -47,18 +37,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "put": {
         "tags": ["current-user"],
@@ -66,24 +50,18 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUsername"
-              }
+              "schema": { "$ref": "#/components/schemas/UpdateUsername" }
             }
           },
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -91,9 +69,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -101,33 +77,23 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "delete": {
         "tags": ["current-user"],
         "operationId": "deactivate_current_user",
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -135,9 +101,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -145,18 +109,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/config": {
@@ -174,16 +132,12 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -191,9 +145,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -201,9 +153,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -211,18 +161,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/emails": {
@@ -232,9 +176,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateUserEmail"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateUserEmail" }
             }
           },
           "required": true
@@ -244,9 +186,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserEmail"
-                }
+                "schema": { "$ref": "#/components/schemas/UserEmail" }
               }
             }
           },
@@ -254,9 +194,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -264,9 +202,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -274,9 +210,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -284,18 +218,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/emails/{email_id}": {
@@ -308,23 +236,16 @@
             "in": "path",
             "description": "Email ID to delete",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -332,9 +253,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -342,9 +261,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -352,18 +269,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/emails/{email_id}/set-as-primary": {
@@ -376,23 +287,16 @@
             "in": "path",
             "description": "Email ID to set as primary",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -400,9 +304,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -410,9 +312,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -420,18 +320,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/info": {
@@ -441,24 +335,18 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserInfoRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/UpdateUserInfoRequest" }
             }
           },
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -466,9 +354,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -476,18 +362,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/oauth2/{provider}": {
@@ -500,30 +380,20 @@
             "in": "path",
             "description": "OAuth2 provider",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "schema": { "type": "string" },
             "example": "google"
           }
         ],
         "responses": {
           "200": {
             "description": "",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
+            "content": { "text/plain": { "schema": { "type": "string" } } }
           },
           "401": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -531,18 +401,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/phone-numbers": {
@@ -552,9 +416,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateUserPhoneNumber"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateUserPhoneNumber" }
             }
           },
           "required": true
@@ -564,9 +426,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserPhoneNumber"
-                }
+                "schema": { "$ref": "#/components/schemas/UserPhoneNumber" }
               }
             }
           },
@@ -574,9 +434,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -584,9 +442,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -594,9 +450,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -604,18 +458,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/phone-numbers/{phone_number_id}": {
@@ -628,23 +476,16 @@
             "in": "path",
             "description": "PhoneNumber ID to delete",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -652,9 +493,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -662,9 +501,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -672,18 +509,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/phone-numbers/{phone_number_id}/set-as-primary": {
@@ -696,23 +527,16 @@
             "in": "path",
             "description": "PhoneNumber ID to set as primary",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -720,9 +544,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -730,9 +552,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -740,18 +560,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/reset-password": {
@@ -761,24 +575,18 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResetPasswordRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/ResetPasswordRequest" }
             }
           },
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -786,9 +594,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -796,18 +602,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/current-user/totp": {
@@ -817,9 +617,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTOTPRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateTOTPRequest" }
             }
           },
           "required": true
@@ -829,9 +627,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserTOTP"
-                }
+                "schema": { "$ref": "#/components/schemas/UserTOTP" }
               }
             }
           },
@@ -839,9 +635,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -849,9 +643,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -859,9 +651,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -869,33 +659,23 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "delete": {
         "tags": ["current-user"],
         "operationId": "delete_current_user_totp",
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "401": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -903,9 +683,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -913,18 +691,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/health": {
@@ -936,9 +708,7 @@
             "description": "Health check response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Health"
-                }
+                "schema": { "$ref": "#/components/schemas/Health" }
               }
             }
           },
@@ -946,9 +716,7 @@
             "description": "Health check response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Health"
-                }
+                "schema": { "$ref": "#/components/schemas/Health" }
               }
             }
           }
@@ -967,9 +735,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": {},
-                  "propertyNames": {
-                    "type": "string"
-                  }
+                  "propertyNames": { "type": "string" }
                 }
               }
             }
@@ -978,9 +744,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -988,9 +752,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -998,21 +760,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "TenantUUID": []
-          },
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "TenantUUID": [] }, { "Authorization": [] }]
       },
       "post": {
         "tags": ["jwt"],
@@ -1020,9 +773,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JWTRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/JWTRequest" }
             }
           },
           "required": true
@@ -1030,21 +781,13 @@
         "responses": {
           "201": {
             "description": "",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
+            "content": { "text/plain": { "schema": { "type": "string" } } }
           },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1052,9 +795,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1062,18 +803,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/mfa": {
@@ -1083,9 +818,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MFARequest"
-              }
+              "schema": { "$ref": "#/components/schemas/MFARequest" }
             }
           },
           "required": true
@@ -1095,9 +828,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Token"
-                }
+                "schema": { "$ref": "#/components/schemas/Token" }
               }
             }
           },
@@ -1105,9 +836,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1115,9 +844,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1125,18 +852,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/oauth2/{provider}": {
@@ -1149,38 +870,26 @@
             "in": "path",
             "description": "OAuth2 provider",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "schema": { "type": "string" },
             "example": "google"
           },
           {
             "name": "register",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["boolean", "null"]
-            }
+            "schema": { "type": ["boolean", "null"] }
           }
         ],
         "responses": {
           "200": {
             "description": "",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
+            "content": { "text/plain": { "schema": { "type": "string" } } }
           },
           "401": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1188,18 +897,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "TenantUUID": []
-          }
-        ]
+        "security": [{ "TenantUUID": [] }]
       }
     },
     "/oauth2/{provider}/callback": {
@@ -1212,47 +915,35 @@
             "in": "path",
             "description": "OAuth2 provider",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "schema": { "type": "string" },
             "example": "google"
           },
           {
             "name": "state",
             "in": "query",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           },
           {
             "name": "code",
             "in": "query",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           },
           {
             "name": "scope",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["string", "null"]
-            }
+            "schema": { "type": ["string", "null"] }
           }
         ],
         "responses": {
-          "302": {
-            "description": ""
-          },
+          "302": { "description": "" },
           "401": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1260,9 +951,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1270,9 +959,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
@@ -1283,11 +970,7 @@
       "get": {
         "tags": ["openapi"],
         "operationId": "get_openapi",
-        "responses": {
-          "200": {
-            "description": "OpenApi documenation"
-          }
-        }
+        "responses": { "200": { "description": "OpenApi documenation" } }
       }
     },
     "/p2p": {
@@ -1299,9 +982,7 @@
             "description": "P2P response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/P2P"
-                }
+                "schema": { "$ref": "#/components/schemas/P2P" }
               }
             }
           },
@@ -1309,9 +990,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1319,9 +998,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1329,18 +1006,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/register": {
@@ -1350,9 +1021,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterUser"
-              }
+              "schema": { "$ref": "#/components/schemas/RegisterUser" }
             }
           },
           "required": true
@@ -1362,9 +1031,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
+                "schema": { "$ref": "#/components/schemas/Token" }
               }
             }
           },
@@ -1372,9 +1039,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1382,9 +1047,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1392,18 +1055,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "TenantUUID": []
-          }
-        ]
+        "security": [{ "TenantUUID": [] }]
       }
     },
     "/service-accounts": {
@@ -1415,19 +1072,13 @@
             "name": "offset",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["integer", "null"],
-              "minimum": 0
-            }
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
           },
           {
             "name": "limit",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["integer", "null"],
-              "minimum": 0
-            }
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
           }
         ],
         "responses": {
@@ -1445,9 +1096,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1455,18 +1104,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "post": {
         "tags": ["service-account"],
@@ -1474,9 +1117,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateServiceAccount"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateServiceAccount" }
             }
           },
           "required": true
@@ -1486,9 +1127,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServiceAccount"
-                }
+                "schema": { "$ref": "#/components/schemas/ServiceAccount" }
               }
             }
           },
@@ -1496,9 +1135,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1506,9 +1143,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1516,18 +1151,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/service-accounts/{service_account_id}": {
@@ -1540,10 +1169,7 @@
             "in": "path",
             "description": "ServiceAccount ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
@@ -1551,9 +1177,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServiceAccount"
-                }
+                "schema": { "$ref": "#/components/schemas/ServiceAccount" }
               }
             }
           },
@@ -1561,9 +1185,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1571,9 +1193,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1581,18 +1201,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "put": {
         "tags": ["service-account"],
@@ -1603,18 +1217,13 @@
             "in": "path",
             "description": "ServiceAccount ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateServiceAccount"
-              }
+              "schema": { "$ref": "#/components/schemas/UpdateServiceAccount" }
             }
           },
           "required": true
@@ -1624,9 +1233,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServiceAccount"
-                }
+                "schema": { "$ref": "#/components/schemas/ServiceAccount" }
               }
             }
           },
@@ -1634,9 +1241,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1644,9 +1249,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1654,18 +1257,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/tenants": {
@@ -1677,27 +1274,19 @@
             "name": "offset",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["integer", "null"],
-              "minimum": 0
-            }
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
           },
           {
             "name": "limit",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["integer", "null"],
-              "minimum": 0
-            }
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
           },
           {
             "name": "show_private_key",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["boolean", "null"]
-            }
+            "schema": { "type": ["boolean", "null"] }
           }
         ],
         "responses": {
@@ -1705,9 +1294,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Pagination_Tenant"
-                }
+                "schema": { "$ref": "#/components/schemas/Pagination_Tenant" }
               }
             }
           },
@@ -1715,9 +1302,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1725,18 +1310,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "post": {
         "tags": ["tenant"],
@@ -1744,9 +1323,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTenant"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateTenant" }
             }
           },
           "required": true
@@ -1756,9 +1333,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Tenant"
-                }
+                "schema": { "$ref": "#/components/schemas/Tenant" }
               }
             }
           },
@@ -1766,9 +1341,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1776,9 +1349,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1786,18 +1357,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/tenants/by-client-id/{tenant_client_id}": {
@@ -1810,18 +1375,13 @@
             "in": "path",
             "description": "Tenant ID",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "show_private_key",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["boolean", "null"]
-            }
+            "schema": { "type": ["boolean", "null"] }
           }
         ],
         "responses": {
@@ -1829,9 +1389,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Tenant"
-                }
+                "schema": { "$ref": "#/components/schemas/Tenant" }
               }
             }
           },
@@ -1839,9 +1397,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1849,9 +1405,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1859,18 +1413,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/tenants/{tenant_id}": {
@@ -1883,18 +1431,13 @@
             "in": "path",
             "description": "Tenant ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           },
           {
             "name": "show_private_key",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["boolean", "null"]
-            }
+            "schema": { "type": ["boolean", "null"] }
           }
         ],
         "responses": {
@@ -1902,9 +1445,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Tenant"
-                }
+                "schema": { "$ref": "#/components/schemas/Tenant" }
               }
             }
           },
@@ -1912,9 +1453,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1922,9 +1461,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1932,18 +1469,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "put": {
         "tags": ["tenant"],
@@ -1954,18 +1485,13 @@
             "in": "path",
             "description": "Tenant ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTenant"
-              }
+              "schema": { "$ref": "#/components/schemas/UpdateTenant" }
             }
           },
           "required": true
@@ -1975,9 +1501,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Tenant"
-                }
+                "schema": { "$ref": "#/components/schemas/Tenant" }
               }
             }
           },
@@ -1985,9 +1509,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -1995,9 +1517,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2005,18 +1525,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "delete": {
         "tags": ["tenant"],
@@ -2027,23 +1541,16 @@
             "in": "path",
             "description": "Tenant ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "401": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2051,9 +1558,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2061,18 +1566,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/tenants/{tenant_id}/oauth2-providers": {
@@ -2085,10 +1584,7 @@
             "in": "path",
             "description": "Tenant ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "requestBody": {
@@ -2116,9 +1612,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2126,9 +1620,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2136,9 +1628,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2146,9 +1636,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2156,18 +1644,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}": {
@@ -2180,20 +1662,14 @@
             "in": "path",
             "description": "Tenant ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           },
           {
             "name": "tenant_oauht2_provider_id",
             "in": "path",
             "description": "OAuth2 Provider ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "requestBody": {
@@ -2207,16 +1683,12 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2224,9 +1696,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2234,9 +1704,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2244,18 +1712,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "delete": {
         "tags": ["oauth2-provider"],
@@ -2266,33 +1728,23 @@
             "in": "path",
             "description": "Tenant ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           },
           {
             "name": "tenant_oauht2_provider_id",
             "in": "path",
             "description": "OAuth2 Provider ID",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2300,9 +1752,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2310,9 +1760,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2320,18 +1768,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/token": {
@@ -2341,9 +1783,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TokenRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/TokenRequest" }
             }
           },
           "required": true
@@ -2353,9 +1793,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Token"
-                }
+                "schema": { "$ref": "#/components/schemas/Token" }
               }
             }
           },
@@ -2363,9 +1801,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2373,9 +1809,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2383,9 +1817,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2393,18 +1825,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "TenantUUID": []
-          }
-        ]
+        "security": [{ "TenantUUID": [] }]
       }
     },
     "/users": {
@@ -2416,19 +1842,13 @@
             "name": "offset",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["integer", "null"],
-              "minimum": 0
-            }
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
           },
           {
             "name": "limit",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": ["integer", "null"],
-              "minimum": 0
-            }
+            "schema": { "type": ["integer", "null"], "minimum": 0 }
           }
         ],
         "responses": {
@@ -2436,9 +1856,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Pagination_User"
-                }
+                "schema": { "$ref": "#/components/schemas/Pagination_User" }
               }
             }
           },
@@ -2446,9 +1864,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2456,18 +1872,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "post": {
         "tags": ["users"],
@@ -2475,9 +1885,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateUser"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateUser" }
             }
           },
           "required": true
@@ -2487,9 +1895,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
+                "schema": { "$ref": "#/components/schemas/User" }
               }
             }
           },
@@ -2497,9 +1903,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2507,9 +1911,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2517,18 +1919,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/users/{user_id}": {
@@ -2541,10 +1937,7 @@
             "in": "path",
             "description": "User id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
@@ -2552,9 +1945,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Pagination_User"
-                }
+                "schema": { "$ref": "#/components/schemas/Pagination_User" }
               }
             }
           },
@@ -2562,9 +1953,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2572,9 +1961,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2582,18 +1969,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/users/{user_id}/emails": {
@@ -2606,10 +1987,7 @@
             "in": "path",
             "description": "User id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "requestBody": {
@@ -2627,9 +2005,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserEmail"
-                }
+                "schema": { "$ref": "#/components/schemas/UserEmail" }
               }
             }
           },
@@ -2637,9 +2013,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2647,9 +2021,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2657,9 +2029,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2667,18 +2037,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/users/{user_id}/emails/{email_id}": {
@@ -2691,20 +2055,14 @@
             "in": "path",
             "description": "User id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           },
           {
             "name": "email_id",
             "in": "path",
             "description": "Email id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "requestBody": {
@@ -2718,16 +2076,12 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2735,9 +2089,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2745,18 +2097,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "delete": {
         "tags": ["user"],
@@ -2767,33 +2113,23 @@
             "in": "path",
             "description": "User id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           },
           {
             "name": "email_id",
             "in": "path",
             "description": "Email id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2801,9 +2137,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2811,18 +2145,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/users/{user_id}/phone-numbers/{phone_number_id}": {
@@ -2835,20 +2163,14 @@
             "in": "path",
             "description": "User id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           },
           {
             "name": "phone_number_id",
             "in": "path",
             "description": "PhoneNumber id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "requestBody": {
@@ -2862,16 +2184,12 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2879,9 +2197,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2889,18 +2205,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       },
       "delete": {
         "tags": ["user"],
@@ -2911,33 +2221,23 @@
             "in": "path",
             "description": "User id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           },
           {
             "name": "phone_number_id",
             "in": "path",
             "description": "PhoneNumber id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "responses": {
-          "204": {
-            "description": ""
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2945,9 +2245,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -2955,18 +2253,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/users/{user_id}/phone_numbers": {
@@ -2979,10 +2271,7 @@
             "in": "path",
             "description": "User id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "requestBody": {
@@ -3000,9 +2289,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserPhoneNumber"
-                }
+                "schema": { "$ref": "#/components/schemas/UserPhoneNumber" }
               }
             }
           },
@@ -3010,9 +2297,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -3020,9 +2305,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -3030,9 +2313,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -3040,18 +2321,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/users/{user_id}/reset-password": {
@@ -3064,18 +2339,13 @@
             "in": "path",
             "description": "User id",
             "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+            "schema": { "type": "integer", "format": "int64" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserResetPassword"
-              }
+              "schema": { "$ref": "#/components/schemas/UserResetPassword" }
             }
           },
           "required": true
@@ -3085,9 +2355,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Token"
-                }
+                "schema": { "$ref": "#/components/schemas/Token" }
               }
             }
           },
@@ -3095,9 +2363,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -3105,9 +2371,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           },
@@ -3115,18 +2379,12 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Errors"
-                }
+                "schema": { "$ref": "#/components/schemas/Errors" }
               }
             }
           }
         },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
+        "security": [{ "Authorization": [] }]
       }
     },
     "/version": {
@@ -3138,9 +2396,7 @@
             "description": "Version response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Version"
-                }
+                "schema": { "$ref": "#/components/schemas/Version" }
               }
             }
           }
@@ -3172,26 +2428,15 @@
         "type": "object",
         "required": ["name"],
         "properties": {
-          "client_id": {
-            "type": ["string", "null"],
-            "format": "uuid"
-          },
-          "client_secret": {
-            "type": ["string", "null"],
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          }
+          "client_id": { "type": ["string", "null"], "format": "uuid" },
+          "client_secret": { "type": ["string", "null"], "format": "uuid" },
+          "name": { "type": "string" }
         }
       },
       "CreateTOTPRequest": {
         "type": "object",
         "properties": {
-          "algorithm": {
-            "type": ["string", "null"],
-            "example": "SHA1"
-          },
+          "algorithm": { "type": ["string", "null"], "example": "SHA1" },
           "digits": {
             "type": ["integer", "null"],
             "format": "int64",
@@ -3210,37 +2455,20 @@
         "properties": {
           "algorithm": {
             "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Algorithm"
-              }
+              { "type": "null" },
+              { "$ref": "#/components/schemas/Algorithm" }
             ]
           },
-          "audience": {
-            "type": "string",
-            "example": "https://example.com"
-          },
-          "client_id": {
-            "type": ["string", "null"],
-            "format": "uuid"
-          },
+          "audience": { "type": "string", "example": "https://example.com" },
+          "client_id": { "type": ["string", "null"], "format": "uuid" },
           "expires_in_seconds": {
             "type": ["integer", "null"],
             "format": "int64",
             "example": "86400"
           },
-          "issuer": {
-            "type": "string",
-            "example": "Example"
-          },
-          "private_key": {
-            "type": ["string", "null"]
-          },
-          "public_key": {
-            "type": ["string", "null"]
-          },
+          "issuer": { "type": "string", "example": "Example" },
+          "private_key": { "type": ["string", "null"] },
+          "public_key": { "type": ["string", "null"] },
           "refresh_expires_in_seconds": {
             "type": ["integer", "null"],
             "format": "int64",
@@ -3252,83 +2480,49 @@
         "type": "object",
         "required": ["provider", "client_id", "client_secret", "redirect_url"],
         "properties": {
-          "auth_url": {
-            "type": ["string", "null"]
-          },
-          "callback_url": {
-            "type": ["string", "null"]
-          },
-          "client_id": {
-            "type": "string"
-          },
-          "client_secret": {
-            "type": "string"
-          },
-          "provider": {
-            "type": "string"
-          },
-          "redirect_url": {
-            "type": "string"
-          },
-          "scope": {
-            "type": ["string", "null"]
-          },
-          "token_url": {
-            "type": ["string", "null"]
-          }
+          "auth_url": { "type": ["string", "null"] },
+          "callback_url": { "type": ["string", "null"] },
+          "client_id": { "type": "string" },
+          "client_secret": { "type": "string" },
+          "provider": { "type": "string" },
+          "redirect_url": { "type": "string" },
+          "scope": { "type": ["string", "null"] },
+          "token_url": { "type": ["string", "null"] }
         }
       },
       "CreateUser": {
         "type": "object",
         "required": ["username", "active"],
         "properties": {
-          "active": {
-            "type": "boolean"
-          },
-          "username": {
-            "type": "string"
-          }
+          "active": { "type": "boolean" },
+          "username": { "type": "string" }
         }
       },
       "CreateUserEmail": {
         "type": "object",
         "required": ["email"],
-        "properties": {
-          "email": {
-            "type": "string"
-          }
-        }
+        "properties": { "email": { "type": "string" } }
       },
       "CreateUserPhoneNumber": {
         "type": "object",
         "required": ["phone_number"],
-        "properties": {
-          "phone_number": {
-            "type": "string"
-          }
-        }
+        "properties": { "phone_number": { "type": "string" } }
       },
       "ErrorMessage": {
         "type": "object",
         "required": ["code", "parameters"],
         "properties": {
-          "code": {
-            "type": "string"
-          },
+          "code": { "type": "string" },
           "parameters": {
             "type": "object",
             "additionalProperties": {},
-            "propertyNames": {
-              "type": "string"
-            }
+            "propertyNames": { "type": "string" }
           }
         }
       },
       "ErrorMessages": {
         "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/ErrorMessage"
-        }
+        "items": { "$ref": "#/components/schemas/ErrorMessage" }
       },
       "Errors": {
         "type": "object",
@@ -3339,25 +2533,15 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/ErrorMessages"
             },
-            "propertyNames": {
-              "type": "string"
-            }
+            "propertyNames": { "type": "string" }
           },
-          "status_code": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          }
+          "status_code": { "type": "integer", "format": "int32", "minimum": 0 }
         }
       },
       "Health": {
         "type": "object",
         "required": ["db"],
-        "properties": {
-          "db": {
-            "type": "boolean"
-          }
-        }
+        "properties": { "db": { "type": "boolean" } }
       },
       "JWTRequest": {
         "type": "object",
@@ -3366,14 +2550,9 @@
           "claims": {
             "type": "object",
             "additionalProperties": {},
-            "propertyNames": {
-              "type": "string"
-            }
+            "propertyNames": { "type": "string" }
           },
-          "tenant_id": {
-            "type": "integer",
-            "format": "int64"
-          }
+          "tenant_id": { "type": "integer", "format": "int64" }
         }
       },
       "MFARequest": {
@@ -3383,13 +2562,8 @@
             "title": "MFARequestTOTP",
             "required": ["code", "type"],
             "properties": {
-              "code": {
-                "type": "string"
-              },
-              "type": {
-                "type": "string",
-                "enum": ["totp"]
-              }
+              "code": { "type": "string" },
+              "type": { "type": "string", "enum": ["totp"] }
             }
           },
           {
@@ -3397,13 +2571,8 @@
             "title": "MFARequestServiceAccount",
             "required": ["code", "type"],
             "properties": {
-              "code": {
-                "type": "string"
-              },
-              "type": {
-                "type": "string",
-                "enum": ["service-account"]
-              }
+              "code": { "type": "string" },
+              "type": { "type": "string", "enum": ["service-account"] }
             }
           }
         ]
@@ -3419,34 +2588,19 @@
           "password"
         ],
         "properties": {
-          "api_uri": {
-            "type": "string"
-          },
-          "enabled": {
-            "type": "boolean"
-          },
-          "id": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          },
-          "tenant_id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "ws_uri": {
-            "type": "string"
-          }
+          "api_uri": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "id": { "type": "string" },
+          "password": { "type": "string" },
+          "tenant_id": { "type": "integer", "format": "int64" },
+          "ws_uri": { "type": "string" }
         }
       },
       "Pagination_ServiceAccount": {
         "type": "object",
         "required": ["has_more", "items"],
         "properties": {
-          "has_more": {
-            "type": "boolean"
-          },
+          "has_more": { "type": "boolean" },
           "items": {
             "type": "array",
             "items": {
@@ -3460,32 +2614,16 @@
                 "created_at"
               ],
               "properties": {
-                "active": {
-                  "type": "boolean"
-                },
-                "client_id": {
-                  "type": "string",
-                  "format": "uuid"
-                },
+                "active": { "type": "boolean" },
+                "client_id": { "type": "string", "format": "uuid" },
                 "client_secret": {
                   "type": ["string", "null"],
                   "format": "uuid"
                 },
-                "created_at": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "name": {
-                  "type": "string"
-                },
-                "updated_at": {
-                  "type": "string",
-                  "format": "date-time"
-                }
+                "created_at": { "type": "string", "format": "date-time" },
+                "id": { "type": "integer", "format": "int64" },
+                "name": { "type": "string" },
+                "updated_at": { "type": "string", "format": "date-time" }
               }
             }
           }
@@ -3495,9 +2633,7 @@
         "type": "object",
         "required": ["has_more", "items"],
         "properties": {
-          "has_more": {
-            "type": "boolean"
-          },
+          "has_more": { "type": "boolean" },
           "items": {
             "type": "array",
             "items": {
@@ -3514,51 +2650,26 @@
                 "created_at"
               ],
               "properties": {
-                "algorithm": {
-                  "type": "string"
-                },
-                "audience": {
-                  "type": ["string", "null"]
-                },
-                "client_id": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "created_at": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "expires_in_seconds": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "issuer": {
-                  "type": "string"
-                },
+                "algorithm": { "type": "string" },
+                "audience": { "type": ["string", "null"] },
+                "client_id": { "type": "string", "format": "uuid" },
+                "created_at": { "type": "string", "format": "date-time" },
+                "expires_in_seconds": { "type": "integer", "format": "int64" },
+                "id": { "type": "integer", "format": "int64" },
+                "issuer": { "type": "string" },
                 "oauth2_providers": {
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/TenantOAuth2Provider"
                   }
                 },
-                "private_key": {
-                  "type": ["string", "null"]
-                },
-                "public_key": {
-                  "type": ["string", "null"]
-                },
+                "private_key": { "type": ["string", "null"] },
+                "public_key": { "type": ["string", "null"] },
                 "refresh_expires_in_seconds": {
                   "type": "integer",
                   "format": "int64"
                 },
-                "updated_at": {
-                  "type": "string",
-                  "format": "date-time"
-                }
+                "updated_at": { "type": "string", "format": "date-time" }
               }
             }
           }
@@ -3568,9 +2679,7 @@
         "type": "object",
         "required": ["has_more", "items"],
         "properties": {
-          "has_more": {
-            "type": "boolean"
-          },
+          "has_more": { "type": "boolean" },
           "items": {
             "type": "array",
             "items": {
@@ -3588,81 +2697,46 @@
                 "created_at"
               ],
               "properties": {
-                "active": {
-                  "type": "boolean"
-                },
+                "active": { "type": "boolean" },
                 "config": {
                   "oneOf": [
-                    {
-                      "type": "null"
-                    },
-                    {
-                      "$ref": "#/components/schemas/UserConfig"
-                    }
+                    { "type": "null" },
+                    { "$ref": "#/components/schemas/UserConfig" }
                   ]
                 },
-                "created_at": {
-                  "type": "string",
-                  "format": "date-time"
-                },
+                "created_at": { "type": "string", "format": "date-time" },
                 "email": {
                   "oneOf": [
-                    {
-                      "type": "null"
-                    },
-                    {
-                      "$ref": "#/components/schemas/UserEmail"
-                    }
+                    { "type": "null" },
+                    { "$ref": "#/components/schemas/UserEmail" }
                   ]
                 },
                 "emails": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserEmail"
-                  }
+                  "items": { "$ref": "#/components/schemas/UserEmail" }
                 },
-                "id": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "info": {
-                  "$ref": "#/components/schemas/UserInfo"
-                },
+                "id": { "type": "integer", "format": "int64" },
+                "info": { "$ref": "#/components/schemas/UserInfo" },
                 "mfa_types": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserMFAType"
-                  }
+                  "items": { "$ref": "#/components/schemas/UserMFAType" }
                 },
                 "oauth2_providers": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserOAuth2Provider"
-                  }
+                  "items": { "$ref": "#/components/schemas/UserOAuth2Provider" }
                 },
                 "phone_number": {
                   "oneOf": [
-                    {
-                      "type": "null"
-                    },
-                    {
-                      "$ref": "#/components/schemas/UserPhoneNumber"
-                    }
+                    { "type": "null" },
+                    { "$ref": "#/components/schemas/UserPhoneNumber" }
                   ]
                 },
                 "phone_numbers": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserPhoneNumber"
-                  }
+                  "items": { "$ref": "#/components/schemas/UserPhoneNumber" }
                 },
-                "updated_at": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "username": {
-                  "type": "string"
-                }
+                "updated_at": { "type": "string", "format": "date-time" },
+                "username": { "type": "string" }
               }
             }
           }
@@ -3672,30 +2746,18 @@
         "type": "object",
         "required": ["username", "password", "password_confirmation"],
         "properties": {
-          "password": {
-            "type": "string"
-          },
-          "password_confirmation": {
-            "type": "string"
-          },
-          "username": {
-            "type": "string"
-          }
+          "password": { "type": "string" },
+          "password_confirmation": { "type": "string" },
+          "username": { "type": "string" }
         }
       },
       "ResetPasswordRequest": {
         "type": "object",
         "required": ["current_password", "password", "password_confirmation"],
         "properties": {
-          "current_password": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          },
-          "password_confirmation": {
-            "type": "string"
-          }
+          "current_password": { "type": "string" },
+          "password": { "type": "string" },
+          "password_confirmation": { "type": "string" }
         }
       },
       "ServiceAccount": {
@@ -3709,84 +2771,45 @@
           "created_at"
         ],
         "properties": {
-          "active": {
-            "type": "boolean"
-          },
-          "client_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "client_secret": {
-            "type": ["string", "null"],
-            "format": "uuid"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "name": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "active": { "type": "boolean" },
+          "client_id": { "type": "string", "format": "uuid" },
+          "client_secret": { "type": ["string", "null"], "format": "uuid" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "updated_at": { "type": "string", "format": "date-time" }
         }
       },
       "ServiceAccountCreateUserEmail": {
         "type": "object",
         "required": ["email"],
         "properties": {
-          "email": {
-            "type": "string"
-          },
-          "primary": {
-            "type": ["boolean", "null"]
-          },
-          "verified": {
-            "type": ["boolean", "null"]
-          }
+          "email": { "type": "string" },
+          "primary": { "type": ["boolean", "null"] },
+          "verified": { "type": ["boolean", "null"] }
         }
       },
       "ServiceAccountCreateUserPhoneNumber": {
         "type": "object",
         "required": ["phone_number"],
         "properties": {
-          "phone_number": {
-            "type": "string"
-          },
-          "primary": {
-            "type": ["boolean", "null"]
-          },
-          "verified": {
-            "type": ["boolean", "null"]
-          }
+          "phone_number": { "type": "string" },
+          "primary": { "type": ["boolean", "null"] },
+          "verified": { "type": ["boolean", "null"] }
         }
       },
       "ServiceAccountUpdateUserEmail": {
         "type": "object",
         "properties": {
-          "primary": {
-            "type": ["boolean", "null"]
-          },
-          "verified": {
-            "type": ["boolean", "null"]
-          }
+          "primary": { "type": ["boolean", "null"] },
+          "verified": { "type": ["boolean", "null"] }
         }
       },
       "ServiceAccountUpdateUserPhoneNumber": {
         "type": "object",
         "properties": {
-          "primary": {
-            "type": ["boolean", "null"]
-          },
-          "verified": {
-            "type": ["boolean", "null"]
-          }
+          "primary": { "type": ["boolean", "null"] },
+          "verified": { "type": ["boolean", "null"] }
         }
       },
       "Tenant": {
@@ -3803,51 +2826,24 @@
           "created_at"
         ],
         "properties": {
-          "algorithm": {
-            "type": "string"
-          },
-          "audience": {
-            "type": ["string", "null"]
-          },
-          "client_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "expires_in_seconds": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "issuer": {
-            "type": "string"
-          },
+          "algorithm": { "type": "string" },
+          "audience": { "type": ["string", "null"] },
+          "client_id": { "type": "string", "format": "uuid" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "expires_in_seconds": { "type": "integer", "format": "int64" },
+          "id": { "type": "integer", "format": "int64" },
+          "issuer": { "type": "string" },
           "oauth2_providers": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TenantOAuth2Provider"
-            }
+            "items": { "$ref": "#/components/schemas/TenantOAuth2Provider" }
           },
-          "private_key": {
-            "type": ["string", "null"]
-          },
-          "public_key": {
-            "type": ["string", "null"]
-          },
+          "private_key": { "type": ["string", "null"] },
+          "public_key": { "type": ["string", "null"] },
           "refresh_expires_in_seconds": {
             "type": "integer",
             "format": "int64"
           },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "updated_at": { "type": "string", "format": "date-time" }
         }
       },
       "TenantOAuth2Provider": {
@@ -3868,81 +2864,36 @@
           "created_at"
         ],
         "properties": {
-          "active": {
-            "type": "boolean"
-          },
-          "auth_url": {
-            "type": "string"
-          },
-          "callback_url": {
-            "type": "string"
-          },
-          "client_id": {
-            "type": "string"
-          },
-          "client_secret": {
-            "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "provider": {
-            "type": "string"
-          },
-          "redirect_url": {
-            "type": "string"
-          },
-          "scope": {
-            "type": "string"
-          },
-          "tenant_id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "token_url": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "active": { "type": "boolean" },
+          "auth_url": { "type": "string" },
+          "callback_url": { "type": "string" },
+          "client_id": { "type": "string" },
+          "client_secret": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "id": { "type": "integer", "format": "int64" },
+          "provider": { "type": "string" },
+          "redirect_url": { "type": "string" },
+          "scope": { "type": "string" },
+          "tenant_id": { "type": "integer", "format": "int64" },
+          "token_url": { "type": "string" },
+          "updated_at": { "type": "string", "format": "date-time" }
         }
       },
       "Token": {
         "type": "object",
         "required": ["access_token", "token_type", "expires_in"],
         "properties": {
-          "access_token": {
-            "type": "string"
-          },
-          "expires_in": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "id_token": {
-            "type": ["string", "null"]
-          },
-          "issued_token_type": {
-            "type": ["string", "null"]
-          },
-          "refresh_token": {
-            "type": ["string", "null"]
-          },
+          "access_token": { "type": "string" },
+          "expires_in": { "type": "integer", "format": "int64" },
+          "id_token": { "type": ["string", "null"] },
+          "issued_token_type": { "type": ["string", "null"] },
+          "refresh_token": { "type": ["string", "null"] },
           "refresh_token_expires_in": {
             "type": ["integer", "null"],
             "format": "int64"
           },
-          "scope": {
-            "type": ["string", "null"]
-          },
-          "token_type": {
-            "type": "string"
-          }
+          "scope": { "type": ["string", "null"] },
+          "token_type": { "type": "string" }
         }
       },
       "TokenRequest": {
@@ -3952,22 +2903,10 @@
             "title": "TokenRequestPassword",
             "required": ["username", "password", "grant_type"],
             "properties": {
-              "grant_type": {
-                "type": "string",
-                "enum": ["password"]
-              },
-              "password": {
-                "type": "string",
-                "example": "password"
-              },
-              "scope": {
-                "type": ["string", "null"],
-                "example": "openid"
-              },
-              "username": {
-                "type": "string",
-                "example": "username"
-              }
+              "grant_type": { "type": "string", "enum": ["password"] },
+              "password": { "type": "string", "example": "password" },
+              "scope": { "type": ["string", "null"], "example": "openid" },
+              "username": { "type": "string", "example": "username" }
             }
           },
           {
@@ -3975,13 +2914,8 @@
             "title": "TokenRequestRefreshToken",
             "required": ["refresh_token", "grant_type"],
             "properties": {
-              "grant_type": {
-                "type": "string",
-                "enum": ["refresh-token"]
-              },
-              "refresh_token": {
-                "type": "string"
-              }
+              "grant_type": { "type": "string", "enum": ["refresh-token"] },
+              "refresh_token": { "type": "string" }
             }
           },
           {
@@ -3989,18 +2923,9 @@
             "title": "TokenRequestServiceAccount",
             "required": ["client_id", "client_secret", "grant_type"],
             "properties": {
-              "client_id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "client_secret": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "grant_type": {
-                "type": "string",
-                "enum": ["service-account"]
-              }
+              "client_id": { "type": "string", "format": "uuid" },
+              "client_secret": { "type": "string", "format": "uuid" },
+              "grant_type": { "type": "string", "enum": ["service-account"] }
             }
           },
           {
@@ -4008,17 +2933,12 @@
             "title": "TokenRequestAuthorizationCode",
             "required": ["code", "grant_type"],
             "properties": {
-              "code": {
-                "type": "string"
-              },
+              "code": { "type": "string" },
               "grant_type": {
                 "type": "string",
                 "enum": ["authorization-code"]
               },
-              "scope": {
-                "type": ["string", "null"],
-                "example": "openid"
-              }
+              "scope": { "type": ["string", "null"], "example": "openid" }
             }
           }
         ]
@@ -4026,20 +2946,10 @@
       "UpdateServiceAccount": {
         "type": "object",
         "properties": {
-          "active": {
-            "type": ["boolean", "null"]
-          },
-          "client_id": {
-            "type": ["string", "null"],
-            "format": "uuid"
-          },
-          "client_secret": {
-            "type": ["string", "null"],
-            "format": "uuid"
-          },
-          "name": {
-            "type": ["string", "null"]
-          }
+          "active": { "type": ["boolean", "null"] },
+          "client_id": { "type": ["string", "null"], "format": "uuid" },
+          "client_secret": { "type": ["string", "null"], "format": "uuid" },
+          "name": { "type": ["string", "null"] }
         }
       },
       "UpdateTenant": {
@@ -4047,37 +2957,20 @@
         "properties": {
           "algorithm": {
             "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/Algorithm"
-              }
+              { "type": "null" },
+              { "$ref": "#/components/schemas/Algorithm" }
             ]
           },
-          "audience": {
-            "type": ["string", "null"],
-            "example": "example.com"
-          },
-          "client_id": {
-            "type": ["string", "null"],
-            "format": "uuid"
-          },
+          "audience": { "type": ["string", "null"], "example": "example.com" },
+          "client_id": { "type": ["string", "null"], "format": "uuid" },
           "expires_in_seconds": {
             "type": ["integer", "null"],
             "format": "int64",
             "example": "86400"
           },
-          "issuer": {
-            "type": ["string", "null"],
-            "example": "Example"
-          },
-          "private_key": {
-            "type": ["string", "null"]
-          },
-          "public_key": {
-            "type": ["string", "null"]
-          },
+          "issuer": { "type": ["string", "null"], "example": "Example" },
+          "private_key": { "type": ["string", "null"] },
+          "public_key": { "type": ["string", "null"] },
           "refresh_expires_in_seconds": {
             "type": ["integer", "null"],
             "format": "int64",
@@ -4088,30 +2981,14 @@
       "UpdateTenantOAuth2Provider": {
         "type": "object",
         "properties": {
-          "active": {
-            "type": ["boolean", "null"]
-          },
-          "auth_url": {
-            "type": ["string", "null"]
-          },
-          "callback_url": {
-            "type": ["string", "null"]
-          },
-          "client_id": {
-            "type": ["string", "null"]
-          },
-          "client_secret": {
-            "type": ["string", "null"]
-          },
-          "redirect_url": {
-            "type": ["string", "null"]
-          },
-          "scope": {
-            "type": ["string", "null"]
-          },
-          "token_url": {
-            "type": ["string", "null"]
-          }
+          "active": { "type": ["boolean", "null"] },
+          "auth_url": { "type": ["string", "null"] },
+          "callback_url": { "type": ["string", "null"] },
+          "client_id": { "type": ["string", "null"] },
+          "client_secret": { "type": ["string", "null"] },
+          "redirect_url": { "type": ["string", "null"] },
+          "scope": { "type": ["string", "null"] },
+          "token_url": { "type": ["string", "null"] }
         }
       },
       "UpdateUserConfigRequest": {
@@ -4119,12 +2996,8 @@
         "properties": {
           "mfa_type": {
             "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/UserMFAType"
-              }
+              { "type": "null" },
+              { "$ref": "#/components/schemas/UserMFAType" }
             ]
           }
         }
@@ -4132,52 +3005,23 @@
       "UpdateUserInfoRequest": {
         "type": "object",
         "properties": {
-          "address": {
-            "type": ["string", "null"]
-          },
-          "birthdate": {
-            "type": ["string", "null"],
-            "format": "date-time"
-          },
-          "family_name": {
-            "type": ["string", "null"]
-          },
-          "gender": {
-            "type": ["string", "null"]
-          },
-          "given_name": {
-            "type": ["string", "null"]
-          },
-          "locale": {
-            "type": ["string", "null"]
-          },
-          "middle_name": {
-            "type": ["string", "null"]
-          },
-          "name": {
-            "type": ["string", "null"]
-          },
-          "nickname": {
-            "type": ["string", "null"]
-          },
-          "profile_picture": {
-            "type": ["string", "null"]
-          },
-          "website": {
-            "type": ["string", "null"]
-          },
-          "zone_info": {
-            "type": ["string", "null"]
-          }
+          "address": { "type": ["string", "null"] },
+          "birthdate": { "type": ["string", "null"], "format": "date-time" },
+          "family_name": { "type": ["string", "null"] },
+          "gender": { "type": ["string", "null"] },
+          "given_name": { "type": ["string", "null"] },
+          "locale": { "type": ["string", "null"] },
+          "middle_name": { "type": ["string", "null"] },
+          "name": { "type": ["string", "null"] },
+          "nickname": { "type": ["string", "null"] },
+          "profile_picture": { "type": ["string", "null"] },
+          "website": { "type": ["string", "null"] },
+          "zone_info": { "type": ["string", "null"] }
         }
       },
       "UpdateUsername": {
         "type": "object",
-        "properties": {
-          "username": {
-            "type": ["string", "null"]
-          }
-        }
+        "properties": { "username": { "type": ["string", "null"] } }
       },
       "User": {
         "type": "object",
@@ -4194,90 +3038,51 @@
           "created_at"
         ],
         "properties": {
-          "active": {
-            "type": "boolean"
-          },
+          "active": { "type": "boolean" },
           "config": {
             "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/UserConfig"
-              }
+              { "type": "null" },
+              { "$ref": "#/components/schemas/UserConfig" }
             ]
           },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
+          "created_at": { "type": "string", "format": "date-time" },
           "email": {
             "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/UserEmail"
-              }
+              { "type": "null" },
+              { "$ref": "#/components/schemas/UserEmail" }
             ]
           },
           "emails": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserEmail"
-            }
+            "items": { "$ref": "#/components/schemas/UserEmail" }
           },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "info": {
-            "$ref": "#/components/schemas/UserInfo"
-          },
+          "id": { "type": "integer", "format": "int64" },
+          "info": { "$ref": "#/components/schemas/UserInfo" },
           "mfa_types": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserMFAType"
-            }
+            "items": { "$ref": "#/components/schemas/UserMFAType" }
           },
           "oauth2_providers": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserOAuth2Provider"
-            }
+            "items": { "$ref": "#/components/schemas/UserOAuth2Provider" }
           },
           "phone_number": {
             "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/UserPhoneNumber"
-              }
+              { "type": "null" },
+              { "$ref": "#/components/schemas/UserPhoneNumber" }
             ]
           },
           "phone_numbers": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserPhoneNumber"
-            }
+            "items": { "$ref": "#/components/schemas/UserPhoneNumber" }
           },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "username": {
-            "type": "string"
-          }
+          "updated_at": { "type": "string", "format": "date-time" },
+          "username": { "type": "string" }
         }
       },
       "UserConfig": {
         "type": "object",
-        "properties": {
-          "mfa_type": {
-            "type": ["string", "null"]
-          }
-        }
+        "properties": { "mfa_type": { "type": ["string", "null"] } }
       },
       "UserEmail": {
         "type": "object",
@@ -4290,69 +3095,29 @@
           "created_at"
         ],
         "properties": {
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "email": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "primary": {
-            "type": "boolean"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "verified": {
-            "type": "boolean"
-          }
+          "created_at": { "type": "string", "format": "date-time" },
+          "email": { "type": "string" },
+          "id": { "type": "integer", "format": "int64" },
+          "primary": { "type": "boolean" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "verified": { "type": "boolean" }
         }
       },
       "UserInfo": {
         "type": "object",
         "properties": {
-          "address": {
-            "type": ["string", "null"]
-          },
-          "birthdate": {
-            "type": ["string", "null"],
-            "format": "date-time"
-          },
-          "family_name": {
-            "type": ["string", "null"]
-          },
-          "gender": {
-            "type": ["string", "null"]
-          },
-          "given_name": {
-            "type": ["string", "null"]
-          },
-          "locale": {
-            "type": ["string", "null"]
-          },
-          "middle_name": {
-            "type": ["string", "null"]
-          },
-          "name": {
-            "type": ["string", "null"]
-          },
-          "nickname": {
-            "type": ["string", "null"]
-          },
-          "profile_picture": {
-            "type": ["string", "null"]
-          },
-          "website": {
-            "type": ["string", "null"]
-          },
-          "zone_info": {
-            "type": ["string", "null"]
-          }
+          "address": { "type": ["string", "null"] },
+          "birthdate": { "type": ["string", "null"], "format": "date-time" },
+          "family_name": { "type": ["string", "null"] },
+          "gender": { "type": ["string", "null"] },
+          "given_name": { "type": ["string", "null"] },
+          "locale": { "type": ["string", "null"] },
+          "middle_name": { "type": ["string", "null"] },
+          "name": { "type": ["string", "null"] },
+          "nickname": { "type": ["string", "null"] },
+          "profile_picture": { "type": ["string", "null"] },
+          "website": { "type": ["string", "null"] },
+          "zone_info": { "type": ["string", "null"] }
         }
       },
       "UserMFAType": {
@@ -4368,25 +3133,11 @@
           "created_at"
         ],
         "properties": {
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "email": {
-            "type": ["string", "null"]
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "tenant_oauth2_provider_id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "created_at": { "type": "string", "format": "date-time" },
+          "email": { "type": ["string", "null"] },
+          "id": { "type": "integer", "format": "int64" },
+          "tenant_oauth2_provider_id": { "type": "integer", "format": "int64" },
+          "updated_at": { "type": "string", "format": "date-time" }
         }
       },
       "UserPhoneNumber": {
@@ -4400,81 +3151,40 @@
           "created_at"
         ],
         "properties": {
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "phone_number": {
-            "type": "string"
-          },
-          "primary": {
-            "type": "boolean"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "verified": {
-            "type": "boolean"
-          }
+          "created_at": { "type": "string", "format": "date-time" },
+          "id": { "type": "integer", "format": "int64" },
+          "phone_number": { "type": "string" },
+          "primary": { "type": "boolean" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "verified": { "type": "boolean" }
         }
       },
       "UserResetPassword": {
         "type": "object",
         "required": ["tenant_id"],
         "properties": {
-          "scope": {
-            "type": ["string", "null"]
-          },
-          "tenant_id": {
-            "type": "integer",
-            "format": "int64"
-          }
+          "scope": { "type": ["string", "null"] },
+          "tenant_id": { "type": "integer", "format": "int64" }
         }
       },
       "UserTOTP": {
         "type": "object",
         "required": ["algorithm", "digits", "step", "updated_at", "created_at"],
         "properties": {
-          "algorithm": {
-            "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "digits": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "secret": {
-            "type": ["string", "null"]
-          },
-          "step": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "algorithm": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "digits": { "type": "integer", "format": "int64" },
+          "secret": { "type": ["string", "null"] },
+          "step": { "type": "integer", "format": "int64" },
+          "updated_at": { "type": "string", "format": "date-time" }
         }
       },
       "Version": {
         "type": "object",
         "required": ["version", "build"],
         "properties": {
-          "build": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "version": {
-            "type": "string"
-          }
+          "build": { "type": "string", "format": "date-time" },
+          "version": { "type": "string" }
         }
       }
     },
@@ -4484,65 +3194,22 @@
         "scheme": "bearer",
         "bearerFormat": "JWT"
       },
-      "TenantUUID": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "Tenant-ID"
-      }
+      "TenantUUID": { "type": "apiKey", "in": "header", "name": "Tenant-ID" }
     }
   },
   "tags": [
-    {
-      "name": "current-user",
-      "description": "Current user endpoints"
-    },
-    {
-      "name": "jwt",
-      "description": "JSON Web Token endpoints"
-    },
-    {
-      "name": "mfa",
-      "description": "Multi-factor authentication endpoints"
-    },
-    {
-      "name": "util",
-      "description": "Utility endpoints"
-    },
-    {
-      "name": "oauth2",
-      "description": "OAuth2 endpoints"
-    },
-    {
-      "name": "openapi",
-      "description": "OpenApi endpoints"
-    },
-    {
-      "name": "p2p",
-      "description": "P2P endpoints"
-    },
-    {
-      "name": "register",
-      "description": "Register endpoints"
-    },
-    {
-      "name": "service-account",
-      "description": "Service Account endpoints"
-    },
-    {
-      "name": "oauth2-provider",
-      "description": "OAuth2 Provider endpoints"
-    },
-    {
-      "name": "tenant",
-      "description": "Tenant endpoints"
-    },
-    {
-      "name": "token",
-      "description": "Token endpoints"
-    },
-    {
-      "name": "user",
-      "description": "User endpoints"
-    }
+    { "name": "current-user", "description": "Current user endpoints" },
+    { "name": "jwt", "description": "JSON Web Token endpoints" },
+    { "name": "mfa", "description": "Multi-factor authentication endpoints" },
+    { "name": "util", "description": "Utility endpoints" },
+    { "name": "oauth2", "description": "OAuth2 endpoints" },
+    { "name": "openapi", "description": "OpenApi endpoints" },
+    { "name": "p2p", "description": "P2P endpoints" },
+    { "name": "register", "description": "Register endpoints" },
+    { "name": "service-account", "description": "Service Account endpoints" },
+    { "name": "oauth2-provider", "description": "OAuth2 Provider endpoints" },
+    { "name": "tenant", "description": "Tenant endpoints" },
+    { "name": "token", "description": "Token endpoints" },
+    { "name": "user", "description": "User endpoints" }
   ]
 }

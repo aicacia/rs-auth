@@ -1,6 +1,6 @@
 use crate::{
   core::{
-    config::get_config,
+    config::Config,
     error::{Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
   },
   middleware::{
@@ -67,9 +67,16 @@ pub async fn token(
       username,
       password,
       scope,
-    } => password_request(&state.pool, tenant, username, password, scope)
-      .await
-      .into_response(),
+    } => password_request(
+      &state.pool,
+      &state.config,
+      tenant,
+      username,
+      password,
+      scope,
+    )
+    .await
+    .into_response(),
     TokenRequest::RefreshToken { refresh_token } => {
       refresh_token_request(&state.pool, tenant, refresh_token)
         .await
@@ -97,6 +104,7 @@ pub fn create_router(state: RouterState) -> OpenApiRouter {
 
 async fn password_request(
   pool: &AnyPool,
+  config: &Config,
   tenant: TenantRow,
   username: String,
   password: String,
@@ -136,7 +144,7 @@ async fn password_request(
         .into_response();
     }
   }
-  let expire_days = get_config().password.expire_days;
+  let expire_days = config.password.expire_days;
   if expire_days > 0 {
     let expire_time = user_password.created_at + ((expire_days as i64) * 24 * 60 * 60);
     if chrono::Utc::now().timestamp() >= expire_time {

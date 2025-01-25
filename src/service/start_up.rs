@@ -2,6 +2,7 @@ use tokio::fs;
 
 use crate::{
   core::{
+    config::Config,
     encryption::encrypt_password,
     error::{Errors, DATEBASE_ERROR, INTERNAL_ERROR},
   },
@@ -11,7 +12,7 @@ use crate::{
   },
 };
 
-pub async fn init_service_accounts(pool: &sqlx::AnyPool) -> Result<(), Errors> {
+pub async fn init_service_accounts(pool: &sqlx::AnyPool, config: &Config) -> Result<(), Errors> {
   let service_accounts = match get_service_accounts(pool, None, None).await {
     Ok(service_accounts) => service_accounts,
     Err(e) => {
@@ -23,13 +24,16 @@ pub async fn init_service_accounts(pool: &sqlx::AnyPool) -> Result<(), Errors> {
     return Ok(());
   }
   log::info!("No service accounts found, creating initial admin service account");
-  create_new_admin_service_account(pool).await
+  create_new_admin_service_account(pool, config).await
 }
 
-pub async fn create_new_admin_service_account(pool: &sqlx::AnyPool) -> Result<(), Errors> {
+pub async fn create_new_admin_service_account(
+  pool: &sqlx::AnyPool,
+  config: &Config,
+) -> Result<(), Errors> {
   let client_id = uuid::Uuid::new_v4();
   let client_secret = uuid::Uuid::new_v4();
-  let encrypted_client_secret = match encrypt_password(&client_secret.to_string()) {
+  let encrypted_client_secret = match encrypt_password(config, &client_secret.to_string()) {
     Ok(encrypted_client_secret) => encrypted_client_secret,
     Err(e) => {
       log::error!("Error encrypting client secret: {}", e);

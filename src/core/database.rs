@@ -10,16 +10,14 @@ use std::{
 use atomicoption::AtomicOption;
 use sqlx::{migrate::Migrator, Executor};
 
-use super::config::get_config;
+use super::config::Config;
 
 static POOL: AtomicOption<sqlx::AnyPool> = AtomicOption::none();
 
 static SQLITE_MIGRATOR: Migrator = sqlx::migrate!("./migrations/sqlite");
 static POSTGRESQL_MIGRATOR: Migrator = sqlx::migrate!("./migrations/postgresql");
 
-pub async fn init_pool() -> Result<sqlx::AnyPool, sqlx::Error> {
-  let config = get_config();
-
+pub async fn init_pool(config: &Config) -> Result<sqlx::AnyPool, sqlx::Error> {
   log::info!("Creating pool for database: {}", config.database.url);
 
   if config.database.url.starts_with("sqlite:") {

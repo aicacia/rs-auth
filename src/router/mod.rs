@@ -18,6 +18,8 @@ pub mod user_email;
 pub mod user_phone_number;
 pub mod util;
 
+use std::sync::Arc;
+
 use axum::Router;
 use current_user::CURRENT_USER_TAG;
 use jwt::JWT_TAG;
@@ -34,14 +36,18 @@ use token::TOKEN_TAG;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use user::USER_TAG;
 use util::UTIL_TAG;
-use utoipa::OpenApi;
+use utoipa::{Modify, OpenApi};
 use utoipa_axum::router::OpenApiRouter;
 
-use crate::core::openapi::{SecurityAddon, ServersAddon};
+use crate::core::{
+  config::Config,
+  openapi::{SecurityAddon, ServersAddon},
+};
 
 #[derive(Clone)]
 pub struct RouterState {
   pub pool: AnyPool,
+  pub config: Arc<Config>,
 }
 
 unsafe impl Send for RouterState {}
@@ -65,12 +71,16 @@ unsafe impl Sync for RouterState {}
     (name = TOKEN_TAG, description = "Token endpoints"),
     (name = USER_TAG, description = "User endpoints"),
   ),
-  modifiers(&SecurityAddon, &ServersAddon)
+  modifiers(&SecurityAddon)
 )]
 pub struct ApiDoc;
 
 pub fn create_router(state: RouterState) -> Router {
-  let open_api_router = OpenApiRouter::with_openapi(ApiDoc::openapi())
+  let mut openapi = ApiDoc::openapi();
+  let servers_addon = ServersAddon::new(state.config.clone());
+  servers_addon.modify(&mut openapi);
+
+  let open_api_router = OpenApiRouter::with_openapi(openapi)
     .merge(current_user::create_router(state.clone()))
     .merge(current_user_config::create_router(state.clone()))
     .merge(current_user_email::create_router(state.clone()))

@@ -1,8 +1,8 @@
-use std::{net::SocketAddr, str::FromStr};
+use std::{net::SocketAddr, str::FromStr, sync::Arc};
 
 use auth::{
   core::{
-    config::{get_config, init_config},
+    config::Config,
     database::{close_pool, init_pool},
     error::Errors,
   },
@@ -28,12 +28,12 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<(), Errors> {
-  dotenv::dotenv().ok();
+  dotenvy::dotenv().ok();
   sqlx::any::install_default_drivers();
 
   let args = Args::parse();
 
-  let config = init_config(&args.config).await?;
+  let config = Arc::new(Config::new(&args.config).await?);
 
   let level = tracing::Level::from_str(&config.log_level).unwrap_or(tracing::Level::DEBUG);
   tracing_subscriber::registry()
@@ -50,20 +50,32 @@ async fn main() -> Result<(), Errors> {
     .with(tracing_subscriber::fmt::layer())
     .init();
 
-  let pool = init_pool().await?;
+  let pool = init_pool(config.as_ref()).await?;
 
   if args.create_new_admin {
-    return create_new_admin_service_account(&pool).await;
+    return create_new_admin_service_account(&pool, config.as_ref()).await;
   }
 
-  init_service_accounts(&pool).await?;
+  init_service_accounts(&pool, config.as_ref()).await?;
 
   let cancellation_token = CancellationToken::new();
 
-  let router = create_router(RouterState { pool: pool.clone() });
-  let serve_handle = tokio::spawn(serve(router.clone(), cancellation_token.clone()));
+  let router = create_router(RouterState {
+    config: config.clone(),
+    pool: pool.clone(),
+  });
+  let serve_handle = tokio::spawn(serve(
+    router.clone(),
+    config.clone(),
+    cancellation_token.clone(),
+  ));
   let serve_peer_handle = if config.p2p.enabled {
-    Some(tokio::spawn(serve_peer(router, cancellation_token.clone())))
+    Some(tokio::spawn(serve_peer(
+      pool.clone(),
+      config.clone(),
+      router,
+      cancellation_token.clone(),
+    )))
   } else {
     None
   };
@@ -94,11 +106,14 @@ async fn main() -> Result<(), Errors> {
   Ok(())
 }
 
-async fn serve(router: Router, cancellation_token: CancellationToken) -> Result<(), Errors> {
+async fn serve(
+  router: Router,
+  config: Arc<Config>,
+  cancellation_token: CancellationToken,
+) -> Result<(), Errors> {
   let serve_shutdown_signal = async move {
     cancellation_token.cancelled().await;
   };
-  let config = get_config();
 
   let listener = tokio::net::TcpListener::bind(&SocketAddr::from((
     config.server.address,

@@ -90,7 +90,7 @@ pub async fn create_tenant_oauth2_provider(
         .into_response();
     }
   };
-  axum::Json(TenantOAuth2Provider::from(tenant)).into_response()
+  axum::Json(TenantOAuth2Provider::from((state.config.as_ref(), tenant))).into_response()
 }
 
 #[utoipa::path(

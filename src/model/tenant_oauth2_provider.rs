@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::repository::tenant_oauth2_provider::TenantOAuth2ProviderRow;
+use crate::{core::config::Config, repository::tenant_oauth2_provider::TenantOAuth2ProviderRow};
 
 #[derive(Serialize, ToSchema)]
 pub struct TenantOAuth2Provider {
@@ -21,10 +21,10 @@ pub struct TenantOAuth2Provider {
   pub created_at: DateTime<Utc>,
 }
 
-impl From<TenantOAuth2ProviderRow> for TenantOAuth2Provider {
-  fn from(row: TenantOAuth2ProviderRow) -> Self {
+impl From<(&Config, TenantOAuth2ProviderRow)> for TenantOAuth2Provider {
+  fn from((config, row): (&Config, TenantOAuth2ProviderRow)) -> Self {
     let active = row.is_active();
-    let callback_url = row.callback_url();
+    let callback_url = row.callback_url(config);
     Self {
       id: row.id,
       tenant_id: row.tenant_id,

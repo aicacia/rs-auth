@@ -1,4 +1,4 @@
-use crate::core::config::get_config;
+use crate::core::config::Config;
 
 #[derive(sqlx::FromRow)]
 pub struct TenantOAuth2ProviderRow {
@@ -22,24 +22,24 @@ impl TenantOAuth2ProviderRow {
     self.active != 0
   }
 
-  pub fn callback_url(&self) -> String {
-    self.callback_url.clone().unwrap_or_else(|| {
-      format!(
-        "{}/oauth2/{}/callback",
-        &get_config().server.url,
-        &self.provider
-      )
-    })
+  pub fn callback_url(&self, config: &Config) -> String {
+    self
+      .callback_url
+      .clone()
+      .unwrap_or_else(|| format!("{}/oauth2/{}/callback", &config.server.url, &self.provider))
   }
 
-  pub fn basic_client(&self) -> Result<oauth2::basic::BasicClient, oauth2::url::ParseError> {
+  pub fn basic_client(
+    &self,
+    config: &Config,
+  ) -> Result<oauth2::basic::BasicClient, oauth2::url::ParseError> {
     let client = oauth2::basic::BasicClient::new(
       oauth2::ClientId::new(self.client_id.to_owned()),
       Some(oauth2::ClientSecret::new(self.client_secret.to_owned())),
       oauth2::AuthUrl::new(self.auth_url.to_owned())?,
       Some(oauth2::TokenUrl::new(self.token_url.to_owned())?),
     )
-    .set_redirect_uri(oauth2::RedirectUrl::new(self.callback_url())?);
+    .set_redirect_uri(oauth2::RedirectUrl::new(self.callback_url(config))?);
     Ok(client)
   }
 }

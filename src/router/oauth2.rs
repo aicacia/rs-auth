@@ -1,12 +1,9 @@
 use std::{sync::RwLock, time::Duration};
 
 use crate::{
-  core::{
-    config::get_config,
-    error::{
-      Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR,
-      NOT_FOUND_ERROR, PARSE_ERROR, REQUIRED_ERROR,
-    },
+  core::error::{
+    Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR,
+    NOT_FOUND_ERROR, PARSE_ERROR, REQUIRED_ERROR,
   },
   middleware::{
     claims::{
@@ -88,7 +85,7 @@ pub async fn create_oauth2_url(
           .into_response();
       }
     };
-  let basic_client = match tenant_oauth2_provider.basic_client() {
+  let basic_client = match tenant_oauth2_provider.basic_client(state.config.as_ref()) {
     Ok(client) => client,
     Err(e) => {
       log::error!("Error getting basic client: {}", e);
@@ -98,6 +95,7 @@ pub async fn create_oauth2_url(
     }
   };
   let (url, csrf_token, pkce_code_verifier) = match oauth2_authorize_url(
+    state.config.as_ref(),
     &basic_client,
     &tenant,
     register.unwrap_or(false),
@@ -120,7 +118,7 @@ pub async fn create_oauth2_url(
       map.insert(
         csrf_token.secret().to_owned(),
         pkce_code_verifier,
-        Duration::from_secs(get_config().oauth2.code_timeout_in_seconds),
+        Duration::from_secs(state.config.oauth2.code_timeout_in_seconds),
       );
     }
     Err(e) => {
@@ -220,7 +218,7 @@ pub async fn oauth2_callback(
     }
   };
 
-  let basic_client = match tenant_oauth2_provider.basic_client() {
+  let basic_client = match tenant_oauth2_provider.basic_client(state.config.as_ref()) {
     Ok(client) => client,
     Err(e) => {
       log::error!("Error getting basic client: {}", e);
