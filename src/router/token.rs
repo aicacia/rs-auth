@@ -112,7 +112,11 @@ async fn password_request(
 ) -> impl IntoResponse {
   let user = match get_user_by_username_or_primary_email(pool, &username).await {
     Ok(Some(user)) => user,
-    Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
+    Ok(None) => {
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_error("credentials", INVALID_ERROR)
+        .into_response()
+    }
     Err(e) => {
       log::error!("error fetching user from database: {}", e);
       return Errors::from(StatusCode::UNAUTHORIZED)
@@ -136,7 +140,11 @@ async fn password_request(
   };
   match user_password.verify(&password) {
     Ok(true) => {}
-    Ok(false) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
+    Ok(false) => {
+      return Errors::from(StatusCode::UNAUTHORIZED)
+        .with_error("credentials", INVALID_ERROR)
+        .into_response()
+    }
     Err(e) => {
       log::error!("error verifying user password: {}", e);
       return Errors::from(StatusCode::UNAUTHORIZED)

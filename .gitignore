@@ -8,7 +8,7 @@
 /!config.test.json
 /tests/.dbs/
 /auth-admin-service-account.json
-/auth-*.db*
+/auth*.db*
 /values.yaml
 
 # auth-client
