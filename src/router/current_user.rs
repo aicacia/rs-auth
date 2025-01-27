@@ -2,7 +2,9 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::{
   core::{
-    error::{Errors, ALREADY_USED_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
+    error::{
+      Errors, InternalError, ALREADY_USED_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR,
+    },
     openapi::AUTHORIZATION_HEADER,
   },
   middleware::{
@@ -71,7 +73,7 @@ pub async fn get_current_user(
       Ok(emails) => emails,
       Err(e) => {
         log::error!("Error getting user emails: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -90,7 +92,7 @@ pub async fn get_current_user(
       Ok(phone_numbers) => phone_numbers,
       Err(e) => {
         log::error!("Error getting user phone numbers: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -109,7 +111,7 @@ pub async fn get_current_user(
       Ok(oauth2_providers) => oauth2_providers,
       Err(e) => {
         log::error!("Error getting user oauth2 providers: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -126,7 +128,7 @@ pub async fn get_current_user(
     Ok(mfa_types) => mfa_types,
     Err(e) => {
       log::error!("Error getting user MFA types: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -142,7 +144,7 @@ pub async fn get_current_user(
       Ok(user_info) => user_info,
       Err(e) => {
         log::error!("Error getting user info: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -176,13 +178,13 @@ pub async fn get_current_user(
       Ok(Some(user_config)) => user_config,
       Ok(None) => {
         log::error!("User config not found for {}", current_user.id);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
       Err(e) => {
         log::error!("Error getting user config: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -219,13 +221,13 @@ pub async fn create_current_user_add_oauth2_provider_url(
       Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_error("oauth2-provider", NOT_FOUND_ERROR)
           .into_response();
       }
       Err(e) => {
         log::error!("Error getting tenant oauth2 provider: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_error("oauth2-provider", INTERNAL_ERROR)
           .into_response();
       }
@@ -234,7 +236,7 @@ pub async fn create_current_user_add_oauth2_provider_url(
     Ok(client) => client,
     Err(e) => {
       log::error!("Error getting basic client: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_error("oauth2-provider", INVALID_ERROR)
         .into_response();
     }
@@ -252,7 +254,7 @@ pub async fn create_current_user_add_oauth2_provider_url(
     Ok(tuple) => tuple,
     Err(e) => {
       log::error!("Error parsing OAuth2 provider: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -268,7 +270,7 @@ pub async fn create_current_user_add_oauth2_provider_url(
     }
     Err(e) => {
       log::error!("Error aquiring PKCE verifier map: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -300,7 +302,7 @@ pub async fn reset_current_user_password(
   if (claims.kind != TOKEN_TYPE_BEARER && claims.kind != TOKEN_TYPE_RESET_PASSWORD)
     || claims.sub_kind != TOKEN_SUB_TYPE_USER
   {
-    return Errors::unauthorized()
+    return InternalError::unauthorized()
       .with_error(AUTHORIZATION_HEADER, "invalid-token-type")
       .into_response();
   }
@@ -310,13 +312,13 @@ pub async fn reset_current_user_password(
     Ok(Some(user_password)) => match user_password.verify(&payload.current_password) {
       Ok(true) => {}
       Ok(false) => {
-        return Errors::bad_request()
+        return InternalError::bad_request()
           .with_error("current_password", INVALID_ERROR)
           .into_response();
       }
       Err(e) => {
         log::error!("Error verifying user password: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -324,7 +326,7 @@ pub async fn reset_current_user_password(
     Ok(None) => {}
     Err(e) => {
       log::error!("Error getting user password: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -343,7 +345,7 @@ pub async fn reset_current_user_password(
       match &e {
         sqlx::Error::Configuration(e) => {
           if e.to_string().contains("password_already_used") {
-            return Errors::bad_request()
+            return InternalError::bad_request()
               .with_error(
                 "password",
                 (
@@ -360,7 +362,7 @@ pub async fn reset_current_user_password(
         _ => {}
       }
       log::error!("Error creating user password: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -402,7 +404,7 @@ pub async fn update_current_user(
     Ok(_) => {}
     Err(e) => {
       log::error!("Error updating user: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -454,7 +456,7 @@ pub async fn update_current_user_info(
     Ok(_) => {}
     Err(e) => {
       log::error!("Error updating user info: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -494,7 +496,7 @@ pub async fn deactivate_current_user(
     Ok(_) => {}
     Err(e) => {
       log::error!("Error deactivate user: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

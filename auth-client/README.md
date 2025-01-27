@@ -88,7 +88,6 @@ Class | Method | HTTP request | Description
  - [CreateUserEmail](docs/CreateUserEmail.md)
  - [CreateUserPhoneNumber](docs/CreateUserPhoneNumber.md)
  - [ErrorMessage](docs/ErrorMessage.md)
- - [Errors](docs/Errors.md)
  - [Health](docs/Health.md)
  - [JwtRequest](docs/JwtRequest.md)
  - [MfaRequest](docs/MfaRequest.md)

@@ -37,13 +37,13 @@ impl<C: Connect> RegisterApiClient<C>
 }
 
 pub trait RegisterApi: Send + Sync {
-    fn register_user(&self, register_user: models::RegisterUser) -> Pin<Box<dyn Future<Output = Result<models::User, Error>> + Send>>;
+    fn register_user(&self, register_user: models::RegisterUser) -> Pin<Box<dyn Future<Output = Result<models::Token, Error>> + Send>>;
 }
 
 impl<C: Connect>RegisterApi for RegisterApiClient<C>
     where C: Clone + std::marker::Send + Sync {
     #[allow(unused_mut)]
-    fn register_user(&self, register_user: models::RegisterUser) -> Pin<Box<dyn Future<Output = Result<models::User, Error>> + Send>> {
+    fn register_user(&self, register_user: models::RegisterUser) -> Pin<Box<dyn Future<Output = Result<models::Token, Error>> + Send>> {
         let mut req = __internal_request::Request::new(hyper::Method::POST, "/register".to_string())
             .with_auth(__internal_request::Auth::ApiKey(__internal_request::ApiKey{
                 in_header: true,

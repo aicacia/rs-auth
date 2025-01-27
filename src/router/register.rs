@@ -1,5 +1,5 @@
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR, NOT_ALLOWED_ERROR},
+  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_ALLOWED_ERROR},
   middleware::{openid_claims::SCOPE_OPENID, tenant_id::TenantId, validated_json::ValidatedJson},
   model::{
     register::RegisterUser,
@@ -37,7 +37,7 @@ pub async fn register_user(
   ValidatedJson(payload): ValidatedJson<RegisterUser>,
 ) -> impl IntoResponse {
   if !state.config.user.register_enabled {
-    return Errors::from(StatusCode::FORBIDDEN)
+    return InternalError::from(StatusCode::FORBIDDEN)
       .with_application_error(NOT_ALLOWED_ERROR)
       .into_response();
   }
@@ -54,7 +54,7 @@ pub async fn register_user(
     Ok(user) => user,
     Err(e) => {
       log::error!("error creating user: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

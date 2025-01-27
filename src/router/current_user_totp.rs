@@ -3,7 +3,7 @@ use http::StatusCode;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-  core::error::{Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, user_authorization::UserAuthorization},
   model::totp::{CreateTOTPRequest, UserTOTP},
   repository::user_totp::{create_user_totp, delete_user_totp, CreateUserTOTP},
@@ -47,12 +47,12 @@ pub async fn create_current_user_totp(
     Ok(totp) => totp,
     Err(e) => {
       if e.to_string().to_lowercase().contains("unique constraint") {
-        return Errors::from(StatusCode::CONFLICT)
+        return InternalError::from(StatusCode::CONFLICT)
           .with_error("totp", ALREADY_EXISTS_ERROR)
           .into_response();
       }
       log::error!("Error creating user TOTP: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -82,13 +82,13 @@ pub async fn delete_current_user_totp(
   match delete_user_totp(&state.pool, user.id).await {
     Ok(Some(_)) => {}
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error("totp", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {
       log::error!("Error creating user TOTP: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

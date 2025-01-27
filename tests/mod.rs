@@ -1,7 +1,7 @@
 use std::{path::Path, str::FromStr, sync::Arc};
 
 use auth::{
-  core::{config::Config, database::init_pool, error::Errors},
+  core::{config::Config, database::init_pool, error::InternalError},
   router::{create_router, RouterState},
 };
 use axum::{body::Body, Router};
@@ -12,7 +12,7 @@ use tower::ServiceExt;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::test(flavor = "multi_thread")]
-async fn not_found() -> Result<(), Errors> {
+async fn not_found() -> Result<(), InternalError> {
   let (router, config, pool) = setup().await?;
   defer! { teardown(config, pool) }
 
@@ -26,7 +26,7 @@ async fn not_found() -> Result<(), Errors> {
   Ok(())
 }
 
-pub async fn setup() -> Result<(Router, Arc<Config>, sqlx::AnyPool), Errors> {
+pub async fn setup() -> Result<(Router, Arc<Config>, sqlx::AnyPool), InternalError> {
   dotenvy::from_path("./.env.test").ok();
   sqlx::any::install_default_drivers();
 

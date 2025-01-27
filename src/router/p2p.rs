@@ -1,5 +1,8 @@
 use crate::{
-  core::{error::Errors, openapi::AUTHORIZATION_HEADER},
+  core::{
+    error::{Errors, InternalError},
+    openapi::AUTHORIZATION_HEADER,
+  },
   middleware::{
     authorization::Authorization,
     claims::{TOKEN_SUB_TYPE_SERVICE_ACCOUNT, TOKEN_SUB_TYPE_USER, TOKEN_TYPE_BEARER},
@@ -35,7 +38,7 @@ pub async fn p2p(
   if claims.kind != TOKEN_TYPE_BEARER
     || (claims.sub_kind != TOKEN_SUB_TYPE_USER && claims.sub_kind != TOKEN_SUB_TYPE_SERVICE_ACCOUNT)
   {
-    return Errors::unauthorized()
+    return InternalError::unauthorized()
       .with_error(AUTHORIZATION_HEADER, "invalid-token-type")
       .into_response();
   }

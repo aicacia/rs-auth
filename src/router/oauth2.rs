@@ -2,7 +2,7 @@ use std::{sync::RwLock, time::Duration};
 
 use crate::{
   core::error::{
-    Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR,
+    Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR,
     NOT_FOUND_ERROR, PARSE_ERROR, REQUIRED_ERROR,
   },
   middleware::{
@@ -74,13 +74,13 @@ pub async fn create_oauth2_url(
       Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_error("oauth2-provider", NOT_FOUND_ERROR)
           .into_response();
       }
       Err(e) => {
         log::error!("Error getting tenant oauth2 provider: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -89,7 +89,7 @@ pub async fn create_oauth2_url(
     Ok(client) => client,
     Err(e) => {
       log::error!("Error getting basic client: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_error("oauth2-provider", INVALID_ERROR)
         .into_response();
     }
@@ -107,7 +107,7 @@ pub async fn create_oauth2_url(
     Ok(tuple) => tuple,
     Err(e) => {
       log::error!("Error parsing OAuth2 provider: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -123,7 +123,7 @@ pub async fn create_oauth2_url(
     }
     Err(e) => {
       log::error!("Error aquiring PKCE verifier map: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -161,7 +161,7 @@ pub async fn oauth2_callback(
       Ok(token) => token,
       Err(e) => {
         log::error!("Error parsing OAuth2 state: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_error("oauth2-state-token", INVALID_ERROR)
           .into_response();
       }
@@ -176,13 +176,13 @@ pub async fn oauth2_callback(
     Some(Ok(tenant_id)) => tenant_id,
     Some(Err(e)) => {
       log::error!("Error parsing tenant id: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_error("oauth2-state-token", PARSE_ERROR)
         .into_response();
     }
     None => {
       log::error!("No tenant id found in OAuth2 state");
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_error("oauth2-state-token", INVALID_ERROR)
         .into_response();
     }
@@ -193,18 +193,18 @@ pub async fn oauth2_callback(
       Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
       Ok(None) => {
         log::error!("Unknown OAuth2 provider: {}", provider);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_error("oauth2-provider", NOT_FOUND_ERROR)
           .into_response();
       }
       Err(e) => {
         log::error!("Error getting tenant oauth2 provider: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_error("oauth2-provider", INTERNAL_ERROR)
           .into_response();
       }
     };
-  let mut errors = Errors::bad_request();
+  let mut errors = InternalError::bad_request();
   let mut redirect_url = match Url::parse(&tenant_oauth2_provider.redirect_url) {
     Ok(url) => url.to_owned(),
     Err(e) => {
@@ -212,7 +212,7 @@ pub async fn oauth2_callback(
         "Error parsing redirect url from tenant oauth2 provider: {}",
         e
       );
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_error("redirect-url", PARSE_ERROR)
         .into_response();
     }
@@ -360,7 +360,7 @@ pub async fn oauth2_callback(
       }
       Err(e) => {
         if e.to_string().to_lowercase().contains("unique constraint") {
-          return Errors::from(StatusCode::CONFLICT)
+          return InternalError::from(StatusCode::CONFLICT)
             .with_error("oauth2-provider", ALREADY_EXISTS_ERROR)
             .into_response();
         }
@@ -441,7 +441,7 @@ pub fn create_router(state: RouterState) -> OpenApiRouter {
     .with_state(state)
 }
 
-fn redirect_with_error(mut redirect_url: Url, error: Errors) -> impl IntoResponse {
+fn redirect_with_error(mut redirect_url: Url, error: InternalError) -> impl IntoResponse {
   redirect_url.set_query(Some(&format!(
     "error={}",
     urlencoding::encode(&error.to_string())
@@ -454,7 +454,7 @@ fn redirect(redirect_url: Url) -> impl IntoResponse {
     Ok(url_header) => url_header,
     Err(e) => {
       log::error!("Error converting url to header value URL: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_error("redirect_url", INVALID_ERROR)
         .into_response();
     }

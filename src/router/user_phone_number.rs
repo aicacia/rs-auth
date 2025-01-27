@@ -6,7 +6,7 @@ use http::StatusCode;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-  core::error::{Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{
     service_account_authorization::ServiceAccountAuthorization, validated_json::ValidatedJson,
   },
@@ -57,12 +57,12 @@ pub async fn create_user_phone_number(
     Ok(phone_number) => phone_number,
     Err(e) => {
       if e.to_string().to_lowercase().contains("unique constraint") {
-        return Errors::from(StatusCode::CONFLICT)
+        return InternalError::from(StatusCode::CONFLICT)
           .with_error("phone_number", ALREADY_EXISTS_ERROR)
           .into_response();
       }
       log::error!("Error creating user's phone number: {e}");
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -112,13 +112,13 @@ pub async fn update_user_phone_number(
   {
     Ok(Some(_)) => {}
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error("phone-number", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {
       log::error!("Error updating user's phone number: {e}");
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -158,13 +158,13 @@ pub async fn delete_user_phone_number(
   {
     Ok(Some(_)) => {}
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error("phone-number", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {
       log::error!("Error deleting user's phone number: {e}");
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

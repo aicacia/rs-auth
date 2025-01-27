@@ -4,7 +4,7 @@ use axum::{
 };
 use validator::Validate;
 
-use crate::core::error::{Errors, REQUEST_BODY};
+use crate::core::error::{InternalError, REQUEST_BODY};
 
 pub struct ValidatedJson<T>(pub T);
 
@@ -14,19 +14,19 @@ where
   Json<T>: FromRequest<S, Rejection = JsonRejection>,
   S: Send + Sync,
 {
-  type Rejection = Errors;
+  type Rejection = InternalError;
 
   async fn from_request(request: Request, state: &S) -> Result<Self, Self::Rejection> {
     let Json(value) = match Json::<T>::from_request(request, state).await {
       Ok(value) => value,
       Err(rejection) => {
-        return Err(Errors::bad_request().with_error(REQUEST_BODY, rejection.to_string()));
+        return Err(InternalError::bad_request().with_error(REQUEST_BODY, rejection.to_string()));
       }
     };
 
     match value.validate() {
       Ok(_) => (),
-      Err(errors) => return Err(Errors::from(errors)),
+      Err(errors) => return Err(InternalError::from(errors)),
     };
 
     Ok(Self(value))

@@ -3,7 +3,7 @@ use http::request::Parts;
 
 use crate::{
   core::{
-    error::{Errors, INVALID_ERROR, PARSE_ERROR, REQUIRED_ERROR},
+    error::{InternalError, INVALID_ERROR, PARSE_ERROR, REQUIRED_ERROR},
     openapi::TENENT_ID_HEADER,
   },
   repository::tenant::{get_tenant_by_client_id, TenantRow},
@@ -17,7 +17,7 @@ where
   RouterState: FromRef<S>,
   S: Send + Sync,
 {
-  type Rejection = Errors;
+  type Rejection = InternalError;
 
   async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
     let router_state = RouterState::from_ref(state);
@@ -28,25 +28,27 @@ where
           Ok(client_id) => {
             match get_tenant_by_client_id(&router_state.pool, &client_id.to_string()).await {
               Ok(Some(tenant)) => Ok(TenantId(tenant)),
-              Ok(None) => Err(Errors::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR)),
+              Ok(None) => {
+                Err(InternalError::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR))
+              }
               Err(e) => {
                 log::error!("invalid tenant id: {}", e);
-                Err(Errors::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR))
+                Err(InternalError::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR))
               }
             }
           }
           Err(e) => {
             log::error!("invalid tenant id: {}", e);
-            Err(Errors::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR))
+            Err(InternalError::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR))
           }
         },
         Err(e) => {
           log::error!("invalid tenant id: {}", e);
-          Err(Errors::bad_request().with_error(TENENT_ID_HEADER, PARSE_ERROR))
+          Err(InternalError::bad_request().with_error(TENENT_ID_HEADER, PARSE_ERROR))
         }
       }
     } else {
-      Err(Errors::bad_request().with_error(TENENT_ID_HEADER, REQUIRED_ERROR))
+      Err(InternalError::bad_request().with_error(TENENT_ID_HEADER, REQUIRED_ERROR))
     }
   }
 }

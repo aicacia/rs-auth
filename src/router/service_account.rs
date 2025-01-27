@@ -1,7 +1,7 @@
 use crate::{
   core::{
     encryption,
-    error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
+    error::{Errors, InternalError, INTERNAL_ERROR, NOT_FOUND_ERROR},
   },
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
@@ -50,7 +50,7 @@ pub async fn all_service_accounts(
       Ok(rows) => rows,
       Err(e) => {
         log::error!("error getting service_accounts: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -98,13 +98,13 @@ pub async fn get_service_account_by_id(
     {
       Ok(Some(row)) => row,
       Ok(None) => {
-        return Errors::not_found()
+        return InternalError::not_found()
           .with_error("service_account", NOT_FOUND_ERROR)
           .into_response()
       }
       Err(e) => {
         log::error!("error getting service_accounts: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -140,7 +140,7 @@ pub async fn create_service_account(
       Ok(encrypted_client_secret) => encrypted_client_secret,
       Err(e) => {
         log::error!("error encrypting client_secret: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -158,7 +158,7 @@ pub async fn create_service_account(
     Ok(row) => row,
     Err(e) => {
       log::error!("error creating service_account: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -202,7 +202,7 @@ pub async fn update_service_account(
         Ok(encrypted_client_secret) => encrypted_client_secret,
         Err(e) => {
           log::error!("error encrypting client_secret: {}", e);
-          return Errors::internal_error()
+          return InternalError::internal_error()
             .with_application_error(INTERNAL_ERROR)
             .into_response();
         }
@@ -218,13 +218,13 @@ pub async fn update_service_account(
   {
     Ok(Some(row)) => row,
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error(SERVICE_ACCOUNT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
       log::error!("error creating service_account: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -261,13 +261,13 @@ pub async fn delete_service_account(
   match repository::service_account::delete_service_account(&state.pool, service_account_id).await {
     Ok(Some(_)) => {}
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error(SERVICE_ACCOUNT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
       log::error!("error creating service_account: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

@@ -4,7 +4,7 @@ use crate::{
   core::{
     config::Config,
     encryption::encrypt_password,
-    error::{Errors, DATEBASE_ERROR, INTERNAL_ERROR},
+    error::{InternalError, DATEBASE_ERROR, INTERNAL_ERROR},
   },
   model::service_account::ServiceAccount,
   repository::service_account::{
@@ -12,12 +12,15 @@ use crate::{
   },
 };
 
-pub async fn init_service_accounts(pool: &sqlx::AnyPool, config: &Config) -> Result<(), Errors> {
+pub async fn init_service_accounts(
+  pool: &sqlx::AnyPool,
+  config: &Config,
+) -> Result<(), InternalError> {
   let service_accounts = match get_service_accounts(pool, None, None).await {
     Ok(service_accounts) => service_accounts,
     Err(e) => {
       log::error!("Error getting service accounts: {}", e);
-      return Err(Errors::internal_error().with_application_error(DATEBASE_ERROR));
+      return Err(InternalError::internal_error().with_application_error(DATEBASE_ERROR));
     }
   };
   if !service_accounts.is_empty() {
@@ -30,14 +33,14 @@ pub async fn init_service_accounts(pool: &sqlx::AnyPool, config: &Config) -> Res
 pub async fn create_new_admin_service_account(
   pool: &sqlx::AnyPool,
   config: &Config,
-) -> Result<(), Errors> {
+) -> Result<(), InternalError> {
   let client_id = uuid::Uuid::new_v4();
   let client_secret = uuid::Uuid::new_v4();
   let encrypted_client_secret = match encrypt_password(config, &client_secret.to_string()) {
     Ok(encrypted_client_secret) => encrypted_client_secret,
     Err(e) => {
       log::error!("Error encrypting client secret: {}", e);
-      return Err(Errors::internal_error().with_application_error(DATEBASE_ERROR));
+      return Err(InternalError::internal_error().with_application_error(DATEBASE_ERROR));
     }
   };
   let service_account_row = match create_service_account(
@@ -53,7 +56,7 @@ pub async fn create_new_admin_service_account(
     Ok(row) => row,
     Err(e) => {
       log::error!("Error creating service account: {}", e);
-      return Err(Errors::internal_error().with_application_error(DATEBASE_ERROR));
+      return Err(InternalError::internal_error().with_application_error(DATEBASE_ERROR));
     }
   };
   let mut service_account = ServiceAccount::from(service_account_row);
@@ -62,7 +65,7 @@ pub async fn create_new_admin_service_account(
     Ok(json) => json,
     Err(e) => {
       log::error!("Error serializing service account: {}", e);
-      return Err(Errors::internal_error().with_application_error(INTERNAL_ERROR));
+      return Err(InternalError::internal_error().with_application_error(INTERNAL_ERROR));
     }
   };
   match fs::write(
@@ -74,7 +77,7 @@ pub async fn create_new_admin_service_account(
     Ok(_) => {}
     Err(e) => {
       log::error!("Error writing service account to file: {}", e);
-      return Err(Errors::internal_error().with_application_error(INTERNAL_ERROR));
+      return Err(InternalError::internal_error().with_application_error(INTERNAL_ERROR));
     }
   }
   log::info!("Service account created, see auth-admin-service-account.json");

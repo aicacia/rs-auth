@@ -3,7 +3,7 @@ use http::StatusCode;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, user_authorization::UserAuthorization},
   model::current_user::UpdateUserConfigRequest,
   repository::user_config::{update_user_config, UserConfigUpdate},
@@ -44,12 +44,12 @@ pub async fn update_current_user_config(
     Ok(_) => {}
     Err(e) => {
       if e.to_string().to_lowercase().contains("no mfa type") {
-        return Errors::bad_request()
+        return InternalError::bad_request()
           .with_error("mfa-type", NOT_FOUND_ERROR)
           .into_response();
       }
       log::error!("Error updating user config: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

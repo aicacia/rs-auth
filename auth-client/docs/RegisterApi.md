@@ -10,7 +10,7 @@ Method | HTTP request | Description
 
 ## register_user
 
-> models::User register_user(register_user)
+> models::Token register_user(register_user)
 
 
 ### Parameters
@@ -22,7 +22,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::User**](User.md)
+[**models::Token**](Token.md)
 
 ### Authorization
 

@@ -3,7 +3,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
   core::{
-    error::{Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
+    error::{Errors, InternalError, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
     openapi::AUTHORIZATION_HEADER,
   },
   middleware::{
@@ -49,7 +49,7 @@ pub async fn mfa(
   Json(payload): Json<MFARequest>,
 ) -> impl IntoResponse {
   if !claims.kind.starts_with(TOKEN_TYPE_MFA_TOTP_PREFIX) {
-    return Errors::unauthorized()
+    return InternalError::unauthorized()
       .with_error(AUTHORIZATION_HEADER, "invalid-token-type")
       .into_response();
   }
@@ -58,13 +58,13 @@ pub async fn mfa(
   let user = match get_user_by_id(&state.pool, claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error("user", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {
       log::error!("Error getting user: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -91,13 +91,13 @@ async fn totp_request(
   let totp = match get_user_totp_by_user_id(pool, user.id).await {
     Ok(Some(totp)) => totp,
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error("totp", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {
       log::error!("Error getting user TOTP: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -106,13 +106,13 @@ async fn totp_request(
   match totp.verify(&code) {
     Ok(true) => (),
     Ok(false) => {
-      return Errors::unauthorized()
+      return InternalError::unauthorized()
         .with_error("totp", INVALID_ERROR)
         .into_response();
     }
     Err(e) => {
       log::error!("Error verifying TOTP: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -147,7 +147,7 @@ async fn service_account_request(
   if service_account_claims.claims.kind != TOKEN_TYPE_BEARER
     || service_account_claims.claims.sub_kind != TOKEN_SUB_TYPE_SERVICE_ACCOUNT
   {
-    return Errors::unauthorized()
+    return InternalError::unauthorized()
       .with_error("token", "invalid-token-sub-type")
       .into_response();
   }

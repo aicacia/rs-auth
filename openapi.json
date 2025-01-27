@@ -29,7 +29,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -37,7 +37,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -61,7 +61,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -69,7 +69,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -77,7 +77,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -93,7 +93,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -101,7 +101,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -109,7 +109,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -137,7 +137,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -145,7 +145,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -153,7 +153,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -161,7 +161,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -194,7 +194,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -202,7 +202,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -210,7 +210,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -218,7 +218,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -245,7 +245,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -253,7 +253,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -261,7 +261,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -269,7 +269,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -296,7 +296,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -304,7 +304,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -312,7 +312,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -320,7 +320,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -346,7 +346,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -354,7 +354,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -362,7 +362,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -393,7 +393,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -401,7 +401,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -434,7 +434,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -442,7 +442,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -450,7 +450,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -458,7 +458,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -485,7 +485,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -493,7 +493,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -501,7 +501,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -509,7 +509,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -536,7 +536,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -544,7 +544,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -552,7 +552,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -560,7 +560,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -586,7 +586,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -594,7 +594,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -602,7 +602,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -635,7 +635,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -643,7 +643,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -651,7 +651,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -659,7 +659,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -675,7 +675,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -683,7 +683,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -691,7 +691,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -744,7 +744,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -752,7 +752,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -760,7 +760,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -787,7 +787,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -795,7 +795,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -803,7 +803,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -836,7 +836,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -844,7 +844,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -852,7 +852,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -889,7 +889,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -897,7 +897,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -943,7 +943,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -951,7 +951,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -959,7 +959,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -990,7 +990,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -998,7 +998,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1006,7 +1006,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1039,7 +1039,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1047,7 +1047,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1055,7 +1055,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1096,7 +1096,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1104,7 +1104,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1135,7 +1135,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1143,7 +1143,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1151,7 +1151,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1185,7 +1185,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1193,7 +1193,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1201,7 +1201,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1241,7 +1241,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1249,7 +1249,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1257,7 +1257,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1302,7 +1302,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1310,7 +1310,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1341,7 +1341,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1349,7 +1349,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1357,7 +1357,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1397,7 +1397,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1405,7 +1405,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1413,7 +1413,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1453,7 +1453,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1461,7 +1461,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1469,7 +1469,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1509,7 +1509,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1517,7 +1517,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1525,7 +1525,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1550,7 +1550,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1558,7 +1558,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1566,7 +1566,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1612,7 +1612,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1620,7 +1620,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1628,7 +1628,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1636,7 +1636,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1644,7 +1644,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1688,7 +1688,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1696,7 +1696,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1704,7 +1704,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1712,7 +1712,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1744,7 +1744,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1752,7 +1752,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1760,7 +1760,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1768,7 +1768,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1801,7 +1801,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1809,7 +1809,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1817,7 +1817,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1825,7 +1825,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1864,7 +1864,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1872,7 +1872,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1903,7 +1903,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1911,7 +1911,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1919,7 +1919,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -1953,7 +1953,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1961,7 +1961,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -1969,7 +1969,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -2013,7 +2013,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2021,7 +2021,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2029,7 +2029,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2037,7 +2037,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -2081,7 +2081,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2089,7 +2089,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2097,7 +2097,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -2129,7 +2129,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2137,7 +2137,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2145,7 +2145,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -2189,7 +2189,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2197,7 +2197,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2205,7 +2205,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -2237,7 +2237,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2245,7 +2245,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2253,7 +2253,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -2297,7 +2297,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2305,7 +2305,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2313,7 +2313,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2321,7 +2321,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -2363,7 +2363,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2371,7 +2371,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           },
@@ -2379,7 +2379,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Errors" }
+                "schema": { "$ref": "#/components/schemas/HashMap" }
               }
             }
           }
@@ -2520,23 +2520,13 @@
           }
         }
       },
-      "ErrorMessages": {
-        "type": "array",
-        "items": { "$ref": "#/components/schemas/ErrorMessage" }
-      },
-      "Errors": {
+      "HashMap": {
         "type": "object",
-        "required": ["status_code", "messages"],
-        "properties": {
-          "messages": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ErrorMessages"
-            },
-            "propertyNames": { "type": "string" }
-          },
-          "status_code": { "type": "integer", "format": "int32", "minimum": 0 }
-        }
+        "additionalProperties": {
+          "type": "array",
+          "items": { "$ref": "#/components/schemas/ErrorMessage" }
+        },
+        "propertyNames": { "type": "string" }
       },
       "Health": {
         "type": "object",

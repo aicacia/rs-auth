@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
     tenant::{CreateTenant, Tenant, TenantQuery, UpdateTenant},
@@ -60,7 +60,7 @@ pub async fn all_tenants(
     Ok(results) => results,
     Err(e) => {
       log::error!("error getting tenants: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -131,7 +131,7 @@ pub async fn get_tenant_by_client_id(
       Ok(row) => row,
       Err(e) => {
         log::error!("error getting tenant: {}", e);
-        return Errors::internal_error()
+        return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -139,7 +139,7 @@ pub async fn get_tenant_by_client_id(
   let row = match row_optional {
     Some(row) => row,
     None => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error(TENANT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
@@ -149,7 +149,7 @@ pub async fn get_tenant_by_client_id(
     Ok(results) => results,
     Err(e) => {
       log::error!("error getting tenants: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -198,7 +198,7 @@ pub async fn get_tenant_by_id(
     Ok(results) => results,
     Err(e) => {
       log::error!("error getting tenants: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -206,7 +206,7 @@ pub async fn get_tenant_by_id(
   let row = match row_optional {
     Some(row) => row,
     None => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error(TENANT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
@@ -267,7 +267,7 @@ pub async fn create_tenant(
     Ok(tenant_row) => tenant_row,
     Err(e) => {
       log::error!("error creating tenant: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -320,13 +320,13 @@ pub async fn update_tenant(
   {
     Ok(Some(tenant)) => tenant,
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error(TENANT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
       log::error!("error creating tenant: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -359,13 +359,13 @@ pub async fn delete_tenant(
   match repository::tenant::delete_tenant(&state.pool, tenant_id).await {
     Ok(Some(_)) => {}
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error(TENANT_TAG, NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
       log::error!("error creating tenant: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

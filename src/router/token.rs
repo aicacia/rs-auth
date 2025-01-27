@@ -1,7 +1,7 @@
 use crate::{
   core::{
     config::Config,
-    error::{Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
+    error::{Errors, InternalError, INTERNAL_ERROR, INVALID_ERROR, NOT_FOUND_ERROR},
   },
   middleware::{
     claims::{
@@ -113,13 +113,13 @@ async fn password_request(
   let user = match get_user_by_username_or_primary_email(pool, &username).await {
     Ok(Some(user)) => user,
     Ok(None) => {
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_error("credentials", INVALID_ERROR)
         .into_response()
     }
     Err(e) => {
       log::error!("error fetching user from database: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -127,13 +127,13 @@ async fn password_request(
   let user_password = match get_user_active_password_by_user_id(pool, user.id).await {
     Ok(Some(user_password)) => user_password,
     Ok(None) => {
-      return Errors::from(StatusCode::FORBIDDEN)
+      return InternalError::from(StatusCode::FORBIDDEN)
         .with_error("authentication-types", "password")
         .into_response();
     }
     Err(e) => {
       log::error!("error fetching user password from database: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -141,13 +141,13 @@ async fn password_request(
   match user_password.verify(&password) {
     Ok(true) => {}
     Ok(false) => {
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_error("credentials", INVALID_ERROR)
         .into_response()
     }
     Err(e) => {
       log::error!("error verifying user password: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -188,27 +188,27 @@ async fn refresh_token_request(
     Ok(claims) => claims,
     Err(e) => {
       log::error!("error decoding jwt: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
   };
   if jwt.claims.kind != TOKEN_TYPE_REFRESH {
     log::error!("invalid token type: {}", jwt.claims.kind);
-    return Errors::from(StatusCode::UNAUTHORIZED)
+    return InternalError::from(StatusCode::UNAUTHORIZED)
       .with_application_error(INTERNAL_ERROR)
       .into_response();
   }
   let user = match get_user_by_id(pool, jwt.claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => {
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
     Err(e) => {
       log::error!("error fetching user from database: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -236,29 +236,29 @@ async fn authorization_code_request(
     Ok(claims) => claims,
     Err(e) => {
       log::error!("error decoding jwt: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
   };
   if jwt.claims.kind != TOKEN_TYPE_AUTHORIZATION_CODE {
     log::error!("invalid token type: {}", jwt.claims.kind);
-    return Errors::from(StatusCode::UNAUTHORIZED)
+    return InternalError::from(StatusCode::UNAUTHORIZED)
       .with_application_error(INTERNAL_ERROR)
       .into_response();
   }
   if jwt.claims.sub_kind != TOKEN_SUB_TYPE_USER {
     log::error!("invalid token sub_type: {}", jwt.claims.sub_kind);
-    return Errors::from(StatusCode::UNAUTHORIZED)
+    return InternalError::from(StatusCode::UNAUTHORIZED)
       .with_application_error(INTERNAL_ERROR)
       .into_response();
   }
   let user = match get_user_by_id(pool, jwt.claims.sub).await {
     Ok(Some(user)) => user,
-    Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
+    Ok(None) => return InternalError::from(StatusCode::UNAUTHORIZED).into_response(),
     Err(e) => {
       log::error!("error fetching user from database: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -284,10 +284,10 @@ async fn service_account_request(
 ) -> impl IntoResponse {
   let service_account = match get_service_account_by_client_id(pool, &client_id.to_string()).await {
     Ok(Some(service_account)) => service_account,
-    Ok(None) => return Errors::from(StatusCode::UNAUTHORIZED).into_response(),
+    Ok(None) => return InternalError::from(StatusCode::UNAUTHORIZED).into_response(),
     Err(e) => {
       log::error!("error fetching service account from database: {}", e);
-      return Errors::from(StatusCode::UNAUTHORIZED)
+      return InternalError::from(StatusCode::UNAUTHORIZED)
         .with_error("client_id", NOT_FOUND_ERROR)
         .into_response();
     }
@@ -301,10 +301,10 @@ async fn service_account_request(
     )
     .await
     .into_response(),
-    Ok(false) => Errors::from(StatusCode::UNAUTHORIZED).into_response(),
+    Ok(false) => InternalError::from(StatusCode::UNAUTHORIZED).into_response(),
     Err(e) => {
       log::error!("error verifying user password: {}", e);
-      Errors::from(StatusCode::UNAUTHORIZED)
+      InternalError::from(StatusCode::UNAUTHORIZED)
         .with_error("client_secret", INVALID_ERROR)
         .into_response()
     }
@@ -336,7 +336,7 @@ async fn create_service_token_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+      return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -349,7 +349,7 @@ async fn create_service_token_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+      return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -400,7 +400,7 @@ pub(crate) async fn create_user_token(
       Ok(None) => {}
       Err(e) => {
         log::error!("error fetching user totp from database: {}", e);
-        return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+        return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -426,7 +426,7 @@ pub(crate) async fn create_user_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+      return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -439,7 +439,7 @@ pub(crate) async fn create_user_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+      return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -460,13 +460,13 @@ pub(crate) async fn create_user_token(
         Ok(Some(user_info)) => user_info,
         Ok(None) => {
           log::error!("user info not found for user: {}", user.id);
-          return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+          return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
             .with_application_error(INTERNAL_ERROR)
             .into_response();
         }
         Err(e) => {
           log::error!("error fetching user info from database: {}", e);
-          return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+          return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
             .with_application_error(INTERNAL_ERROR)
             .into_response();
         }
@@ -507,7 +507,7 @@ pub(crate) async fn create_user_token(
         }
         Err(e) => {
           log::error!("Error getting user primary email: {}", e);
-          return Errors::internal_error()
+          return InternalError::internal_error()
             .with_application_error(INTERNAL_ERROR)
             .into_response();
         }
@@ -535,7 +535,7 @@ pub(crate) async fn create_user_token(
         }
         Err(e) => {
           log::error!("Error getting user primary phone number: {}", e);
-          return Errors::internal_error()
+          return InternalError::internal_error()
             .with_application_error(INTERNAL_ERROR)
             .into_response();
         }
@@ -546,7 +546,7 @@ pub(crate) async fn create_user_token(
       Ok(token) => Some(token),
       Err(e) => {
         log::error!("error encoding jwt: {}", e);
-        return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+        return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
@@ -596,7 +596,7 @@ pub(crate) async fn create_reset_password_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+      return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -646,7 +646,7 @@ async fn create_mfa_token(
     Ok(token) => token,
     Err(e) => {
       log::error!("error encoding jwt: {}", e);
-      return Errors::from(StatusCode::INTERNAL_SERVER_ERROR)
+      return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

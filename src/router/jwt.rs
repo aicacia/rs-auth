@@ -7,7 +7,8 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use crate::{
   core::{
     error::{
-      Errors, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR, REQUIRED_ERROR,
+      Errors, InternalError, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR,
+      REQUIRED_ERROR,
     },
     openapi::{AUTHORIZATION_HEADER, TENENT_ID_HEADER},
   },
@@ -48,13 +49,13 @@ pub async fn create_jwt(
   let tenant = match get_tenant_by_id(&state.pool, payload.tenant_id).await {
     Ok(Some(tenant)) => tenant,
     Ok(None) => {
-      return Errors::bad_request()
+      return InternalError::bad_request()
         .with_error("tenant_id", NOT_FOUND_ERROR)
         .into_response()
     }
     Err(e) => {
       log::error!("failed to get tenant by id: {e}");
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_error("tenant_id", INTERNAL_ERROR)
         .into_response();
     }
@@ -63,7 +64,7 @@ pub async fn create_jwt(
   let algorithm = match jsonwebtoken::Algorithm::from_str(&tenant.algorithm) {
     Ok(algorithm) => algorithm,
     Err(_) => {
-      return Errors::bad_request()
+      return InternalError::bad_request()
         .with_error("algorithm", NOT_ALLOWED_ERROR)
         .into_response()
     }
@@ -75,7 +76,7 @@ pub async fn create_jwt(
   let key = match tenant_encoding_key(&tenant, algorithm) {
     Ok(key) => key,
     Err(_) => {
-      return Errors::bad_request()
+      return InternalError::bad_request()
         .with_error("algorithm", NOT_ALLOWED_ERROR)
         .into_response()
     }
@@ -83,7 +84,7 @@ pub async fn create_jwt(
   let token = match jsonwebtoken::encode(&header, &payload.claims, &key) {
     Ok(token) => token,
     Err(_) => {
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_error("jwt", INTERNAL_ERROR)
         .into_response()
     }
@@ -116,7 +117,7 @@ pub async fn jwt_is_valid(
       Ok(authorization_string) => {
         if authorization_string.len() < TOKEN_TYPE_BEARER.len() + 1 {
           log::error!("invalid authorization header is invalid");
-          return Errors::unauthorized()
+          return InternalError::unauthorized()
             .with_error(AUTHORIZATION_HEADER, INVALID_ERROR)
             .into_response();
         }
@@ -124,14 +125,14 @@ pub async fn jwt_is_valid(
       }
       Err(e) => {
         log::error!("invalid authorization header is invalid: {}", e);
-        return Errors::unauthorized()
+        return InternalError::unauthorized()
           .with_error(AUTHORIZATION_HEADER, INVALID_ERROR)
           .into_response();
       }
     },
     None => {
       log::error!("invalid authorization header is missing");
-      return Errors::unauthorized()
+      return InternalError::unauthorized()
         .with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR)
         .into_response();
     }
@@ -142,21 +143,21 @@ pub async fn jwt_is_valid(
         Ok(client_id) => client_id,
         Err(e) => {
           log::error!("invalid tenant header is invalid: {}", e);
-          return Errors::unauthorized()
+          return InternalError::unauthorized()
             .with_error(TENENT_ID_HEADER, INVALID_ERROR)
             .into_response();
         }
       },
       Err(e) => {
         log::error!("invalid tenant header is invalid: {}", e);
-        return Errors::unauthorized()
+        return InternalError::unauthorized()
           .with_error(TENENT_ID_HEADER, INVALID_ERROR)
           .into_response();
       }
     },
     None => {
       log::error!("invalid tenant header is missing");
-      return Errors::unauthorized()
+      return InternalError::unauthorized()
         .with_error(TENENT_ID_HEADER, REQUIRED_ERROR)
         .into_response();
     }
@@ -171,7 +172,7 @@ pub async fn jwt_is_valid(
     Ok(result) => result,
     Err(e) => {
       log::error!("Error parsing authorization: {}", e);
-      return Errors::unauthorized()
+      return InternalError::unauthorized()
         .with_error(AUTHORIZATION_HEADER, INVALID_ERROR)
         .into_response();
     }
@@ -180,13 +181,13 @@ pub async fn jwt_is_valid(
     Ok(client_id) => client_id,
     Err(e) => {
       log::error!("authorization tenant id is not a valid uuid: {}", e);
-      return Errors::unauthorized()
+      return InternalError::unauthorized()
         .with_error("tenant", INVALID_ERROR)
         .into_response();
     }
   };
   if tenant_client_id != token_tenant_client_id {
-    return Errors::unauthorized()
+    return InternalError::unauthorized()
       .with_error("tenant", INVALID_ERROR)
       .into_response();
   }

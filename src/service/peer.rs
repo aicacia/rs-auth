@@ -20,7 +20,7 @@ use webrtc_p2p::{peer::SignalMessage, Peer, PeerOptions};
 use crate::{
   core::{
     config::Config,
-    error::{Errors, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR},
+    error::{InternalError, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR},
   },
   middleware::claims::tenant_encoding_key,
   repository::tenant::get_tenant_by_id,
@@ -31,7 +31,7 @@ pub async fn serve_peer(
   config: Arc<Config>,
   router: axum::Router,
   cancellation_token: CancellationToken,
-) -> Result<(), Errors> {
+) -> Result<(), InternalError> {
   let mut m = MediaEngine::default();
   let registry = register_default_interceptors(Registry::new(), &mut m)?;
 
@@ -77,7 +77,7 @@ async fn ws_serve_peer(
   peer_options: PeerOptions,
   router: axum::Router,
   cancellation_token: CancellationToken,
-) -> Result<(), Errors> {
+) -> Result<(), InternalError> {
   let ws_server_token = create_p2p_ws_server_token(pool, config).await?;
   let ws_url = format!(
     "{}/server/websocket?token={}",
@@ -93,7 +93,7 @@ async fn ws_serve_peer(
   while let Some(msg_result) = socket.lock().await.next().await {
     let msg = msg_result?;
     if msg.is_close() {
-      return Err(Errors::internal_error().with_application_error("socket closed"));
+      return Err(InternalError::internal_error().with_application_error("socket closed"));
     }
     let data = msg.into_data().to_vec();
     let json = serde_json::from_slice::<IncomingMessage>(&data)?;
@@ -211,7 +211,7 @@ lazy_static! {
 async fn create_p2p_ws_server_token(
   pool: &sqlx::AnyPool,
   config: &Config,
-) -> Result<String, Errors> {
+) -> Result<String, InternalError> {
   let body = AuthenticateBody {
     id: config.p2p.id.clone(),
     password: config.p2p.password.clone(),
@@ -241,7 +241,7 @@ fn create_p2p_claims(config: &Config) -> (serde_json::Map<String, serde_json::Va
   (claims, expires_at)
 }
 
-async fn create_p2p_token(pool: &sqlx::AnyPool, config: &Config) -> Result<String, Errors> {
+async fn create_p2p_token(pool: &sqlx::AnyPool, config: &Config) -> Result<String, InternalError> {
   let now = chrono::Utc::now().timestamp();
   if let Some((token, expires_at)) = AUTH_P2P_TOKEN.read().await.as_ref() {
     if now < *expires_at {
@@ -262,22 +262,24 @@ async fn create_jwt(
   pool: &sqlx::AnyPool,
   config: &Config,
   claims: serde_json::Map<String, serde_json::Value>,
-) -> Result<String, Errors> {
+) -> Result<String, InternalError> {
   let tenant = match get_tenant_by_id(&pool, config.p2p.tenant_id).await {
     Ok(Some(tenant)) => tenant,
     Ok(None) => {
-      return Err(Errors::bad_request().with_error("config.p2p.tenant_id", NOT_FOUND_ERROR));
+      return Err(InternalError::bad_request().with_error("config.p2p.tenant_id", NOT_FOUND_ERROR));
     }
     Err(e) => {
       log::error!("failed to get tenant by id: {e}");
-      return Err(Errors::internal_error().with_error("config.p2p.tenant_id", INTERNAL_ERROR));
+      return Err(
+        InternalError::internal_error().with_error("config.p2p.tenant_id", INTERNAL_ERROR),
+      );
     }
   };
 
   let algorithm = match jsonwebtoken::Algorithm::from_str(&tenant.algorithm) {
     Ok(algorithm) => algorithm,
     Err(_) => {
-      return Err(Errors::bad_request().with_error("algorithm", NOT_ALLOWED_ERROR));
+      return Err(InternalError::bad_request().with_error("algorithm", NOT_ALLOWED_ERROR));
     }
   };
 
@@ -287,13 +289,13 @@ async fn create_jwt(
   let key = match tenant_encoding_key(&tenant, algorithm) {
     Ok(key) => key,
     Err(_) => {
-      return Err(Errors::bad_request().with_error("algorithm", NOT_ALLOWED_ERROR));
+      return Err(InternalError::bad_request().with_error("algorithm", NOT_ALLOWED_ERROR));
     }
   };
   let token = match jsonwebtoken::encode(&header, &claims, &key) {
     Ok(token) => token,
     Err(_) => {
-      return Err(Errors::internal_error().with_error("jwt", INTERNAL_ERROR));
+      return Err(InternalError::internal_error().with_error("jwt", INTERNAL_ERROR));
     }
   };
   Ok(token)

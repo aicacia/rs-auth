@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-  core::error::{Errors, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{
     json::Json, service_account_authorization::ServiceAccountAuthorization,
     validated_json::ValidatedJson,
@@ -97,7 +97,7 @@ pub async fn all_users(
     Ok(results) => results,
     Err(e) => {
       log::error!("error getting users: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -230,7 +230,7 @@ pub async fn get_user_by_id(
     Ok(results) => results,
     Err(e) => {
       log::error!("error getting users: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -238,7 +238,7 @@ pub async fn get_user_by_id(
   let row = match row_optional {
     Some(row) => row,
     None => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error("tenant", NOT_FOUND_ERROR)
         .into_response()
     }
@@ -305,7 +305,7 @@ pub async fn create_user(
     Ok(user) => user,
     Err(e) => {
       log::error!("error creating user: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -343,7 +343,7 @@ pub async fn create_user_reset_password_token(
   ) {
     Ok((Some(user), Some(tenant))) => (user, tenant),
     Ok((user, tenant)) => {
-      let mut errors = Errors::not_found();
+      let mut errors = InternalError::not_found();
       if user.is_none() {
         errors.error("user_id", NOT_FOUND_ERROR);
       }
@@ -354,7 +354,7 @@ pub async fn create_user_reset_password_token(
     }
     Err(e) => {
       log::error!("error getting user/tenant: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

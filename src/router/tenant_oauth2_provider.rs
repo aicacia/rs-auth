@@ -1,5 +1,7 @@
 use crate::{
-  core::error::{Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR},
+  core::error::{
+    Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR,
+  },
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::tenant_oauth2_provider::{
     CreateTenantOAuth2Provider, TenantOAuth2Provider, UpdateTenantOAuth2Provider,
@@ -48,7 +50,7 @@ pub async fn create_tenant_oauth2_provider(
     match repository::tenant_oauth2_provider::CreateTenantOAuth2Provider::new(&payload.provider) {
       Some(params) => params,
       None => {
-        return Errors::from(StatusCode::NOT_IMPLEMENTED)
+        return InternalError::from(StatusCode::NOT_IMPLEMENTED)
           .with_error("provider", NOT_ALLOWED_ERROR)
           .into_response();
       }
@@ -80,12 +82,12 @@ pub async fn create_tenant_oauth2_provider(
     Ok(tenant) => tenant,
     Err(e) => {
       if e.to_string().to_lowercase().contains("unique constraint") {
-        return Errors::from(StatusCode::CONFLICT)
+        return InternalError::from(StatusCode::CONFLICT)
           .with_error(OAUTH2_PROVIDER_TAG, ALREADY_EXISTS_ERROR)
           .into_response();
       }
       log::error!("error creating tenant OAuth2 provider: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -138,13 +140,13 @@ pub async fn update_tenant_oauth2_provider(
   {
     Ok(Some(_)) => {}
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error("tenant-oauth2-provider", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {
       log::error!("error updating tenant OAuth2 provider: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -185,13 +187,13 @@ pub async fn delete_tenant_oauth2_provider(
   {
     Ok(Some(_)) => {}
     Ok(None) => {
-      return Errors::not_found()
+      return InternalError::not_found()
         .with_error("tenant-oauth2-provider", NOT_FOUND_ERROR)
         .into_response();
     }
     Err(e) => {
       log::error!("error deleting tenant OAuth2 provider: {}", e);
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

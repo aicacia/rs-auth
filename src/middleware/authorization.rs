@@ -5,7 +5,7 @@ use serde::de::DeserializeOwned;
 use super::claims::{parse_jwt, parse_jwt_no_validation, BasicClaims, TOKEN_TYPE_BEARER};
 use crate::{
   core::{
-    error::{Errors, INVALID_ERROR, REQUIRED_ERROR},
+    error::{InternalError, INVALID_ERROR, REQUIRED_ERROR},
     openapi::AUTHORIZATION_HEADER,
   },
   repository::tenant::{get_tenant_by_id, TenantRow},
@@ -22,7 +22,7 @@ where
   RouterState: FromRef<S>,
   S: Send + Sync,
 {
-  type Rejection = Errors;
+  type Rejection = InternalError;
 
   async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
     let router_state = RouterState::from_ref(state);
@@ -32,13 +32,17 @@ where
         Ok(authorization_string) => {
           if authorization_string.len() < TOKEN_TYPE_BEARER.len() + 1 {
             log::error!("invalid authorization header is invalid");
-            return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
+            return Err(
+              InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR),
+            );
           }
           &authorization_string[(TOKEN_TYPE_BEARER.len() + 1)..]
         }
         Err(e) => {
           log::error!("invalid authorization header is invalid: {}", e);
-          return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
+          return Err(
+            InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR),
+          );
         }
       };
       let (tenant, token_data) =
@@ -48,14 +52,14 @@ where
         tenant,
       });
     }
-    Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR))
+    Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, REQUIRED_ERROR))
   }
 }
 
 pub async fn parse_authorization<T>(
   pool: &sqlx::AnyPool,
   authorization_string: &str,
-) -> Result<(TenantRow, jsonwebtoken::TokenData<T>), Errors>
+) -> Result<(TenantRow, jsonwebtoken::TokenData<T>), InternalError>
 where
   T: DeserializeOwned,
 {
@@ -63,7 +67,7 @@ where
     Ok(maybe_invalid_token) => maybe_invalid_token,
     Err(e) => {
       log::error!("invalid authorization failed to check header: {}", e);
-      return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
+      return Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
   let tenant_id = match maybe_invalid_token
@@ -76,29 +80,29 @@ where
     Some(Ok(tenant_id)) => tenant_id,
     Some(Err(e)) => {
       log::error!("invalid authorization failed to parse kid: {}", e);
-      return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
+      return Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
     None => {
       log::error!("invalid authorization kid is missing");
-      return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
+      return Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
   let tenant = match get_tenant_by_id(pool, tenant_id).await {
     Ok(Some(tenant)) => tenant,
     Ok(None) => {
       log::error!("invalid authorization tenant not found by app");
-      return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
+      return Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
     Err(e) => {
       log::error!("invalid authorization token is invalid: {}", e);
-      return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
+      return Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
   let token_data = match parse_jwt::<T>(authorization_string, &tenant) {
     Ok(token_data) => token_data,
     Err(e) => {
       log::error!("invalid authorization failed to parse claims: {}", e);
-      return Err(Errors::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
+      return Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
   Ok((tenant, token_data))

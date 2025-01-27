@@ -6,7 +6,7 @@ use http::StatusCode;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-  core::error::{Errors, ALREADY_EXISTS_ERROR, INTERNAL_ERROR},
+  core::error::{Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR},
   middleware::{user_authorization::UserAuthorization, validated_json::ValidatedJson},
   model::user::{CreateUserPhoneNumber, UserPhoneNumber},
   repository::{
@@ -54,12 +54,12 @@ pub async fn create_current_user_phone_number(
     Ok(phone_number) => phone_number,
     Err(e) => {
       if e.to_string().to_lowercase().contains("unique constraint") {
-        return Errors::from(StatusCode::CONFLICT)
+        return InternalError::from(StatusCode::CONFLICT)
           .with_error("phone_number", ALREADY_EXISTS_ERROR)
           .into_response();
       }
       log::error!("Error creating user phone number: {e}");
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -98,12 +98,12 @@ pub async fn set_current_user_phone_number_as_primary(
     Ok(_) => {}
     Err(e) => {
       if e.to_string().to_lowercase().contains("at least one row") {
-        return Errors::bad_request()
+        return InternalError::bad_request()
           .with_error("phone-number", "not-verified")
           .into_response();
       }
       log::error!("Error setting user phone_number={phone_number_id} as primary: {e}");
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
@@ -138,7 +138,7 @@ pub async fn delete_current_user_phone_number(
     Ok(_) => {}
     Err(e) => {
       log::error!("Error deleting user phone_number={phone_number_id}: {e}");
-      return Errors::internal_error()
+      return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }

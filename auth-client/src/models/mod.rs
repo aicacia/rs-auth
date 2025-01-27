@@ -16,8 +16,6 @@ pub mod create_user_phone_number;
 pub use self::create_user_phone_number::CreateUserPhoneNumber;
 pub mod error_message;
 pub use self::error_message::ErrorMessage;
-pub mod errors;
-pub use self::errors::Errors;
 pub mod health;
 pub use self::health::Health;
 pub mod jwt_request;
