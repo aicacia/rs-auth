@@ -33,7 +33,7 @@ use sqlx::AnyPool;
 use tenant::TENANT_TAG;
 use tenant_oauth2_provider::OAUTH2_PROVIDER_TAG;
 use token::TOKEN_TAG;
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use tower_http::{compression::CompressionLayer, cors::CorsLayer, trace::TraceLayer};
 use user::USER_TAG;
 use util::UTIL_TAG;
 use utoipa::{Modify, OpenApi};
@@ -105,5 +105,6 @@ pub fn create_router(state: RouterState) -> Router {
     .merge(openapi::create_router(openapi))
     .layer(CorsLayer::very_permissive())
     .layer(TraceLayer::new_for_http())
+    .layer(CompressionLayer::new().gzip(true))
     .into()
 }
