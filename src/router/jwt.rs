@@ -97,6 +97,9 @@ pub async fn create_jwt(
   get,
   path = "/jwt",
   tags = [JWT_TAG],
+  params(
+    ("Tenant-ID" = String, Header, description = "Tenant UUID"),
+  ),
   responses(
     (status = 200, content_type = "application/json", body = serde_json::Map<String, serde_json::Value>),
     (status = 400, content_type = "application/json", body = Errors),
@@ -104,8 +107,7 @@ pub async fn create_jwt(
     (status = 500, content_type = "application/json", body = Errors),
   ),
   security(
-    ("TenantUUID" = []),
-    ("Authorization" = [])
+    ("Authorization" = []),
   )
 )]
 pub async fn jwt_is_valid(

@@ -39,12 +39,15 @@ Name | Type | Description  | Required | Notes
 
 ## jwt_is_valid
 
-> std::collections::HashMap<String, serde_json::Value> jwt_is_valid()
+> std::collections::HashMap<String, serde_json::Value> jwt_is_valid(tenant_id)
 
 
 ### Parameters
 
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**tenant_id** | **String** | Tenant UUID | [required] |
 
 ### Return type
 
@@ -52,7 +55,7 @@ This endpoint does not need any parameter.
 
 ### Authorization
 
-[Authorization](../README.md#Authorization), [TenantUUID](../README.md#TenantUUID)
+[Authorization](../README.md#Authorization)
 
 ### HTTP request headers
 

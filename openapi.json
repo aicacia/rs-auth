@@ -727,6 +727,15 @@
       "get": {
         "tags": ["jwt"],
         "operationId": "jwt_is_valid",
+        "parameters": [
+          {
+            "name": "Tenant-ID",
+            "in": "header",
+            "description": "Tenant UUID",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -765,7 +774,7 @@
             }
           }
         },
-        "security": [{ "TenantUUID": [] }, { "Authorization": [] }]
+        "security": [{ "Authorization": [] }]
       },
       "post": {
         "tags": ["jwt"],

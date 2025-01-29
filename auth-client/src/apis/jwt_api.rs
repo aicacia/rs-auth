@@ -38,7 +38,7 @@ impl<C: Connect> JwtApiClient<C>
 
 pub trait JwtApi: Send + Sync {
     fn create_jwt(&self, jwt_request: models::JwtRequest) -> Pin<Box<dyn Future<Output = Result<String, Error>> + Send>>;
-    fn jwt_is_valid(&self, ) -> Pin<Box<dyn Future<Output = Result<std::collections::HashMap<String, serde_json::Value>, Error>> + Send>>;
+    fn jwt_is_valid(&self, tenant_id: &str) -> Pin<Box<dyn Future<Output = Result<std::collections::HashMap<String, serde_json::Value>, Error>> + Send>>;
 }
 
 impl<C: Connect>JwtApi for JwtApiClient<C>
@@ -53,14 +53,10 @@ impl<C: Connect>JwtApi for JwtApiClient<C>
     }
 
     #[allow(unused_mut)]
-    fn jwt_is_valid(&self, ) -> Pin<Box<dyn Future<Output = Result<std::collections::HashMap<String, serde_json::Value>, Error>> + Send>> {
+    fn jwt_is_valid(&self, tenant_id: &str) -> Pin<Box<dyn Future<Output = Result<std::collections::HashMap<String, serde_json::Value>, Error>> + Send>> {
         let mut req = __internal_request::Request::new(hyper::Method::GET, "/jwt".to_string())
-            .with_auth(__internal_request::Auth::ApiKey(__internal_request::ApiKey{
-                in_header: true,
-                in_query: false,
-                param_name: "Tenant-ID".to_owned(),
-            }))
         ;
+        req = req.with_header_param("Tenant-ID".to_string(), tenant_id.to_string());
 
         req.execute(self.configuration.borrow())
     }
