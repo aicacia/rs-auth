@@ -201,11 +201,11 @@ impl fmt::Display for UserMFAType {
 
 impl From<UserMFATypeRow> for UserMFAType {
   fn from(row: UserMFATypeRow) -> Self {
-    match row.kind.as_str() {
+    match row.r#type.as_str() {
       "totp" => Self::TOTP,
       "email" => Self::Email,
       "text" => Self::Text,
-      _ => panic!("Unknown MFA type: {}", row.kind),
+      _ => panic!("Unknown MFA type: {}", row.r#type),
     }
   }
 }

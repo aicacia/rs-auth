@@ -409,9 +409,9 @@ pub async fn oauth2_callback(
 
   let now = chrono::Utc::now();
   let claims = BasicClaims {
-    kind: TOKEN_TYPE_AUTHORIZATION_CODE.to_owned(),
+    r#type: TOKEN_TYPE_AUTHORIZATION_CODE.to_owned(),
     app: tenant.id,
-    sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
+    sub_type: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),

@@ -34,8 +34,8 @@ where
     let router_state = RouterState::from_ref(state);
     let authorization = Authorization::from_request_parts(parts, state).await?;
 
-    if authorization.claims.kind != TOKEN_TYPE_BEARER
-      || authorization.claims.sub_kind != TOKEN_SUB_TYPE_SERVICE_ACCOUNT
+    if authorization.claims.r#type != TOKEN_TYPE_BEARER
+      || authorization.claims.sub_type != TOKEN_SUB_TYPE_SERVICE_ACCOUNT
     {
       return Err(
         InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, "invalid-token-type"),

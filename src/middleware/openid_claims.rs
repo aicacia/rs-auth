@@ -58,8 +58,8 @@ pub struct OpenIdClaims {
 unsafe impl Send for OpenIdClaims {}
 
 impl Claims for OpenIdClaims {
-  fn kind(&self) -> &String {
-    &self.claims.kind
+  fn r#type(&self) -> &String {
+    &self.claims.r#type
   }
   fn exp(&self) -> i64 {
     self.claims.exp
@@ -76,8 +76,8 @@ impl Claims for OpenIdClaims {
   fn aud(&self) -> Option<&String> {
     self.claims.aud.as_ref()
   }
-  fn sub_kind(&self) -> &String {
-    &self.claims.sub_kind
+  fn sub_type(&self) -> &String {
+    &self.claims.sub_type
   }
   fn sub(&self) -> i64 {
     self.claims.sub

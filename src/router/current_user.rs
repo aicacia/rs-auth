@@ -299,8 +299,8 @@ pub async fn reset_current_user_password(
   Authorization { claims, .. }: Authorization,
   ValidatedJson(payload): ValidatedJson<ResetPasswordRequest>,
 ) -> impl IntoResponse {
-  if (claims.kind != TOKEN_TYPE_BEARER && claims.kind != TOKEN_TYPE_RESET_PASSWORD)
-    || claims.sub_kind != TOKEN_SUB_TYPE_USER
+  if (claims.r#type != TOKEN_TYPE_BEARER && claims.r#type != TOKEN_TYPE_RESET_PASSWORD)
+    || claims.sub_type != TOKEN_SUB_TYPE_USER
   {
     return InternalError::unauthorized()
       .with_error(AUTHORIZATION_HEADER, "invalid-token-type")

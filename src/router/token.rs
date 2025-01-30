@@ -193,8 +193,8 @@ async fn refresh_token_request(
         .into_response();
     }
   };
-  if jwt.claims.kind != TOKEN_TYPE_REFRESH {
-    log::error!("invalid token type: {}", jwt.claims.kind);
+  if jwt.claims.r#type != TOKEN_TYPE_REFRESH {
+    log::error!("invalid token type: {}", jwt.claims.r#type);
     return InternalError::from(StatusCode::UNAUTHORIZED)
       .with_application_error(INTERNAL_ERROR)
       .into_response();
@@ -241,14 +241,14 @@ async fn authorization_code_request(
         .into_response();
     }
   };
-  if jwt.claims.kind != TOKEN_TYPE_AUTHORIZATION_CODE {
-    log::error!("invalid token type: {}", jwt.claims.kind);
+  if jwt.claims.r#type != TOKEN_TYPE_AUTHORIZATION_CODE {
+    log::error!("invalid token type: {}", jwt.claims.r#type);
     return InternalError::from(StatusCode::UNAUTHORIZED)
       .with_application_error(INTERNAL_ERROR)
       .into_response();
   }
-  if jwt.claims.sub_kind != TOKEN_SUB_TYPE_USER {
-    log::error!("invalid token sub_type: {}", jwt.claims.sub_kind);
+  if jwt.claims.sub_type != TOKEN_SUB_TYPE_USER {
+    log::error!("invalid token sub_type: {}", jwt.claims.sub_type);
     return InternalError::from(StatusCode::UNAUTHORIZED)
       .with_application_error(INTERNAL_ERROR)
       .into_response();
@@ -320,9 +320,9 @@ async fn create_service_token_token(
   let now = chrono::Utc::now();
 
   let claims = BasicClaims {
-    kind: TOKEN_TYPE_BEARER.to_owned(),
+    r#type: TOKEN_TYPE_BEARER.to_owned(),
     app: tenant.id,
-    sub_kind: TOKEN_SUB_TYPE_SERVICE_ACCOUNT.to_owned(),
+    sub_type: TOKEN_SUB_TYPE_SERVICE_ACCOUNT.to_owned(),
     sub: service_account.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),
@@ -343,7 +343,7 @@ async fn create_service_token_token(
   };
 
   let mut refresh_claims = claims.clone();
-  refresh_claims.kind = TOKEN_TYPE_REFRESH.to_owned();
+  refresh_claims.r#type = TOKEN_TYPE_REFRESH.to_owned();
   refresh_claims.exp = refresh_claims.iat + tenant.refresh_expires_in_seconds;
   let refresh_token = match claims.encode(&tenant) {
     Ok(token) => token,
@@ -359,7 +359,7 @@ async fn create_service_token_token(
     StatusCode::CREATED,
     axum::Json(Token {
       access_token,
-      token_type: claims.kind,
+      token_type: claims.r#type,
       issued_token_type,
       expires_in: tenant.expires_in_seconds,
       scope: None,
@@ -410,9 +410,9 @@ pub(crate) async fn create_user_token(
   let scopes = parse_scopes(scope.as_ref().map(String::as_str));
 
   let claims = BasicClaims {
-    kind: TOKEN_TYPE_BEARER.to_owned(),
+    r#type: TOKEN_TYPE_BEARER.to_owned(),
     app: tenant.id,
-    sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
+    sub_type: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),
@@ -433,7 +433,7 @@ pub(crate) async fn create_user_token(
   };
 
   let mut refresh_claims = claims.clone();
-  refresh_claims.kind = TOKEN_TYPE_REFRESH.to_owned();
+  refresh_claims.r#type = TOKEN_TYPE_REFRESH.to_owned();
   refresh_claims.exp = refresh_claims.iat + tenant.refresh_expires_in_seconds;
   let refresh_token = match refresh_claims.encode(&tenant) {
     Ok(token) => token,
@@ -541,7 +541,7 @@ pub(crate) async fn create_user_token(
         }
       }
     }
-    id_claims.claims.kind = TOKEN_TYPE_ID.to_owned();
+    id_claims.claims.r#type = TOKEN_TYPE_ID.to_owned();
     id_token = match id_claims.encode(&tenant) {
       Ok(token) => Some(token),
       Err(e) => {
@@ -557,7 +557,7 @@ pub(crate) async fn create_user_token(
     StatusCode::CREATED,
     axum::Json(Token {
       access_token,
-      token_type: claims.kind,
+      token_type: claims.r#type,
       issued_token_type,
       expires_in: tenant.expires_in_seconds,
       scope,
@@ -580,9 +580,9 @@ pub(crate) async fn create_reset_password_token(
   let scopes = parse_scopes(scope.as_ref().map(String::as_str));
 
   let claims = BasicClaims {
-    kind: TOKEN_TYPE_RESET_PASSWORD.to_owned(),
+    r#type: TOKEN_TYPE_RESET_PASSWORD.to_owned(),
     app: tenant.id,
-    sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
+    sub_type: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),
@@ -606,7 +606,7 @@ pub(crate) async fn create_reset_password_token(
     StatusCode::CREATED,
     axum::Json(Token {
       access_token,
-      token_type: claims.kind,
+      token_type: claims.r#type,
       issued_token_type,
       expires_in: tenant.expires_in_seconds,
       scope,
@@ -630,9 +630,9 @@ async fn create_mfa_token(
   let scopes = parse_scopes(scope.as_ref().map(String::as_str));
 
   let claims = BasicClaims {
-    kind: mfa_token_type,
+    r#type: mfa_token_type,
     app: tenant.id,
-    sub_kind: TOKEN_SUB_TYPE_USER.to_owned(),
+    sub_type: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
     nbf: now.timestamp(),
@@ -656,7 +656,7 @@ async fn create_mfa_token(
     StatusCode::CREATED,
     axum::Json(Token {
       access_token,
-      token_type: claims.kind,
+      token_type: claims.r#type,
       issued_token_type,
       expires_in: tenant.expires_in_seconds,
       scope,

@@ -3,7 +3,7 @@ use crate::core::database::run_transaction;
 #[derive(sqlx::FromRow)]
 pub struct UserMFATypeRow {
   pub user_id: i64,
-  pub kind: String,
+  pub r#type: String,
 }
 
 pub(crate) async fn get_user_mfa_types_by_user_id_internal(
@@ -11,17 +11,17 @@ pub(crate) async fn get_user_mfa_types_by_user_id_internal(
   user_id: i64,
 ) -> sqlx::Result<Vec<UserMFATypeRow>> {
   sqlx::query_as(
-    r#"SELECT ut.user_id, 'totp' as kind 
+    r#"SELECT ut.user_id, 'totp' as type 
       FROM user_totps ut 
       JOIN users u ON u.id = ut.user_id 
       WHERE u.id = $1
       UNION
-      SELECT ue.user_id, 'email' as kind 
+      SELECT ue.user_id, 'email' as type 
       FROM user_emails ue 
       JOIN users u ON u.id = ue.user_id 
       WHERE u.id = $1 AND ue."verified" = 1
       UNION
-      SELECT upn.user_id, 'text' as kind 
+      SELECT upn.user_id, 'text' as type 
       FROM user_phone_numbers upn 
       JOIN users u ON u.id = upn.user_id 
       WHERE u.id = $1 AND upn."verified" = 1;"#,
@@ -47,16 +47,16 @@ pub async fn get_users_mfa_types(
   offset: usize,
 ) -> sqlx::Result<Vec<UserMFATypeRow>> {
   sqlx::query_as(
-    r#"SELECT ut.user_id, 'totp' as kind 
+    r#"SELECT ut.user_id, 'totp' as type 
     FROM user_totps ut 
     JOIN users u ON u.id = ut.user_id 
     WHERE ut.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2)
     UNION
-    SELECT ue.user_id, 'email' as kind 
+    SELECT ue.user_id, 'email' as type 
     FROM user_emails ue 
     JOIN users u ON u.id = ue.user_id 
     WHERE ue."verified" = 1 AND ue.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2)UNION
-    SELECT upn.user_id, 'text' as kind 
+    SELECT upn.user_id, 'text' as type 
     FROM user_phone_numbers upn
     JOIN users u ON u.id = upn.user_id 
     WHERE upn."verified" = 1 AND upn.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#,

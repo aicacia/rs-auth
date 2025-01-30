@@ -15,13 +15,13 @@ pub const TOKEN_SUB_TYPE_USER: &str = "user";
 pub const TOKEN_SUB_TYPE_SERVICE_ACCOUNT: &str = "service-account";
 
 pub trait Claims: Serialize + DeserializeOwned {
-  fn kind(&self) -> &String;
+  fn r#type(&self) -> &String;
   fn exp(&self) -> i64;
   fn iat(&self) -> i64;
   fn nbf(&self) -> i64;
   fn iss(&self) -> &String;
   fn aud(&self) -> Option<&String>;
-  fn sub_kind(&self) -> &String;
+  fn sub_type(&self) -> &String;
   fn sub(&self) -> i64;
   fn app(&self) -> i64;
   fn scopes(&self) -> &[String];
@@ -40,24 +40,22 @@ pub trait Claims: Serialize + DeserializeOwned {
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct BasicClaims {
-  #[serde(rename = "type")]
-  pub kind: String,
+  pub r#type: String,
   pub exp: i64,
   pub iat: i64,
   pub nbf: i64,
   pub iss: String,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub aud: Option<String>,
-  #[serde(rename = "sub_type")]
-  pub sub_kind: String,
+  pub sub_type: String,
   pub sub: i64,
   pub app: i64,
   pub scopes: Vec<String>,
 }
 
 impl Claims for BasicClaims {
-  fn kind(&self) -> &String {
-    &self.kind
+  fn r#type(&self) -> &String {
+    &self.r#type
   }
   fn exp(&self) -> i64 {
     self.exp
@@ -74,8 +72,8 @@ impl Claims for BasicClaims {
   fn aud(&self) -> Option<&String> {
     self.aud.as_ref()
   }
-  fn sub_kind(&self) -> &String {
-    &self.sub_kind
+  fn sub_type(&self) -> &String {
+    &self.sub_type
   }
   fn sub(&self) -> i64 {
     self.sub

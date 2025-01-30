@@ -35,8 +35,8 @@ pub async fn p2p(
   State(state): State<RouterState>,
   Authorization { claims, .. }: Authorization,
 ) -> impl IntoResponse {
-  if claims.kind != TOKEN_TYPE_BEARER
-    || (claims.sub_kind != TOKEN_SUB_TYPE_USER && claims.sub_kind != TOKEN_SUB_TYPE_SERVICE_ACCOUNT)
+  if claims.r#type != TOKEN_TYPE_BEARER
+    || (claims.sub_type != TOKEN_SUB_TYPE_USER && claims.sub_type != TOKEN_SUB_TYPE_SERVICE_ACCOUNT)
   {
     return InternalError::unauthorized()
       .with_error(AUTHORIZATION_HEADER, "invalid-token-type")

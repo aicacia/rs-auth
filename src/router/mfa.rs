@@ -48,12 +48,12 @@ pub async fn mfa(
   Authorization { claims, tenant, .. }: Authorization,
   Json(payload): Json<MFARequest>,
 ) -> impl IntoResponse {
-  if !claims.kind.starts_with(TOKEN_TYPE_MFA_TOTP_PREFIX) {
+  if !claims.r#type.starts_with(TOKEN_TYPE_MFA_TOTP_PREFIX) {
     return InternalError::unauthorized()
       .with_error(AUTHORIZATION_HEADER, "invalid-token-type")
       .into_response();
   }
-  let mfa_type = &claims.kind[(TOKEN_TYPE_MFA_TOTP_PREFIX.len())..];
+  let mfa_type = &claims.r#type[(TOKEN_TYPE_MFA_TOTP_PREFIX.len())..];
   log::debug!("MFA type: {}", mfa_type);
   let user = match get_user_by_id(&state.pool, claims.sub).await {
     Ok(Some(user)) => user,
@@ -144,8 +144,8 @@ async fn service_account_request(
         return e.into_response();
       }
     };
-  if service_account_claims.claims.kind != TOKEN_TYPE_BEARER
-    || service_account_claims.claims.sub_kind != TOKEN_SUB_TYPE_SERVICE_ACCOUNT
+  if service_account_claims.claims.r#type != TOKEN_TYPE_BEARER
+    || service_account_claims.claims.sub_type != TOKEN_SUB_TYPE_SERVICE_ACCOUNT
   {
     return InternalError::unauthorized()
       .with_error("token", "invalid-token-sub-type")

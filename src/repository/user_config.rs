@@ -59,7 +59,7 @@ pub async fn update_user_config(
         if updated_mfa_type != "none" {
           let mut found = false;
           for mfa_type in &mfa_types {
-            if &mfa_type.kind == updated_mfa_type {
+            if &mfa_type.r#type == updated_mfa_type {
               found = true;
               break;
             }
