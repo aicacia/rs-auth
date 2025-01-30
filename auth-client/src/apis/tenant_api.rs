@@ -37,7 +37,7 @@ impl<C: Connect> TenantApiClient<C>
 }
 
 pub trait TenantApi: Send + Sync {
-    fn all_tenants(&self, offset: Option<i32>, limit: Option<i32>, show_private_key: Option<bool>) -> Pin<Box<dyn Future<Output = Result<models::PaginationTenant, Error>> + Send>>;
+    fn all_tenants(&self, offset: Option<i32>, limit: Option<i32>, show_private_key: Option<bool>) -> Pin<Box<dyn Future<Output = Result<models::Pagination, Error>> + Send>>;
     fn create_tenant(&self, create_tenant: models::CreateTenant) -> Pin<Box<dyn Future<Output = Result<models::Tenant, Error>> + Send>>;
     fn delete_tenant(&self, tenant_id: i64) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
     fn get_tenant_by_client_id(&self, tenant_client_id: &str, show_private_key: Option<bool>) -> Pin<Box<dyn Future<Output = Result<models::Tenant, Error>> + Send>>;
@@ -48,7 +48,7 @@ pub trait TenantApi: Send + Sync {
 impl<C: Connect>TenantApi for TenantApiClient<C>
     where C: Clone + std::marker::Send + Sync {
     #[allow(unused_mut)]
-    fn all_tenants(&self, offset: Option<i32>, limit: Option<i32>, show_private_key: Option<bool>) -> Pin<Box<dyn Future<Output = Result<models::PaginationTenant, Error>> + Send>> {
+    fn all_tenants(&self, offset: Option<i32>, limit: Option<i32>, show_private_key: Option<bool>) -> Pin<Box<dyn Future<Output = Result<models::Pagination, Error>> + Send>> {
         let mut req = __internal_request::Request::new(hyper::Method::GET, "/tenants".to_string())
         ;
         if let Some(ref s) = offset {

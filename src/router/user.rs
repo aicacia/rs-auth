@@ -8,7 +8,7 @@ use crate::{
   },
   model::{
     token::Token,
-    user::{CreateUser, User, UserResetPassword},
+    user::{CreateUser, User, UserPagination, UserResetPassword},
     util::{OffsetAndLimit, Pagination, DEFAULT_LIMIT},
   },
   repository::{
@@ -62,7 +62,7 @@ pub struct ApiDoc;
     OffsetAndLimit,
   ),
   responses(
-    (status = 200, content_type = "application/json", body = Pagination<User>),
+    (status = 200, content_type = "application/json", body = UserPagination),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
   ),
@@ -198,7 +198,7 @@ pub async fn all_users(
     ("user_id" = i64, Path, description = "User id"),
   ),
   responses(
-    (status = 200, content_type = "application/json", body = Pagination<User>),
+    (status = 200, content_type = "application/json", body = UserPagination),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 404, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),

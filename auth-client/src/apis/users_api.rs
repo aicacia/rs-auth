@@ -37,16 +37,16 @@ impl<C: Connect> UsersApiClient<C>
 }
 
 pub trait UsersApi: Send + Sync {
-    fn all_users(&self, offset: Option<i32>, limit: Option<i32>) -> Pin<Box<dyn Future<Output = Result<models::PaginationUser, Error>> + Send>>;
+    fn all_users(&self, offset: Option<i32>, limit: Option<i32>) -> Pin<Box<dyn Future<Output = Result<models::Pagination, Error>> + Send>>;
     fn create_user(&self, create_user: models::CreateUser) -> Pin<Box<dyn Future<Output = Result<models::User, Error>> + Send>>;
     fn create_user_reset_password_token(&self, user_id: i64, user_reset_password: models::UserResetPassword) -> Pin<Box<dyn Future<Output = Result<models::Token, Error>> + Send>>;
-    fn get_user_by_id(&self, user_id: i64) -> Pin<Box<dyn Future<Output = Result<models::PaginationUser, Error>> + Send>>;
+    fn get_user_by_id(&self, user_id: i64) -> Pin<Box<dyn Future<Output = Result<models::Pagination, Error>> + Send>>;
 }
 
 impl<C: Connect>UsersApi for UsersApiClient<C>
     where C: Clone + std::marker::Send + Sync {
     #[allow(unused_mut)]
-    fn all_users(&self, offset: Option<i32>, limit: Option<i32>) -> Pin<Box<dyn Future<Output = Result<models::PaginationUser, Error>> + Send>> {
+    fn all_users(&self, offset: Option<i32>, limit: Option<i32>) -> Pin<Box<dyn Future<Output = Result<models::Pagination, Error>> + Send>> {
         let mut req = __internal_request::Request::new(hyper::Method::GET, "/users".to_string())
         ;
         if let Some(ref s) = offset {
@@ -81,7 +81,7 @@ impl<C: Connect>UsersApi for UsersApiClient<C>
     }
 
     #[allow(unused_mut)]
-    fn get_user_by_id(&self, user_id: i64) -> Pin<Box<dyn Future<Output = Result<models::PaginationUser, Error>> + Send>> {
+    fn get_user_by_id(&self, user_id: i64) -> Pin<Box<dyn Future<Output = Result<models::Pagination, Error>> + Send>> {
         let mut req = __internal_request::Request::new(hyper::Method::GET, "/users/{user_id}".to_string())
         ;
         req = req.with_path_param("user_id".to_string(), user_id.to_string());

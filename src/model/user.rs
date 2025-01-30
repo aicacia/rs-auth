@@ -11,7 +11,7 @@ use crate::repository::{
   user_phone_number::UserPhoneNumberRow,
 };
 
-use super::register::validate_unique_username;
+use super::{register::validate_unique_username, util::Pagination};
 
 #[derive(Serialize, ToSchema, Default)]
 pub struct User {
@@ -45,6 +45,8 @@ impl From<UserRow> for User {
     }
   }
 }
+
+pub type UserPagination = Pagination<User>;
 
 #[derive(Serialize, ToSchema, Default)]
 pub struct UserConfig {

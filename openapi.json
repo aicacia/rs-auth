@@ -1095,9 +1095,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Pagination_ServiceAccount"
-                }
+                "schema": { "$ref": "#/components/schemas/Pagination" }
               }
             }
           },
@@ -1303,7 +1301,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Pagination_Tenant" }
+                "schema": { "$ref": "#/components/schemas/Pagination" }
               }
             }
           },
@@ -1865,7 +1863,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Pagination_User" }
+                "schema": { "$ref": "#/components/schemas/Pagination" }
               }
             }
           },
@@ -1954,7 +1952,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Pagination_User" }
+                "schema": { "$ref": "#/components/schemas/Pagination" }
               }
             }
           },
@@ -2595,149 +2593,14 @@
           "ws_uri": { "type": "string" }
         }
       },
-      "Pagination_ServiceAccount": {
+      "Pagination": {
         "type": "object",
         "required": ["has_more", "items"],
         "properties": {
           "has_more": { "type": "boolean" },
           "items": {
             "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "client_id",
-                "name",
-                "active",
-                "updated_at",
-                "created_at"
-              ],
-              "properties": {
-                "active": { "type": "boolean" },
-                "client_id": { "type": "string", "format": "uuid" },
-                "client_secret": {
-                  "type": ["string", "null"],
-                  "format": "uuid"
-                },
-                "created_at": { "type": "string", "format": "date-time" },
-                "id": { "type": "integer", "format": "int64" },
-                "name": { "type": "string" },
-                "updated_at": { "type": "string", "format": "date-time" }
-              }
-            }
-          }
-        }
-      },
-      "Pagination_Tenant": {
-        "type": "object",
-        "required": ["has_more", "items"],
-        "properties": {
-          "has_more": { "type": "boolean" },
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "client_id",
-                "issuer",
-                "algorithm",
-                "expires_in_seconds",
-                "refresh_expires_in_seconds",
-                "oauth2_providers",
-                "updated_at",
-                "created_at"
-              ],
-              "properties": {
-                "algorithm": { "type": "string" },
-                "audience": { "type": ["string", "null"] },
-                "client_id": { "type": "string", "format": "uuid" },
-                "created_at": { "type": "string", "format": "date-time" },
-                "expires_in_seconds": { "type": "integer", "format": "int64" },
-                "id": { "type": "integer", "format": "int64" },
-                "issuer": { "type": "string" },
-                "oauth2_providers": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TenantOAuth2Provider"
-                  }
-                },
-                "private_key": { "type": ["string", "null"] },
-                "public_key": { "type": ["string", "null"] },
-                "refresh_expires_in_seconds": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "updated_at": { "type": "string", "format": "date-time" }
-              }
-            }
-          }
-        }
-      },
-      "Pagination_User": {
-        "type": "object",
-        "required": ["has_more", "items"],
-        "properties": {
-          "has_more": { "type": "boolean" },
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "username",
-                "active",
-                "emails",
-                "phone_numbers",
-                "oauth2_providers",
-                "mfa_types",
-                "info",
-                "updated_at",
-                "created_at"
-              ],
-              "properties": {
-                "active": { "type": "boolean" },
-                "config": {
-                  "oneOf": [
-                    { "type": "null" },
-                    { "$ref": "#/components/schemas/UserConfig" }
-                  ]
-                },
-                "created_at": { "type": "string", "format": "date-time" },
-                "email": {
-                  "oneOf": [
-                    { "type": "null" },
-                    { "$ref": "#/components/schemas/UserEmail" }
-                  ]
-                },
-                "emails": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/UserEmail" }
-                },
-                "id": { "type": "integer", "format": "int64" },
-                "info": { "$ref": "#/components/schemas/UserInfo" },
-                "mfa_types": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/UserMFAType" }
-                },
-                "oauth2_providers": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/UserOAuth2Provider" }
-                },
-                "phone_number": {
-                  "oneOf": [
-                    { "type": "null" },
-                    { "$ref": "#/components/schemas/UserPhoneNumber" }
-                  ]
-                },
-                "phone_numbers": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/UserPhoneNumber" }
-                },
-                "updated_at": { "type": "string", "format": "date-time" },
-                "username": { "type": "string" }
-              }
-            }
+            "items": { "$ref": "#/components/schemas/ServiceAccount" }
           }
         }
       },

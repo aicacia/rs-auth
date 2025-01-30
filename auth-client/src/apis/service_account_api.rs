@@ -37,7 +37,7 @@ impl<C: Connect> ServiceAccountApiClient<C>
 }
 
 pub trait ServiceAccountApi: Send + Sync {
-    fn all_service_accounts(&self, offset: Option<i32>, limit: Option<i32>) -> Pin<Box<dyn Future<Output = Result<models::PaginationServiceAccount, Error>> + Send>>;
+    fn all_service_accounts(&self, offset: Option<i32>, limit: Option<i32>) -> Pin<Box<dyn Future<Output = Result<models::Pagination, Error>> + Send>>;
     fn create_service_account(&self, create_service_account: models::CreateServiceAccount) -> Pin<Box<dyn Future<Output = Result<models::ServiceAccount, Error>> + Send>>;
     fn get_service_account_by_id(&self, service_account_id: i64) -> Pin<Box<dyn Future<Output = Result<models::ServiceAccount, Error>> + Send>>;
     fn update_service_account(&self, service_account_id: i64, update_service_account: models::UpdateServiceAccount) -> Pin<Box<dyn Future<Output = Result<models::ServiceAccount, Error>> + Send>>;
@@ -46,7 +46,7 @@ pub trait ServiceAccountApi: Send + Sync {
 impl<C: Connect>ServiceAccountApi for ServiceAccountApiClient<C>
     where C: Clone + std::marker::Send + Sync {
     #[allow(unused_mut)]
-    fn all_service_accounts(&self, offset: Option<i32>, limit: Option<i32>) -> Pin<Box<dyn Future<Output = Result<models::PaginationServiceAccount, Error>> + Send>> {
+    fn all_service_accounts(&self, offset: Option<i32>, limit: Option<i32>) -> Pin<Box<dyn Future<Output = Result<models::Pagination, Error>> + Send>> {
         let mut req = __internal_request::Request::new(hyper::Method::GET, "/service-accounts".to_string())
         ;
         if let Some(ref s) = offset {

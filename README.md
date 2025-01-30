@@ -176,5 +176,5 @@ helm delete -n api auth-api
 
 ```bash
 rm -rf auth-client && \
-openapi-generator-cli generate -i ./openapi.json -g rust -o 'auth-client' --additional-properties=packageName=auth-client,library=hyper,bestFitInt=true,avoidBoxedModels=true
+openapi-generator-cli generate -i ./openapi.json -g rust -o 'auth-client' --additional-properties=packageName=auth-client,library=hyper,avoidBoxedModels=true
 ```

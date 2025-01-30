@@ -13,7 +13,7 @@ Method | HTTP request | Description
 
 ## all_service_accounts
 
-> models::PaginationServiceAccount all_service_accounts(offset, limit)
+> models::Pagination all_service_accounts(offset, limit)
 
 
 ### Parameters
@@ -26,7 +26,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationServiceAccount**](Pagination_ServiceAccount.md)
+[**models::Pagination**](Pagination.md)
 
 ### Authorization
 

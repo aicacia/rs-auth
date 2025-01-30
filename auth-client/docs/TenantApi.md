@@ -15,7 +15,7 @@ Method | HTTP request | Description
 
 ## all_tenants
 
-> models::PaginationTenant all_tenants(offset, limit, show_private_key)
+> models::Pagination all_tenants(offset, limit, show_private_key)
 
 
 ### Parameters
@@ -29,7 +29,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationTenant**](Pagination_Tenant.md)
+[**models::Pagination**](Pagination.md)
 
 ### Authorization
 

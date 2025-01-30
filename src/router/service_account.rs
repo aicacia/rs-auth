@@ -5,7 +5,9 @@ use crate::{
   },
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
-    service_account::{CreateServiceAccount, ServiceAccount, UpdateServiceAccount},
+    service_account::{
+      CreateServiceAccount, ServiceAccount, ServiceAccountPagination, UpdateServiceAccount,
+    },
     util::{OffsetAndLimit, Pagination},
   },
   repository,
@@ -30,7 +32,7 @@ pub const SERVICE_ACCOUNT_TAG: &str = "service-account";
     OffsetAndLimit,
   ),
   responses(
-    (status = 200, content_type = "application/json", body = Pagination<ServiceAccount>),
+    (status = 200, content_type = "application/json", body = ServiceAccountPagination),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
   ),

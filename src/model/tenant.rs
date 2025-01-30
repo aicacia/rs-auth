@@ -7,7 +7,7 @@ use utoipa::{IntoParams, ToSchema};
 
 use crate::{core::encryption::random_bytes, repository::tenant::TenantRow};
 
-use super::tenant_oauth2_provider::TenantOAuth2Provider;
+use super::{tenant_oauth2_provider::TenantOAuth2Provider, util::Pagination};
 
 #[derive(Serialize, ToSchema)]
 pub struct Tenant {
@@ -46,6 +46,8 @@ impl From<TenantRow> for Tenant {
     }
   }
 }
+
+pub type TenantPagination = Pagination<Tenant>;
 
 /// jsonwebtoken::Algorithm
 #[derive(Deserialize, ToSchema, Default)]

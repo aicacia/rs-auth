@@ -4,7 +4,7 @@ use crate::{
   core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
-    tenant::{CreateTenant, Tenant, TenantQuery, UpdateTenant},
+    tenant::{CreateTenant, Tenant, TenantPagination, TenantQuery, UpdateTenant},
     tenant_oauth2_provider::TenantOAuth2Provider,
     util::{OffsetAndLimit, Pagination, DEFAULT_LIMIT},
   },
@@ -37,7 +37,7 @@ pub const TENANT_TAG: &str = "tenant";
     TenantQuery
   ),
   responses(
-    (status = 200, content_type = "application/json", body = Pagination<Tenant>),
+    (status = 200, content_type = "application/json", body = TenantPagination),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
   ),
