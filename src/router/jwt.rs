@@ -189,6 +189,11 @@ pub async fn jwt_is_valid(
     }
   };
   if tenant_client_id != token_tenant_client_id {
+    log::error!(
+      "authorization tenant id does not match tenant header: {} != {}",
+      tenant_client_id,
+      token_tenant_client_id
+    );
     return InternalError::unauthorized()
       .with_error("tenant", INVALID_ERROR)
       .into_response();
