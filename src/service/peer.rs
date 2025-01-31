@@ -23,7 +23,7 @@ use crate::{
     error::{InternalError, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR},
   },
   middleware::claims::tenant_encoding_key,
-  repository::tenant::get_tenant_by_id,
+  repository::tenant::get_tenant_by_client_id,
 };
 
 pub async fn serve_peer(
@@ -263,7 +263,8 @@ async fn create_jwt(
   config: &Config,
   claims: serde_json::Map<String, serde_json::Value>,
 ) -> Result<String, InternalError> {
-  let tenant = match get_tenant_by_id(&pool, config.p2p.tenant_id).await {
+  let tenant = match get_tenant_by_client_id(&pool, &config.p2p.tenant_client_id.to_string()).await
+  {
     Ok(Some(tenant)) => tenant,
     Ok(None) => {
       return Err(InternalError::bad_request().with_error("config.p2p.tenant_id", NOT_FOUND_ERROR));

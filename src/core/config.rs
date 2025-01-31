@@ -23,7 +23,7 @@ pub struct DatabaseConfig {
 #[derive(Debug, Deserialize)]
 pub struct P2PConfig {
   pub enabled: bool,
-  pub tenant_id: i64,
+  pub tenant_client_id: uuid::Uuid,
   pub ws_uri: String,
   pub api_uri: String,
   pub id: String,
