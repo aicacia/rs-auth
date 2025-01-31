@@ -21,20 +21,20 @@ pub struct P2P {
     pub id: String,
     #[serde(rename = "password")]
     pub password: String,
-    #[serde(rename = "tenant_id")]
-    pub tenant_id: i64,
+    #[serde(rename = "tenant_client_id")]
+    pub tenant_client_id: uuid::Uuid,
     #[serde(rename = "ws_uri")]
     pub ws_uri: String,
 }
 
 impl P2P {
-    pub fn new(api_uri: String, enabled: bool, id: String, password: String, tenant_id: i64, ws_uri: String) -> P2P {
+    pub fn new(api_uri: String, enabled: bool, id: String, password: String, tenant_client_id: uuid::Uuid, ws_uri: String) -> P2P {
         P2P {
             api_uri,
             enabled,
             id,
             password,
-            tenant_id,
+            tenant_client_id,
             ws_uri,
         }
     }

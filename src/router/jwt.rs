@@ -18,6 +18,7 @@ use crate::{
     json::Json,
     service_account_authorization::ServiceAccountAuthorization,
   },
+  model::token::Token,
 };
 
 use super::RouterState;
@@ -30,7 +31,7 @@ pub const JWT_TAG: &str = "jwt";
   tags = [JWT_TAG],
   request_body = Map<String, Value>,
   responses(
-    (status = 201, content_type = "text/plain", body = String),
+    (status = 201, content_type = "application/json", body = Token),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -72,7 +73,20 @@ pub async fn create_jwt(
     }
   };
 
-  (StatusCode::CREATED, token).into_response()
+  (
+    StatusCode::CREATED,
+    axum::Json(Token {
+      access_token: token,
+      token_type: TOKEN_TYPE_BEARER.to_string(),
+      expires_in: tenant.expires_in_seconds,
+      issued_token_type: None,
+      scope: None,
+      refresh_token: None,
+      refresh_token_expires_in: None,
+      id_token: None,
+    }),
+  )
+    .into_response()
 }
 
 #[utoipa::path(

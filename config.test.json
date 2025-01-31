@@ -2,7 +2,6 @@
   "p2p": {
     "enabled": false,
     "tenant_client_id": "fdde6047-537e-4efb-afa2-52c207bfde93",
-    "uri": "https://p2p.aicacia.com",
     "id": "4f90276b-aae5-46a0-ba06-3ffdf22f256d",
     "password": "037f81cc-941d-4001-bd60-33878ae76007"
   },

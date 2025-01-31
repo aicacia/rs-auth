@@ -794,7 +794,11 @@
         "responses": {
           "201": {
             "description": "",
-            "content": { "text/plain": { "schema": { "type": "string" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Token" }
+              }
+            }
           },
           "400": {
             "description": "",
@@ -2570,7 +2574,7 @@
         "type": "object",
         "required": [
           "enabled",
-          "tenant_id",
+          "tenant_client_id",
           "ws_uri",
           "api_uri",
           "id",
@@ -2581,7 +2585,7 @@
           "enabled": { "type": "boolean" },
           "id": { "type": "string" },
           "password": { "type": "string" },
-          "tenant_id": { "type": "integer", "format": "int64" },
+          "tenant_client_id": { "type": "string", "format": "uuid" },
           "ws_uri": { "type": "string" }
         }
       },

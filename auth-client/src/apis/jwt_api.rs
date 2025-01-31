@@ -37,14 +37,14 @@ impl<C: Connect> JwtApiClient<C>
 }
 
 pub trait JwtApi: Send + Sync {
-    fn create_jwt(&self, request_body: std::collections::HashMap<String, serde_json::Value>) -> Pin<Box<dyn Future<Output = Result<String, Error>> + Send>>;
+    fn create_jwt(&self, request_body: std::collections::HashMap<String, serde_json::Value>) -> Pin<Box<dyn Future<Output = Result<models::Token, Error>> + Send>>;
     fn jwt_is_valid(&self, tenant_id: &str) -> Pin<Box<dyn Future<Output = Result<std::collections::HashMap<String, serde_json::Value>, Error>> + Send>>;
 }
 
 impl<C: Connect>JwtApi for JwtApiClient<C>
     where C: Clone + std::marker::Send + Sync {
     #[allow(unused_mut)]
-    fn create_jwt(&self, request_body: std::collections::HashMap<String, serde_json::Value>) -> Pin<Box<dyn Future<Output = Result<String, Error>> + Send>> {
+    fn create_jwt(&self, request_body: std::collections::HashMap<String, serde_json::Value>) -> Pin<Box<dyn Future<Output = Result<models::Token, Error>> + Send>> {
         let mut req = __internal_request::Request::new(hyper::Method::POST, "/jwt".to_string())
         ;
         req = req.with_body_param(request_body);
