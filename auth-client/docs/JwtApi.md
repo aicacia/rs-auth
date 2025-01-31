@@ -11,7 +11,7 @@ Method | HTTP request | Description
 
 ## create_jwt
 
-> String create_jwt(jwt_request)
+> String create_jwt(request_body)
 
 
 ### Parameters
@@ -19,7 +19,7 @@ Method | HTTP request | Description
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
-**jwt_request** | [**JwtRequest**](JwtRequest.md) |  | [required] |
+**request_body** | [**std::collections::HashMap<String, serde_json::Value>**](serde_json::Value.md) |  | [required] |
 
 ### Return type
 

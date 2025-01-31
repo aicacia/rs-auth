@@ -18,8 +18,6 @@ pub mod error_message;
 pub use self::error_message::ErrorMessage;
 pub mod health;
 pub use self::health::Health;
-pub mod jwt_request;
-pub use self::jwt_request::JwtRequest;
 pub mod mfa_request;
 pub use self::mfa_request::MfaRequest;
 pub mod mfa_request_service_account;

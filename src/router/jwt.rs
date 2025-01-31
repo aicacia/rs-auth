@@ -2,13 +2,13 @@ use std::str::FromStr;
 
 use axum::{extract::State, response::IntoResponse};
 use http::{HeaderMap, StatusCode};
+use serde_json::{Map, Value};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
   core::{
     error::{
-      Errors, InternalError, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR,
-      REQUIRED_ERROR,
+      Errors, InternalError, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR, REQUIRED_ERROR,
     },
     openapi::{AUTHORIZATION_HEADER, TENENT_ID_HEADER},
   },
@@ -18,8 +18,6 @@ use crate::{
     json::Json,
     service_account_authorization::ServiceAccountAuthorization,
   },
-  model::jwt::JWTRequest,
-  repository::tenant::get_tenant_by_id,
 };
 
 use super::RouterState;
@@ -30,7 +28,7 @@ pub const JWT_TAG: &str = "jwt";
   post,
   path = "/jwt",
   tags = [JWT_TAG],
-  request_body = JWTRequest,
+  request_body = Map<String, Value>,
   responses(
     (status = 201, content_type = "text/plain", body = String),
     (status = 400, content_type = "application/json", body = Errors),
@@ -42,25 +40,9 @@ pub const JWT_TAG: &str = "jwt";
   )
 )]
 pub async fn create_jwt(
-  State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Json(payload): Json<JWTRequest>,
+  ServiceAccountAuthorization { tenant, .. }: ServiceAccountAuthorization,
+  Json(claims): Json<Map<String, Value>>,
 ) -> impl IntoResponse {
-  let tenant = match get_tenant_by_id(&state.pool, payload.tenant_id).await {
-    Ok(Some(tenant)) => tenant,
-    Ok(None) => {
-      return InternalError::bad_request()
-        .with_error("tenant_id", NOT_FOUND_ERROR)
-        .into_response()
-    }
-    Err(e) => {
-      log::error!("failed to get tenant by id: {e}");
-      return InternalError::internal_error()
-        .with_error("tenant_id", INTERNAL_ERROR)
-        .into_response();
-    }
-  };
-
   let algorithm = match jsonwebtoken::Algorithm::from_str(&tenant.algorithm) {
     Ok(algorithm) => algorithm,
     Err(_) => {
@@ -81,7 +63,7 @@ pub async fn create_jwt(
         .into_response()
     }
   };
-  let token = match jsonwebtoken::encode(&header, &payload.claims, &key) {
+  let token = match jsonwebtoken::encode(&header, &claims, &key) {
     Ok(token) => token,
     Err(_) => {
       return InternalError::internal_error()

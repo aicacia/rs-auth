@@ -782,7 +782,11 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/JWTRequest" }
+              "schema": {
+                "type": "object",
+                "additionalProperties": {},
+                "propertyNames": { "type": "string" }
+              }
             }
           },
           "required": true
@@ -2539,18 +2543,6 @@
         "type": "object",
         "required": ["db"],
         "properties": { "db": { "type": "boolean" } }
-      },
-      "JWTRequest": {
-        "type": "object",
-        "required": ["tenant_id", "claims"],
-        "properties": {
-          "claims": {
-            "type": "object",
-            "additionalProperties": {},
-            "propertyNames": { "type": "string" }
-          },
-          "tenant_id": { "type": "integer", "format": "int64" }
-        }
       },
       "MFARequest": {
         "oneOf": [
