@@ -18,9 +18,8 @@ static SQLITE_MIGRATOR: Migrator = sqlx::migrate!("./migrations/sqlite");
 static POSTGRESQL_MIGRATOR: Migrator = sqlx::migrate!("./migrations/postgresql");
 
 pub async fn init_pool(config: &Config) -> Result<sqlx::AnyPool, sqlx::Error> {
-  log::info!("Creating pool for database: {}", config.database.url);
-
   if config.database.url.starts_with("sqlite:") {
+    log::info!("Initializing sqlite database: {}", config.database.url);
     let path = Path::new(&config.database.url["sqlite:".len()..]);
     if let Some(parent) = path.parent() {
       if !parent.as_os_str().is_empty() && !parent.exists() {
@@ -73,8 +72,10 @@ pub async fn init_pool(config: &Config) -> Result<sqlx::AnyPool, sqlx::Error> {
   POOL.store(Ordering::SeqCst, pool.clone());
 
   if config.database.url.starts_with("sqlite:") {
+    log::info!("Running migrations for sqlite");
     SQLITE_MIGRATOR.run(&pool).await?;
   } else if config.database.url.starts_with("postgres:") {
+    log::info!("Running migrations for postgres");
     POSTGRESQL_MIGRATOR.run(&pool).await?;
   }
 
