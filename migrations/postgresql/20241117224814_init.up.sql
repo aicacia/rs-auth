@@ -70,7 +70,7 @@ CREATE TABLE "user_configs" (
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
   CONSTRAINT "user_configs_user_id_fk" FOREIGN KEY("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
-) STRICT;
+);
 CREATE UNIQUE INDEX "user_configs_user_id_unique_idx" ON "user_configs" ("user_id");
 
 
