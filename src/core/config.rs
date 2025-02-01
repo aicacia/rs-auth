@@ -86,6 +86,10 @@ impl Config {
       .set_default("database.max_lifetime", 300)?
       // P2P
       .set_default("p2p.enabled", false)?
+      .set_default(
+        "p2p.tenant_client_id",
+        "6fcf0235-cb11-4160-9df8-b9114f8dcdae",
+      )?
       .set_default("p2p.ws_uri", "wss://p2p.aicacia.com".to_owned())?
       .set_default("p2p.api_uri", "https://p2p.aicacia.com".to_owned())?
       .set_default("p2p.id", uuid::Uuid::new_v4().to_string())?
