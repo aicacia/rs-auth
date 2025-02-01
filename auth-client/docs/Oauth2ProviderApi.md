@@ -4,9 +4,9 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**create_tenant_oauth2_provider**](Oauth2ProviderApi.md#create_tenant_oauth2_provider) | **Post** /tenants/{tenant_id}/oauth2-providers | 
-[**delete_tenant_oauth2_provider**](Oauth2ProviderApi.md#delete_tenant_oauth2_provider) | **Delete** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
-[**update_tenant_oauth2_provider**](Oauth2ProviderApi.md#update_tenant_oauth2_provider) | **Put** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
+[**create_tenant_oauth2_provider**](Oauth2ProviderApi.md#create_tenant_oauth2_provider) | **POST** /tenants/{tenant_id}/oauth2-providers | 
+[**delete_tenant_oauth2_provider**](Oauth2ProviderApi.md#delete_tenant_oauth2_provider) | **DELETE** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
+[**update_tenant_oauth2_provider**](Oauth2ProviderApi.md#update_tenant_oauth2_provider) | **PUT** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
 
 
 

@@ -4,8 +4,8 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**create_jwt**](JwtApi.md#create_jwt) | **Post** /jwt | 
-[**jwt_is_valid**](JwtApi.md#jwt_is_valid) | **Get** /jwt | 
+[**create_jwt**](JwtApi.md#create_jwt) | **POST** /jwt | 
+[**jwt_is_valid**](JwtApi.md#jwt_is_valid) | **GET** /jwt | 
 
 
 

@@ -4,7 +4,7 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**get_openapi**](OpenapiApi.md#get_openapi) | **Get** /openapi.json | 
+[**get_openapi**](OpenapiApi.md#get_openapi) | **GET** /openapi.json | 
 
 
 

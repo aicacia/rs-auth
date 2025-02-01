@@ -4,7 +4,7 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**token**](TokenApi.md#token) | **Post** /token | 
+[**token**](TokenApi.md#token) | **POST** /token | 
 
 
 

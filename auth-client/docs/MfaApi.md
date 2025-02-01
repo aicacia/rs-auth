@@ -4,7 +4,7 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**mfa**](MfaApi.md#mfa) | **Post** /mfa | 
+[**mfa**](MfaApi.md#mfa) | **POST** /mfa | 
 
 
 

@@ -1,99 +1,108 @@
+use std::error;
 use std::fmt;
-use std::fmt::Debug;
 
-use hyper;
-use hyper::http;
-use hyper_util::client::legacy::connect::Connect;
-use serde_json;
+#[derive(Debug, Clone)]
+pub struct ResponseContent<T> {
+    pub status: reqwest::StatusCode,
+    pub content: String,
+    pub entity: Option<T>,
+}
 
 #[derive(Debug)]
-pub enum Error {
-    Api(ApiError),
-    Header(http::header::InvalidHeaderValue),
-    Http(http::Error),
-    Hyper(hyper::Error),
-    HyperClient(hyper_util::client::legacy::Error),
+pub enum Error<T> {
+    Reqwest(reqwest::Error),
     Serde(serde_json::Error),
-    UriError(http::uri::InvalidUri),
+    Io(std::io::Error),
+    ResponseError(ResponseContent<T>),
 }
 
-pub struct ApiError {
-    pub code: hyper::StatusCode,
-    pub body: hyper::body::Incoming,
-}
-
-impl Debug for ApiError {
+impl <T> fmt::Display for Error<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("ApiError")
-         .field("code", &self.code)
-         .field("body", &"hyper::body::Incoming")
-         .finish()
+        let (module, e) = match self {
+            Error::Reqwest(e) => ("reqwest", e.to_string()),
+            Error::Serde(e) => ("serde", e.to_string()),
+            Error::Io(e) => ("IO", e.to_string()),
+            Error::ResponseError(e) => ("response", format!("status code {}", e.status)),
+        };
+        write!(f, "error in {}: {}", module, e)
     }
 }
 
-impl From<(hyper::StatusCode, hyper::body::Incoming)> for Error {
-    fn from(e: (hyper::StatusCode, hyper::body::Incoming)) -> Self {
-        Error::Api(ApiError {
-            code: e.0,
-            body: e.1,
+impl <T: fmt::Debug> error::Error for Error<T> {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        Some(match self {
+            Error::Reqwest(e) => e,
+            Error::Serde(e) => e,
+            Error::Io(e) => e,
+            Error::ResponseError(_) => return None,
         })
     }
 }
 
-impl From<http::Error> for Error {
-    fn from(e: http::Error) -> Self {
-        Error::Http(e)
+impl <T> From<reqwest::Error> for Error<T> {
+    fn from(e: reqwest::Error) -> Self {
+        Error::Reqwest(e)
     }
 }
 
-impl From<hyper_util::client::legacy::Error> for Error {
-    fn from(e: hyper_util::client::legacy::Error) -> Self {
-        Error::HyperClient(e)
-    }
-}
-
-impl From<hyper::Error> for Error {
-    fn from(e: hyper::Error) -> Self {
-        Error::Hyper(e)
-    }
-}
-
-impl From<serde_json::Error> for Error {
+impl <T> From<serde_json::Error> for Error<T> {
     fn from(e: serde_json::Error) -> Self {
         Error::Serde(e)
     }
 }
 
-mod request;
+impl <T> From<std::io::Error> for Error<T> {
+    fn from(e: std::io::Error) -> Self {
+        Error::Io(e)
+    }
+}
 
-mod current_user_api;
-pub use self::current_user_api::{ CurrentUserApi, CurrentUserApiClient };
-mod jwt_api;
-pub use self::jwt_api::{ JwtApi, JwtApiClient };
-mod mfa_api;
-pub use self::mfa_api::{ MfaApi, MfaApiClient };
-mod oauth2_api;
-pub use self::oauth2_api::{ Oauth2Api, Oauth2ApiClient };
-mod oauth2_provider_api;
-pub use self::oauth2_provider_api::{ Oauth2ProviderApi, Oauth2ProviderApiClient };
-mod openapi_api;
-pub use self::openapi_api::{ OpenapiApi, OpenapiApiClient };
-mod p2p_api;
-pub use self::p2p_api::{ P2pApi, P2pApiClient };
-mod register_api;
-pub use self::register_api::{ RegisterApi, RegisterApiClient };
-mod service_account_api;
-pub use self::service_account_api::{ ServiceAccountApi, ServiceAccountApiClient };
-mod tenant_api;
-pub use self::tenant_api::{ TenantApi, TenantApiClient };
-mod token_api;
-pub use self::token_api::{ TokenApi, TokenApiClient };
-mod user_api;
-pub use self::user_api::{ UserApi, UserApiClient };
-mod users_api;
-pub use self::users_api::{ UsersApi, UsersApiClient };
-mod util_api;
-pub use self::util_api::{ UtilApi, UtilApiClient };
+pub fn urlencode<T: AsRef<str>>(s: T) -> String {
+    ::url::form_urlencoded::byte_serialize(s.as_ref().as_bytes()).collect()
+}
+
+pub fn parse_deep_object(prefix: &str, value: &serde_json::Value) -> Vec<(String, String)> {
+    if let serde_json::Value::Object(object) = value {
+        let mut params = vec![];
+
+        for (key, value) in object {
+            match value {
+                serde_json::Value::Object(_) => params.append(&mut parse_deep_object(
+                    &format!("{}[{}]", prefix, key),
+                    value,
+                )),
+                serde_json::Value::Array(array) => {
+                    for (i, value) in array.iter().enumerate() {
+                        params.append(&mut parse_deep_object(
+                            &format!("{}[{}][{}]", prefix, key, i),
+                            value,
+                        ));
+                    }
+                },
+                serde_json::Value::String(s) => params.push((format!("{}[{}]", prefix, key), s.clone())),
+                _ => params.push((format!("{}[{}]", prefix, key), value.to_string())),
+            }
+        }
+
+        return params;
+    }
+
+    unimplemented!("Only objects are supported with style=deepObject")
+}
+
+pub mod current_user_api;
+pub mod jwt_api;
+pub mod mfa_api;
+pub mod oauth2_api;
+pub mod oauth2_provider_api;
+pub mod openapi_api;
+pub mod p2p_api;
+pub mod register_api;
+pub mod service_account_api;
+pub mod tenant_api;
+pub mod token_api;
+pub mod user_api;
+pub mod users_api;
+pub mod util_api;
 
 pub mod configuration;
-pub mod client;

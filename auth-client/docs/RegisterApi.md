@@ -4,7 +4,7 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**register_user**](RegisterApi.md#register_user) | **Post** /register | 
+[**register_user**](RegisterApi.md#register_user) | **POST** /register | 
 
 
 

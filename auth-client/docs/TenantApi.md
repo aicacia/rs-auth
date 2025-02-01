@@ -4,12 +4,12 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**all_tenants**](TenantApi.md#all_tenants) | **Get** /tenants | 
-[**create_tenant**](TenantApi.md#create_tenant) | **Post** /tenants | 
-[**delete_tenant**](TenantApi.md#delete_tenant) | **Delete** /tenants/{tenant_id} | 
-[**get_tenant_by_client_id**](TenantApi.md#get_tenant_by_client_id) | **Get** /tenants/by-client-id/{tenant_client_id} | 
-[**get_tenant_by_id**](TenantApi.md#get_tenant_by_id) | **Get** /tenants/{tenant_id} | 
-[**update_tenant**](TenantApi.md#update_tenant) | **Put** /tenants/{tenant_id} | 
+[**all_tenants**](TenantApi.md#all_tenants) | **GET** /tenants | 
+[**create_tenant**](TenantApi.md#create_tenant) | **POST** /tenants | 
+[**delete_tenant**](TenantApi.md#delete_tenant) | **DELETE** /tenants/{tenant_id} | 
+[**get_tenant_by_client_id**](TenantApi.md#get_tenant_by_client_id) | **GET** /tenants/by-client-id/{tenant_client_id} | 
+[**get_tenant_by_id**](TenantApi.md#get_tenant_by_id) | **GET** /tenants/{tenant_id} | 
+[**update_tenant**](TenantApi.md#update_tenant) | **PUT** /tenants/{tenant_id} | 
 
 
 

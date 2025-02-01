@@ -4,7 +4,7 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**p2p**](P2pApi.md#p2p) | **Get** /p2p | 
+[**p2p**](P2pApi.md#p2p) | **GET** /p2p | 
 
 
 

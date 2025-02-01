@@ -4,8 +4,8 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**create_oauth2_url**](Oauth2Api.md#create_oauth2_url) | **Post** /oauth2/{provider} | 
-[**oauth2_callback**](Oauth2Api.md#oauth2_callback) | **Get** /oauth2/{provider}/callback | 
+[**create_oauth2_url**](Oauth2Api.md#create_oauth2_url) | **POST** /oauth2/{provider} | 
+[**oauth2_callback**](Oauth2Api.md#oauth2_callback) | **GET** /oauth2/{provider}/callback | 
 
 
 

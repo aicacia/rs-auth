@@ -4,8 +4,8 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**health**](UtilApi.md#health) | **Get** /health | 
-[**version**](UtilApi.md#version) | **Get** /version | 
+[**health**](UtilApi.md#health) | **GET** /health | 
+[**version**](UtilApi.md#version) | **GET** /version | 
 
 
 

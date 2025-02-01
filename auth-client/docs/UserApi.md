@@ -4,12 +4,12 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**create_user_email**](UserApi.md#create_user_email) | **Post** /users/{user_id}/emails | 
-[**create_user_phone_number**](UserApi.md#create_user_phone_number) | **Post** /users/{user_id}/phone_numbers | 
-[**delete_user_email**](UserApi.md#delete_user_email) | **Delete** /users/{user_id}/emails/{email_id} | 
-[**delete_user_phone_number**](UserApi.md#delete_user_phone_number) | **Delete** /users/{user_id}/phone-numbers/{phone_number_id} | 
-[**update_user_email**](UserApi.md#update_user_email) | **Put** /users/{user_id}/emails/{email_id} | 
-[**update_user_phone_number**](UserApi.md#update_user_phone_number) | **Put** /users/{user_id}/phone-numbers/{phone_number_id} | 
+[**create_user_email**](UserApi.md#create_user_email) | **POST** /users/{user_id}/emails | 
+[**create_user_phone_number**](UserApi.md#create_user_phone_number) | **POST** /users/{user_id}/phone_numbers | 
+[**delete_user_email**](UserApi.md#delete_user_email) | **DELETE** /users/{user_id}/emails/{email_id} | 
+[**delete_user_phone_number**](UserApi.md#delete_user_phone_number) | **DELETE** /users/{user_id}/phone-numbers/{phone_number_id} | 
+[**update_user_email**](UserApi.md#update_user_email) | **PUT** /users/{user_id}/emails/{email_id} | 
+[**update_user_phone_number**](UserApi.md#update_user_phone_number) | **PUT** /users/{user_id}/phone-numbers/{phone_number_id} | 
 
 
 

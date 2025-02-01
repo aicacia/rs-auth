@@ -4,10 +4,10 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**all_users**](UsersApi.md#all_users) | **Get** /users | 
-[**create_user**](UsersApi.md#create_user) | **Post** /users | 
-[**create_user_reset_password_token**](UsersApi.md#create_user_reset_password_token) | **Post** /users/{user_id}/reset-password | 
-[**get_user_by_id**](UsersApi.md#get_user_by_id) | **Get** /users/{user_id} | 
+[**all_users**](UsersApi.md#all_users) | **GET** /users | 
+[**create_user**](UsersApi.md#create_user) | **POST** /users | 
+[**create_user_reset_password_token**](UsersApi.md#create_user_reset_password_token) | **POST** /users/{user_id}/reset-password | 
+[**get_user_by_id**](UsersApi.md#get_user_by_id) | **GET** /users/{user_id} | 
 
 
 

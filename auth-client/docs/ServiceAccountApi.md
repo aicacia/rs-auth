@@ -4,10 +4,10 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**all_service_accounts**](ServiceAccountApi.md#all_service_accounts) | **Get** /service-accounts | 
-[**create_service_account**](ServiceAccountApi.md#create_service_account) | **Post** /service-accounts | 
-[**get_service_account_by_id**](ServiceAccountApi.md#get_service_account_by_id) | **Get** /service-accounts/{service_account_id} | 
-[**update_service_account**](ServiceAccountApi.md#update_service_account) | **Put** /service-accounts/{service_account_id} | 
+[**all_service_accounts**](ServiceAccountApi.md#all_service_accounts) | **GET** /service-accounts | 
+[**create_service_account**](ServiceAccountApi.md#create_service_account) | **POST** /service-accounts | 
+[**get_service_account_by_id**](ServiceAccountApi.md#get_service_account_by_id) | **GET** /service-accounts/{service_account_id} | 
+[**update_service_account**](ServiceAccountApi.md#update_service_account) | **PUT** /service-accounts/{service_account_id} | 
 
 
 

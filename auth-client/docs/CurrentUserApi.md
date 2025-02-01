@@ -4,21 +4,21 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**create_current_user_add_oauth2_provider_url**](CurrentUserApi.md#create_current_user_add_oauth2_provider_url) | **Post** /current-user/oauth2/{provider} | 
-[**create_current_user_email**](CurrentUserApi.md#create_current_user_email) | **Post** /current-user/emails | 
-[**create_current_user_phone_number**](CurrentUserApi.md#create_current_user_phone_number) | **Post** /current-user/phone-numbers | 
-[**create_current_user_totp**](CurrentUserApi.md#create_current_user_totp) | **Post** /current-user/totp | 
-[**deactivate_current_user**](CurrentUserApi.md#deactivate_current_user) | **Delete** /current-user | 
-[**delete_current_user_email**](CurrentUserApi.md#delete_current_user_email) | **Delete** /current-user/emails/{email_id} | 
-[**delete_current_user_phone_number**](CurrentUserApi.md#delete_current_user_phone_number) | **Delete** /current-user/phone-numbers/{phone_number_id} | 
-[**delete_current_user_totp**](CurrentUserApi.md#delete_current_user_totp) | **Delete** /current-user/totp | 
-[**get_current_user**](CurrentUserApi.md#get_current_user) | **Get** /current-user | 
-[**reset_current_user_password**](CurrentUserApi.md#reset_current_user_password) | **Post** /current-user/reset-password | 
-[**set_current_user_email_as_primary**](CurrentUserApi.md#set_current_user_email_as_primary) | **Put** /current-user/emails/{email_id}/set-as-primary | 
-[**set_current_user_phone_number_as_primary**](CurrentUserApi.md#set_current_user_phone_number_as_primary) | **Put** /current-user/phone-numbers/{phone_number_id}/set-as-primary | 
-[**update_current_user**](CurrentUserApi.md#update_current_user) | **Put** /current-user | 
-[**update_current_user_config**](CurrentUserApi.md#update_current_user_config) | **Put** /current-user/config | 
-[**update_current_user_info**](CurrentUserApi.md#update_current_user_info) | **Put** /current-user/info | 
+[**create_current_user_add_oauth2_provider_url**](CurrentUserApi.md#create_current_user_add_oauth2_provider_url) | **POST** /current-user/oauth2/{provider} | 
+[**create_current_user_email**](CurrentUserApi.md#create_current_user_email) | **POST** /current-user/emails | 
+[**create_current_user_phone_number**](CurrentUserApi.md#create_current_user_phone_number) | **POST** /current-user/phone-numbers | 
+[**create_current_user_totp**](CurrentUserApi.md#create_current_user_totp) | **POST** /current-user/totp | 
+[**deactivate_current_user**](CurrentUserApi.md#deactivate_current_user) | **DELETE** /current-user | 
+[**delete_current_user_email**](CurrentUserApi.md#delete_current_user_email) | **DELETE** /current-user/emails/{email_id} | 
+[**delete_current_user_phone_number**](CurrentUserApi.md#delete_current_user_phone_number) | **DELETE** /current-user/phone-numbers/{phone_number_id} | 
+[**delete_current_user_totp**](CurrentUserApi.md#delete_current_user_totp) | **DELETE** /current-user/totp | 
+[**get_current_user**](CurrentUserApi.md#get_current_user) | **GET** /current-user | 
+[**reset_current_user_password**](CurrentUserApi.md#reset_current_user_password) | **POST** /current-user/reset-password | 
+[**set_current_user_email_as_primary**](CurrentUserApi.md#set_current_user_email_as_primary) | **PUT** /current-user/emails/{email_id}/set-as-primary | 
+[**set_current_user_phone_number_as_primary**](CurrentUserApi.md#set_current_user_phone_number_as_primary) | **PUT** /current-user/phone-numbers/{phone_number_id}/set-as-primary | 
+[**update_current_user**](CurrentUserApi.md#update_current_user) | **PUT** /current-user | 
+[**update_current_user_config**](CurrentUserApi.md#update_current_user_config) | **PUT** /current-user/config | 
+[**update_current_user_info**](CurrentUserApi.md#update_current_user_info) | **PUT** /current-user/info | 
 
 
 
