@@ -32,7 +32,7 @@ pub async fn get_user_active_password_by_user_id(
   sqlx::query_as(
     r#"SELECT up.*
     FROM user_passwords up
-    WHERE up.active AND up.user_id = $1 
+    WHERE up.active != 0 AND up.user_id = $1 
     LIMIT 1;"#,
   )
   .bind(user_id)
