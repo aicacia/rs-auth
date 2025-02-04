@@ -23,6 +23,8 @@ env:
 config:
   server:
     url: https://api.auth.aicacia.com
+  oauth2:
+    register_enabled: false
   user:
     register_enabled: false
 

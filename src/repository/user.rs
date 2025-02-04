@@ -193,8 +193,13 @@ pub async fn create_user_with_oauth2(
 ) -> sqlx::Result<UserRow> {
   run_transaction(pool, |transaction| {
     Box::pin(async move {
-      let mut username: String = params.email.split('@').next().unwrap_or_default().trim().to_string();
-      if username.is_empty() {
+      let mut username: String;
+      if let Some((email_name, _)) = params.email.split_once('@') {
+        if email_name.is_empty() {
+          return Err(sqlx::Error::Encode("Failed to convert email into username".into()));
+        }
+        username = email_name.to_owned();
+      } else {
         return Err(sqlx::Error::Encode("Failed to convert email into username".into()));
       }
 
@@ -226,7 +231,7 @@ pub async fn create_user_with_oauth2(
       )
       .bind(user.id)
       .bind(&params.email)
-      .bind(params.email_verified)
+      .bind(params.email_verified as i32)
       .execute(&mut **transaction)
       .await?;
 
@@ -236,7 +241,7 @@ pub async fn create_user_with_oauth2(
         )
         .bind(user.id)
         .bind(phone_number)
-        .bind(params.phone_number_verified)
+        .bind(params.phone_number_verified as i32)
         .execute(&mut **transaction)
         .await?;
       }

@@ -5,6 +5,9 @@
     "id": "4f90276b-aae5-46a0-ba06-3ffdf22f256d",
     "password": "037f81cc-941d-4001-bd60-33878ae76007"
   },
+  "oauth2": {
+    "register_enabled": true
+  },
   "user": {
     "register_enabled": true
   }

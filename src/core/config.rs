@@ -52,6 +52,7 @@ pub struct UserConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct OAuth2 {
+  pub register_enabled: bool,
   pub code_timeout_in_seconds: u64,
 }
 
@@ -109,6 +110,7 @@ impl Config {
       .set_default("user.allow_mfa_email", true)?
       .set_default("user.allow_mfa_text", true)?
       // OAuth2 Defaults
+      .set_default("oauth2.register_enabled", false)?
       .set_default("oauth2.code_timeout_in_seconds", 60 * 5)?
       // Defaults
       .set_default("log_level", "debug")?

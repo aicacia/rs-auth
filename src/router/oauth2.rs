@@ -72,6 +72,11 @@ pub async fn create_oauth2_url(
     state: custom_state,
   }): Query<OAuth2Query>,
 ) -> impl IntoResponse {
+  if register.unwrap_or_default() && !state.config.oauth2.register_enabled {
+    return InternalError::internal_error()
+      .with_error("oauth2-provider", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let tenant_oauth2_provider =
     match get_active_tenant_oauth2_provider(&state.pool, tenant.id, &provider).await {
       Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
