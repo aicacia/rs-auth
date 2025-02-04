@@ -243,6 +243,14 @@ impl InternalError {
   pub fn with_application_error(self, msg: impl Into<ErrorMessage>) -> Self {
     self.with_error(APPLICATION, msg)
   }
+
+  pub fn status_code(&self) -> u16 {
+    self.status_code
+  }
+
+  pub fn errors(&self) -> &HashMap<String, ErrorMessages> {
+    &self.messages
+  }
 }
 
 fn handle_validation_errors(

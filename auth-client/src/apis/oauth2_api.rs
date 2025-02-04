@@ -35,16 +35,20 @@ pub enum Oauth2CallbackError {
 }
 
 
-pub async fn create_oauth2_url(configuration: &configuration::Configuration, provider: &str, register: Option<bool>) -> Result<String, Error<CreateOauth2UrlError>> {
+pub async fn create_oauth2_url(configuration: &configuration::Configuration, provider: &str, register: Option<bool>, state: Option<&str>) -> Result<String, Error<CreateOauth2UrlError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_provider = provider;
     let p_register = register;
+    let p_state = state;
 
     let uri_str = format!("{}/oauth2/{provider}", configuration.base_path, provider=crate::apis::urlencode(p_provider));
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
 
     if let Some(ref param_value) = p_register {
         req_builder = req_builder.query(&[("register", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_state {
+        req_builder = req_builder.query(&[("state", &param_value.to_string())]);
     }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());

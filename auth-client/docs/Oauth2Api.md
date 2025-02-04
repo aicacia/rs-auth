@@ -11,7 +11,7 @@ Method | HTTP request | Description
 
 ## create_oauth2_url
 
-> String create_oauth2_url(provider, register)
+> String create_oauth2_url(provider, register, state)
 
 
 ### Parameters
@@ -21,6 +21,7 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **provider** | **String** | OAuth2 provider | [required] |
 **register** | Option<**bool**> |  |  |
+**state** | Option<**String**> |  |  |
 
 ### Return type
 

@@ -67,7 +67,10 @@ pub async fn create_oauth2_url(
   State(state): State<RouterState>,
   Path(provider): Path<String>,
   TenantId(tenant): TenantId,
-  Query(OAuth2Query { register }): Query<OAuth2Query>,
+  Query(OAuth2Query {
+    register,
+    state: custom_state,
+  }): Query<OAuth2Query>,
 ) -> impl IntoResponse {
   let tenant_oauth2_provider =
     match get_active_tenant_oauth2_provider(&state.pool, tenant.id, &provider).await {
@@ -99,6 +102,7 @@ pub async fn create_oauth2_url(
     &basic_client,
     &tenant,
     register.unwrap_or(false),
+    custom_state,
     None,
     parse_scopes(Some(tenant_oauth2_provider.scope.as_str()))
       .into_iter()
@@ -431,7 +435,14 @@ pub async fn oauth2_callback(
     }
   };
 
-  redirect_url.set_query(Some(&format!("authorization-code={authorization_code}")));
+  let mut query = form_urlencoded::Serializer::new(String::new());
+  query.append_pair("authorization-code", &authorization_code);
+  if let Some(state) = oauth2_state_token.claims.custom_state {
+    if !state.is_empty() {
+      query.append_pair("state", &state);
+    }
+  }
+  redirect_url.set_query(Some(&query.finish()));
   redirect(redirect_url).into_response()
 }
 
@@ -442,10 +453,16 @@ pub fn create_router(state: RouterState) -> OpenApiRouter {
 }
 
 fn redirect_with_error(mut redirect_url: Url, error: InternalError) -> impl IntoResponse {
-  redirect_url.set_query(Some(&format!(
-    "error={}",
-    urlencoding::encode(&error.to_string())
-  )));
+  let errors = match serde_json::to_string(&error.errors()) {
+    Ok(errors) => errors,
+    Err(e) => {
+      log::error!("Error serializing errors: {}", e);
+      return InternalError::internal_error()
+        .with_error("redirect-url", INTERNAL_ERROR)
+        .into_response();
+    }
+  };
+  redirect_url.set_query(Some(&format!("error={}", urlencoding::encode(&errors))));
   redirect(redirect_url).into_response()
 }
 

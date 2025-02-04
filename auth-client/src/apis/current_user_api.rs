@@ -172,13 +172,17 @@ pub enum UpdateCurrentUserInfoError {
 }
 
 
-pub async fn create_current_user_add_oauth2_provider_url(configuration: &configuration::Configuration, provider: &str) -> Result<String, Error<CreateCurrentUserAddOauth2ProviderUrlError>> {
+pub async fn create_current_user_add_oauth2_provider_url(configuration: &configuration::Configuration, provider: &str, state: Option<&str>) -> Result<String, Error<CreateCurrentUserAddOauth2ProviderUrlError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_provider = provider;
+    let p_state = state;
 
     let uri_str = format!("{}/current-user/oauth2/{provider}", configuration.base_path, provider=crate::apis::urlencode(p_provider));
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
 
+    if let Some(ref param_value) = p_state {
+        req_builder = req_builder.query(&[("state", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }

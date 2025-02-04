@@ -382,6 +382,12 @@
             "required": true,
             "schema": { "type": "string" },
             "example": "google"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["string", "null"] }
           }
         ],
         "responses": {
@@ -895,6 +901,12 @@
             "in": "query",
             "required": false,
             "schema": { "type": ["boolean", "null"] }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": { "type": ["string", "null"] }
           }
         ],
         "responses": {

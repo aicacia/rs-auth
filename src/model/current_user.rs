@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 use validator::Validate;
 
 use super::user::UserMFAType;
@@ -33,4 +33,9 @@ pub struct UpdateUserInfoRequest {
 #[derive(Deserialize, ToSchema)]
 pub struct UpdateUserConfigRequest {
   pub mfa_type: Option<UserMFAType>,
+}
+
+#[derive(Deserialize, IntoParams)]
+pub struct OAuth2Query {
+  pub state: Option<String>,
 }

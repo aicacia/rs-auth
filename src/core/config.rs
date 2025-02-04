@@ -80,9 +80,9 @@ impl Config {
       )?
       .set_default("database.min_connections", 1)?
       .set_default("database.max_connections", 100)?
-      .set_default("database.connect_timeout", 3)?
-      .set_default("database.acquire_timeout", 3)?
-      .set_default("database.idle_timeout", 5)?
+      .set_default("database.connect_timeout", 10)?
+      .set_default("database.acquire_timeout", 10)?
+      .set_default("database.idle_timeout", 10)?
       .set_default("database.max_lifetime", 300)?
       // P2P
       .set_default("p2p.enabled", false)?

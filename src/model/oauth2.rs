@@ -11,6 +11,7 @@ use crate::{
 #[derive(Deserialize, IntoParams)]
 pub struct OAuth2Query {
   pub register: Option<bool>,
+  pub state: Option<String>,
 }
 
 #[derive(Deserialize, IntoParams)]
@@ -27,15 +28,23 @@ pub struct OAuth2State {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub user_id: Option<i64>,
   pub register: bool,
+  pub custom_state: Option<String>,
 }
 
 impl OAuth2State {
-  pub fn new(config: &Config, tenant_id: i64, register: bool, user_id: Option<i64>) -> Self {
+  pub fn new(
+    config: &Config,
+    tenant_id: i64,
+    register: bool,
+    custom_state: Option<String>,
+    user_id: Option<i64>,
+  ) -> Self {
     Self {
       exp: chrono::Utc::now().timestamp() + (config.oauth2.code_timeout_in_seconds as i64),
       tenant_id,
-      register: register,
-      user_id: user_id,
+      register,
+      user_id,
+      custom_state,
     }
   }
 
@@ -56,6 +65,7 @@ pub fn oauth2_authorize_url<I>(
   client: &oauth2::basic::BasicClient,
   tenant: &TenantRow,
   register: bool,
+  custom_state: Option<String>,
   user_id: Option<i64>,
   scopes: I,
 ) -> Result<
@@ -71,7 +81,7 @@ where
 {
   let (pkce_code_challenge, pkce_code_verifier) = oauth2::PkceCodeChallenge::new_random_sha256();
 
-  let oauth2_state = OAuth2State::new(config, tenant.id, register, user_id);
+  let oauth2_state = OAuth2State::new(config, tenant.id, register, custom_state, user_id);
   let oauth2_state_token = match oauth2_state.encode(tenant) {
     Ok(t) => t,
     Err(err) => return Err(io::Error::new(io::ErrorKind::InvalidData, err)),

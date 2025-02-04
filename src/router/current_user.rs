@@ -18,7 +18,7 @@ use crate::{
     validated_json::ValidatedJson,
   },
   model::{
-    current_user::{ResetPasswordRequest, UpdateUserInfoRequest},
+    current_user::{OAuth2Query, ResetPasswordRequest, UpdateUserInfoRequest},
     oauth2::oauth2_authorize_url,
     user::{UpdateUsername, User, UserOAuth2Provider},
   },
@@ -36,7 +36,7 @@ use crate::{
 };
 
 use axum::{
-  extract::{Path, State},
+  extract::{Path, Query, State},
   response::IntoResponse,
 };
 use chrono::{DateTime, Utc};
@@ -201,6 +201,7 @@ pub async fn get_current_user(
   tags = [CURRENT_USER_TAG],
   params(
     ("provider" = String, Path, description = "OAuth2 provider", example = "google"),
+    OAuth2Query,
   ),
   responses(
     (status = 200, content_type = "text/plain", body = String),
@@ -214,6 +215,9 @@ pub async fn get_current_user(
 pub async fn create_current_user_add_oauth2_provider_url(
   State(state): State<RouterState>,
   Path(provider): Path<String>,
+  Query(OAuth2Query {
+    state: custom_state,
+  }): Query<OAuth2Query>,
   UserAuthorization { user, tenant, .. }: UserAuthorization,
 ) -> impl IntoResponse {
   let tenant_oauth2_provider =
@@ -246,6 +250,7 @@ pub async fn create_current_user_add_oauth2_provider_url(
     &basic_client,
     &tenant,
     false,
+    custom_state,
     Some(user.id),
     parse_scopes(Some(tenant_oauth2_provider.scope.as_str()))
       .into_iter()

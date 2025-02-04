@@ -224,6 +224,7 @@ dependencies = [
  "dashmap",
  "dotenvy",
  "expiringmap",
+ "form_urlencoded",
  "futures-util",
  "http 1.2.0",
  "jsonwebtoken",

@@ -24,7 +24,7 @@ Method | HTTP request | Description
 
 ## create_current_user_add_oauth2_provider_url
 
-> String create_current_user_add_oauth2_provider_url(provider)
+> String create_current_user_add_oauth2_provider_url(provider, state)
 
 
 ### Parameters
@@ -33,6 +33,7 @@ Method | HTTP request | Description
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **provider** | **String** | OAuth2 provider | [required] |
+**state** | Option<**String**> |  |  |
 
 ### Return type
 
