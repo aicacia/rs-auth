@@ -3,12 +3,12 @@ entries:
   auth-api:
   - apiVersion: v2
     appVersion: latest
-    created: "2025-02-02T16:02:41.076526424Z"
+    created: "2025-02-04T09:28:44.763940774Z"
     description: Aicacia Auth API provides authentication services for applications.
-    digest: d4346e3a9284a0192ddef975a3d12da2f51055b15a662458b253d5635294df11
+    digest: 8d3abe3a8bf19437a6559b8f452be427888e05ec677d10f2c2859e23d320c267
     name: auth-api
     type: application
     urls:
     - auth-api-0.1.0.tgz
     version: 0.1.0
-generated: "2025-02-02T16:02:41.075846977Z"
+generated: "2025-02-04T09:28:44.762818324Z"
