@@ -384,6 +384,7 @@ pub async fn oauth2_callback(
       user.id,
       tenant_oauth2_provider.id,
       &email,
+      &tenant_oauth2_provider.provider,
     )
     .await
     {

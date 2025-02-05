@@ -65,17 +65,19 @@ pub async fn create_user_oauth2_provider_and_email(
   user_id: i64,
   tenant_oauth2_provider_id: i64,
   email: &str,
+  provider: &str,
 ) -> sqlx::Result<UserOAuth2ProviderRow> {
   sqlx::query_as(
     r#"INSERT INTO user_oauth2_providers 
           ("user_id", "tenant_oauth2_provider_id", "email")
           VALUES
           ($1, $2, $3)
-          RETURNING *;"#,
+          RETURNING *, $4 as provider;"#,
   )
   .bind(user_id)
   .bind(tenant_oauth2_provider_id)
   .bind(email)
+  .bind(provider)
   .fetch_one(pool)
   .await
 }
