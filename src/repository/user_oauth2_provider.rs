@@ -5,6 +5,7 @@ pub struct UserOAuth2ProviderRow {
   pub id: i64,
   pub user_id: i64,
   pub tenant_oauth2_provider_id: i64,
+  pub provider: String,
   pub email: String,
   pub updated_at: i64,
   pub created_at: i64,
@@ -15,11 +16,16 @@ pub async fn get_users_oauth2_providers(
   limit: usize,
   offset: usize,
 ) -> sqlx::Result<Vec<UserOAuth2ProviderRow>> {
-  sqlx::query_as(r#"SELECT uop.* FROM user_oauth2_providers uop WHERE uop.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#)
-    .bind(limit as i64)
-    .bind(offset as i64)
-    .fetch_all(pool)
-    .await
+  sqlx::query_as(
+    r#"SELECT uop.*, toap.provider
+    FROM user_oauth2_providers uop 
+    JOIN tenant_oauth2_providers toap ON toap.id = uop.tenant_oauth2_provider_id 
+    WHERE toap.active = 1 AND uop.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#,
+  )
+  .bind(limit as i64)
+  .bind(offset as i64)
+  .fetch_all(pool)
+  .await
 }
 
 pub async fn get_user_by_oauth2_provider_and_email(
@@ -44,9 +50,10 @@ pub async fn get_user_oauth2_providers_by_user_id(
   user_id: i64,
 ) -> sqlx::Result<Vec<UserOAuth2ProviderRow>> {
   sqlx::query_as(
-    r#"SELECT uop.*
+    r#"SELECT uop.*, toap.provider
     FROM user_oauth2_providers uop
-    WHERE uop.user_id = $1;"#,
+    JOIN tenant_oauth2_providers toap ON toap.id = uop.tenant_oauth2_provider_id 
+    WHERE toap.active = 1 AND uop.user_id = $1;"#,
   )
   .bind(user_id)
   .fetch_all(pool)

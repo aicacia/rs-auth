@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **created_at** | **String** |  | 
 **email** | Option<**String**> |  | [optional]
 **id** | **i64** |  | 
+**provider** | **String** |  | 
 **tenant_oauth2_provider_id** | **i64** |  | 
 **updated_at** | **String** |  | 
 

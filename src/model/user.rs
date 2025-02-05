@@ -160,6 +160,7 @@ impl From<UserPhoneNumberRow> for UserPhoneNumber {
 pub struct UserOAuth2Provider {
   pub id: i64,
   pub tenant_oauth2_provider_id: i64,
+  pub provider: String,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub email: Option<String>,
   pub updated_at: DateTime<Utc>,
@@ -171,6 +172,7 @@ impl From<UserOAuth2ProviderRow> for UserOAuth2Provider {
     Self {
       id: row.id,
       tenant_oauth2_provider_id: row.tenant_oauth2_provider_id,
+      provider: row.provider,
       email: Some(row.email),
       updated_at: DateTime::<Utc>::from_timestamp(row.updated_at, 0).unwrap_or_default(),
       created_at: DateTime::<Utc>::from_timestamp(row.created_at, 0).unwrap_or_default(),

@@ -19,6 +19,8 @@ pub struct UserOAuth2Provider {
     pub email: Option<Option<String>>,
     #[serde(rename = "id")]
     pub id: i64,
+    #[serde(rename = "provider")]
+    pub provider: String,
     #[serde(rename = "tenant_oauth2_provider_id")]
     pub tenant_oauth2_provider_id: i64,
     #[serde(rename = "updated_at")]
@@ -26,11 +28,12 @@ pub struct UserOAuth2Provider {
 }
 
 impl UserOAuth2Provider {
-    pub fn new(created_at: String, id: i64, tenant_oauth2_provider_id: i64, updated_at: String) -> UserOAuth2Provider {
+    pub fn new(created_at: String, id: i64, provider: String, tenant_oauth2_provider_id: i64, updated_at: String) -> UserOAuth2Provider {
         UserOAuth2Provider {
             created_at,
             email: None,
             id,
+            provider,
             tenant_oauth2_provider_id,
             updated_at,
         }
