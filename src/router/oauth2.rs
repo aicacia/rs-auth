@@ -214,7 +214,7 @@ pub async fn oauth2_callback(
       }
     };
   let mut errors = InternalError::bad_request();
-  let mut redirect_url = match Url::parse(&tenant_oauth2_provider.redirect_url) {
+  let redirect_url = match Url::parse(&tenant_oauth2_provider.redirect_url) {
     Ok(url) => url.to_owned(),
     Err(e) => {
       log::error!(
@@ -227,43 +227,17 @@ pub async fn oauth2_callback(
     }
   };
 
-  let basic_client = match tenant_oauth2_provider.basic_client(state.config.as_ref()) {
-    Ok(client) => client,
-    Err(e) => {
-      log::error!("Error getting basic client: {}", e);
-      errors.error("oauth2-provider", INVALID_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
-    }
-  };
   let tenant = match get_tenant_by_id(&state.pool, tenant_id).await {
     Ok(Some(tenant)) => tenant,
     Ok(None) => {
       log::error!("Tenant not found");
       errors.error("oauth2-state-token", INVALID_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
+      return redirect_with_query(redirect_url, None, None, Some(errors)).into_response();
     }
     Err(e) => {
       log::error!("Error getting tenant from OAuth2 state: {}", e);
       errors.error("oauth2-state-token", INVALID_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
-    }
-  };
-
-  let pkce_code_verifier = match PKCE_CODE_VERIFIERS.write() {
-    Ok(mut map) => match map.remove_entry(&oauth2_state_token_string) {
-      Some((_, pkce_code_verifier)) => pkce_code_verifier,
-      None => {
-        log::error!("No PKCE code verifier found for CSRF token");
-        errors.status(StatusCode::INTERNAL_SERVER_ERROR);
-        errors.error("pkce-code-verifier", INTERNAL_ERROR);
-        return redirect_with_error(redirect_url, errors).into_response();
-      }
-    },
-    Err(e) => {
-      log::error!("Error aquiring PKCE verifier map: {}", e);
-      errors.status(StatusCode::INTERNAL_SERVER_ERROR);
-      errors.error("pkce-code-verifier", INTERNAL_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
+      return redirect_with_query(redirect_url, None, None, Some(errors)).into_response();
     }
   };
 
@@ -274,9 +248,54 @@ pub async fn oauth2_callback(
         log::error!("Error parsing OAuth2 state: {}", e);
         errors.status(StatusCode::INTERNAL_SERVER_ERROR);
         errors.error("oauth2-state-token", PARSE_ERROR);
-        return redirect_with_error(redirect_url, errors).into_response();
+        return redirect_with_query(redirect_url, None, None, Some(errors)).into_response();
       }
     };
+
+  let basic_client = match tenant_oauth2_provider.basic_client(state.config.as_ref()) {
+    Ok(client) => client,
+    Err(e) => {
+      log::error!("Error getting basic client: {}", e);
+      errors.error("oauth2-provider", INVALID_ERROR);
+      return redirect_with_query(
+        redirect_url,
+        None,
+        oauth2_state_token.claims.custom_state,
+        Some(errors),
+      )
+      .into_response();
+    }
+  };
+
+  let pkce_code_verifier = match PKCE_CODE_VERIFIERS.write() {
+    Ok(mut map) => match map.remove_entry(&oauth2_state_token_string) {
+      Some((_, pkce_code_verifier)) => pkce_code_verifier,
+      None => {
+        log::error!("No PKCE code verifier found for CSRF token");
+        errors.status(StatusCode::INTERNAL_SERVER_ERROR);
+        errors.error("pkce-code-verifier", INTERNAL_ERROR);
+        return redirect_with_query(
+          redirect_url,
+          None,
+          oauth2_state_token.claims.custom_state,
+          Some(errors),
+        )
+        .into_response();
+      }
+    },
+    Err(e) => {
+      log::error!("Error aquiring PKCE verifier map: {}", e);
+      errors.status(StatusCode::INTERNAL_SERVER_ERROR);
+      errors.error("pkce-code-verifier", INTERNAL_ERROR);
+      return redirect_with_query(
+        redirect_url,
+        None,
+        oauth2_state_token.claims.custom_state,
+        Some(errors),
+      )
+      .into_response();
+    }
+  };
 
   let token_response = match basic_client
     .exchange_code(oauth2::AuthorizationCode::new(code))
@@ -289,7 +308,13 @@ pub async fn oauth2_callback(
       log::error!("Error exchanging code for token: {}", e);
       errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("oauth2-code-exchange", INTERNAL_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
+      return redirect_with_query(
+        redirect_url,
+        None,
+        oauth2_state_token.claims.custom_state,
+        Some(errors),
+      )
+      .into_response();
     }
   };
 
@@ -299,7 +324,13 @@ pub async fn oauth2_callback(
       log::error!("Error getting OAuth2 profile: {}", e);
       errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("oauth2-provider-profile", INVALID_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
+      return redirect_with_query(
+        redirect_url,
+        None,
+        oauth2_state_token.claims.custom_state,
+        Some(errors),
+      )
+      .into_response();
     }
   };
 
@@ -308,7 +339,13 @@ pub async fn oauth2_callback(
     None => {
       log::error!("No email found in openid profile");
       errors.error("email", REQUIRED_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
+      return redirect_with_query(
+        redirect_url,
+        None,
+        oauth2_state_token.claims.custom_state,
+        Some(errors),
+      )
+      .into_response();
     }
   };
 
@@ -354,10 +391,27 @@ pub async fn oauth2_callback(
     {
       Ok(user) => user,
       Err(e) => {
+        if e.to_string().to_lowercase().contains("unique constraint") {
+          errors.status(StatusCode::CONFLICT);
+          errors.error("user", ALREADY_EXISTS_ERROR);
+          return redirect_with_query(
+            redirect_url,
+            None,
+            oauth2_state_token.claims.custom_state,
+            Some(errors),
+          )
+          .into_response();
+        }
         log::error!("Error creating user with OAuth2 provider: {}", e);
         errors.status(StatusCode::INTERNAL_SERVER_ERROR);
         errors.error("oauth2-provider", INTERNAL_ERROR);
-        return redirect_with_error(redirect_url, errors).into_response();
+        return redirect_with_query(
+          redirect_url,
+          None,
+          oauth2_state_token.claims.custom_state,
+          Some(errors),
+        )
+        .into_response();
       }
     }
   } else if let Some(user_id) = oauth2_state_token.claims.user_id {
@@ -365,7 +419,13 @@ pub async fn oauth2_callback(
       Ok(Some(user)) => user,
       Ok(None) => {
         errors.error("user", NOT_FOUND_ERROR);
-        return redirect_with_error(redirect_url, errors).into_response();
+        return redirect_with_query(
+          redirect_url,
+          None,
+          oauth2_state_token.claims.custom_state,
+          Some(errors),
+        )
+        .into_response();
       }
       Err(e) => {
         if e.to_string().to_lowercase().contains("unique constraint") {
@@ -375,7 +435,13 @@ pub async fn oauth2_callback(
         }
         log::error!("Error fetching user by ID: {}", e);
         errors.error("oauth2-provider", REQUIRED_ERROR);
-        return redirect_with_error(redirect_url, errors).into_response();
+        return redirect_with_query(
+          redirect_url,
+          None,
+          oauth2_state_token.claims.custom_state,
+          Some(errors),
+        )
+        .into_response();
       }
     };
 
@@ -393,7 +459,13 @@ pub async fn oauth2_callback(
         log::error!("Error creating user OAuth2 provider: {}", e);
         errors.status(StatusCode::INTERNAL_SERVER_ERROR);
         errors.error("oauth2-provider", INTERNAL_ERROR);
-        return redirect_with_error(redirect_url, errors).into_response();
+        return redirect_with_query(
+          redirect_url,
+          None,
+          oauth2_state_token.claims.custom_state,
+          Some(errors),
+        )
+        .into_response();
       }
     }
 
@@ -406,13 +478,25 @@ pub async fn oauth2_callback(
       Ok(None) => {
         errors.status(StatusCode::NOT_FOUND);
         errors.error("oauth2-provider", NOT_FOUND_ERROR);
-        return redirect_with_error(redirect_url, errors).into_response();
+        return redirect_with_query(
+          redirect_url,
+          None,
+          oauth2_state_token.claims.custom_state,
+          Some(errors),
+        )
+        .into_response();
       }
       Err(e) => {
         log::error!("Error fetching user by OAuth2 provider: {}", e);
         errors.status(StatusCode::FORBIDDEN);
         errors.error("oauth2-provider", NOT_ALLOWED_ERROR);
-        return redirect_with_error(redirect_url, errors).into_response();
+        return redirect_with_query(
+          redirect_url,
+          None,
+          oauth2_state_token.claims.custom_state,
+          Some(errors),
+        )
+        .into_response();
       }
     }
   };
@@ -437,38 +521,59 @@ pub async fn oauth2_callback(
       log::error!("error encoding jwt: {}", e);
       errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("authorization-code", PARSE_ERROR);
-      return redirect_with_error(redirect_url, errors).into_response();
+      return redirect_with_query(
+        redirect_url,
+        None,
+        oauth2_state_token.claims.custom_state,
+        Some(errors),
+      )
+      .into_response();
     }
   };
+  redirect_with_query(
+    redirect_url,
+    Some(authorization_code),
+    oauth2_state_token.claims.custom_state,
+    None,
+  )
+  .into_response()
+}
 
+pub fn create_router(state: RouterState) -> OpenApiRouter {
+  OpenApiRouter::new()
+    .routes(routes!(create_oauth2_url))
+    .routes(routes!(oauth2_callback))
+    .with_state(state)
+}
+
+fn redirect_with_query(
+  mut redirect_url: Url,
+  authorization_code: Option<String>,
+  state: Option<String>,
+  error: Option<InternalError>,
+) -> impl IntoResponse {
   let mut query = form_urlencoded::Serializer::new(String::new());
-  query.append_pair("authorization-code", &authorization_code);
-  if let Some(state) = oauth2_state_token.claims.custom_state {
+  if let Some(error) = error {
+    let errors = match serde_json::to_string(&error.errors()) {
+      Ok(errors) => errors,
+      Err(e) => {
+        log::error!("Error serializing errors: {}", e);
+        return InternalError::internal_error()
+          .with_error("redirect-url", INTERNAL_ERROR)
+          .into_response();
+      }
+    };
+    query.append_pair("errors", &errors);
+  }
+  if let Some(authorization_code) = authorization_code {
+    query.append_pair("authorization-code", &authorization_code);
+  }
+  if let Some(state) = state {
     if !state.is_empty() {
       query.append_pair("state", &state);
     }
   }
   redirect_url.set_query(Some(&query.finish()));
-  redirect(redirect_url).into_response()
-}
-
-pub fn create_router(state: RouterState) -> OpenApiRouter {
-  OpenApiRouter::new()
-    .routes(routes!(create_oauth2_url, oauth2_callback))
-    .with_state(state)
-}
-
-fn redirect_with_error(mut redirect_url: Url, error: InternalError) -> impl IntoResponse {
-  let errors = match serde_json::to_string(&error.errors()) {
-    Ok(errors) => errors,
-    Err(e) => {
-      log::error!("Error serializing errors: {}", e);
-      return InternalError::internal_error()
-        .with_error("redirect-url", INTERNAL_ERROR)
-        .into_response();
-    }
-  };
-  redirect_url.set_query(Some(&format!("error={}", urlencoding::encode(&errors))));
   redirect(redirect_url).into_response()
 }
 
