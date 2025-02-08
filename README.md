@@ -176,5 +176,6 @@ helm delete -n api auth-api
 
 ```bash
 rm -rf auth-client && \
-npx @openapitools/openapi-generator-cli generate -i ./openapi.json -g rust -o 'auth-client' --additional-properties=packageName=auth-client,library=reqwest,avoidBoxedModels=true
+npx @openapitools/openapi-generator-cli generate -i ./openapi.json -g rust -o 'auth-client' --additional-properties=packageName=auth-client,library=reqwest,avoidBoxedModels=true,preferUnsignedInt=true,bestFitInt=true
+# set auth-client/Cargo.toml reqwest default-features = false
 ```

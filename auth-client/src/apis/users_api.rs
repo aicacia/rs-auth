@@ -55,7 +55,7 @@ pub enum GetUserByIdError {
 }
 
 
-pub async fn all_users(configuration: &configuration::Configuration, offset: Option<i32>, limit: Option<i32>) -> Result<models::Pagination, Error<AllUsersError>> {
+pub async fn all_users(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>) -> Result<models::Pagination, Error<AllUsersError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_offset = offset;
     let p_limit = limit;

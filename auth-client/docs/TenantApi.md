@@ -23,8 +23,8 @@ Method | HTTP request | Description
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
-**offset** | Option<**i32**> |  |  |
-**limit** | Option<**i32**> |  |  |
+**offset** | Option<**u32**> |  |  |
+**limit** | Option<**u32**> |  |  |
 **show_private_key** | Option<**bool**> |  |  |
 
 ### Return type
