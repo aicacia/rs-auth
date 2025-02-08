@@ -1,4 +1,4 @@
-FROM rust:1.83-bookworm AS builder
+FROM rust:1.84-bookworm AS builder
 
 RUN apt update && apt -yq upgrade
 RUN apt -yq install musl-tools libpq-dev
@@ -11,7 +11,6 @@ RUN rustup target add ${TARGET}
 WORKDIR /
 RUN cargo new app && touch /app/src/lib.rs
 WORKDIR /app
-RUN cargo new auth-client && touch /app/auth-client/src/lib.rs
 
 COPY Cargo.toml Cargo.lock ./
 RUN cargo build --target ${TARGET} --release
