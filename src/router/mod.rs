@@ -7,7 +7,6 @@ pub mod jwt;
 pub mod mfa;
 pub mod oauth2;
 pub mod openapi;
-pub mod p2p;
 pub mod register;
 pub mod service_account;
 pub mod tenant;
@@ -26,7 +25,6 @@ use jwt::JWT_TAG;
 use mfa::MFA_TAG;
 use oauth2::OAUTH2_TAG;
 use openapi::OPENAPI_TAG;
-use p2p::P2P_TAG;
 use register::REGISTER_TAG;
 use service_account::SERVICE_ACCOUNT_TAG;
 use sqlx::AnyPool;
@@ -63,7 +61,6 @@ unsafe impl Sync for RouterState {}
     (name = UTIL_TAG, description = "Utility endpoints"),
     (name = OAUTH2_TAG, description = "OAuth2 endpoints"),
     (name = OPENAPI_TAG, description = "OpenApi endpoints"),
-    (name = P2P_TAG, description = "P2P endpoints"),
     (name = REGISTER_TAG, description = "Register endpoints"),
     (name = SERVICE_ACCOUNT_TAG, description = "Service Account endpoints"),
     (name = OAUTH2_PROVIDER_TAG, description = "OAuth2 Provider endpoints"),
@@ -89,7 +86,6 @@ pub fn create_router(state: RouterState) -> Router {
     .merge(jwt::create_router(state.clone()))
     .merge(mfa::create_router(state.clone()))
     .merge(oauth2::create_router(state.clone()))
-    .merge(p2p::create_router(state.clone()))
     .merge(register::create_router(state.clone()))
     .merge(service_account::create_router(state.clone()))
     .merge(tenant_oauth2_provider::create_router(state.clone()))

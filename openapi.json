@@ -1374,61 +1374,6 @@
         }
       }
     },
-    "/p2p": {
-      "get": {
-        "tags": [
-          "p2p"
-        ],
-        "operationId": "p2p",
-        "responses": {
-          "200": {
-            "description": "P2P response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/P2P"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HashMap"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HashMap"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HashMap"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
-      }
-    },
     "/register": {
       "post": {
         "tags": [
@@ -3616,38 +3561,6 @@
           }
         ]
       },
-      "P2P": {
-        "type": "object",
-        "required": [
-          "enabled",
-          "tenant_client_id",
-          "ws_uri",
-          "api_uri",
-          "id",
-          "password"
-        ],
-        "properties": {
-          "api_uri": {
-            "type": "string"
-          },
-          "enabled": {
-            "type": "boolean"
-          },
-          "id": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          },
-          "tenant_client_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "ws_uri": {
-            "type": "string"
-          }
-        }
-      },
       "Pagination": {
         "type": "object",
         "required": [
@@ -4772,10 +4685,6 @@
     {
       "name": "openapi",
       "description": "OpenApi endpoints"
-    },
-    {
-      "name": "p2p",
-      "description": "P2P endpoints"
     },
     {
       "name": "register",

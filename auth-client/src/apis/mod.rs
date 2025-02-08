@@ -96,7 +96,6 @@ pub mod mfa_api;
 pub mod oauth2_api;
 pub mod oauth2_provider_api;
 pub mod openapi_api;
-pub mod p2p_api;
 pub mod register_api;
 pub mod service_account_api;
 pub mod tenant_api;

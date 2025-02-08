@@ -24,8 +24,6 @@ pub mod mfa_request_service_account;
 pub use self::mfa_request_service_account::MfaRequestServiceAccount;
 pub mod mfa_request_totp;
 pub use self::mfa_request_totp::MfaRequestTotp;
-pub mod p2_p;
-pub use self::p2_p::P2P;
 pub mod pagination;
 pub use self::pagination::Pagination;
 pub mod register_user;

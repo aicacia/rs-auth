@@ -150,20 +150,8 @@ impl From<oauth2::url::ParseError> for InternalError {
   }
 }
 
-impl From<webrtc::Error> for InternalError {
-  fn from(error: webrtc::Error) -> Self {
-    Self::internal_error().with_application_error(error.to_string())
-  }
-}
-
 impl From<reqwest::Error> for InternalError {
   fn from(error: reqwest::Error) -> Self {
-    Self::internal_error().with_application_error(error.to_string())
-  }
-}
-
-impl From<async_tungstenite::tungstenite::Error> for InternalError {
-  fn from(error: async_tungstenite::tungstenite::Error) -> Self {
     Self::internal_error().with_application_error(error.to_string())
   }
 }

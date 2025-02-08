@@ -7,10 +7,7 @@ use auth::{
     error::InternalError,
   },
   router::{create_router, RouterState},
-  service::{
-    peer::serve_peer,
-    start_up::{create_new_admin_service_account, init_service_accounts},
-  },
+  service::start_up::{create_new_admin_service_account, init_service_accounts},
 };
 use axum::Router;
 use clap::Parser;
@@ -69,16 +66,6 @@ async fn main() -> Result<(), InternalError> {
     config.clone(),
     cancellation_token.clone(),
   ));
-  let serve_peer_handle = if config.p2p.enabled {
-    Some(tokio::spawn(serve_peer(
-      pool.clone(),
-      config.clone(),
-      router,
-      cancellation_token.clone(),
-    )))
-  } else {
-    None
-  };
 
   shutdown_signal(cancellation_token).await;
 
@@ -86,14 +73,6 @@ async fn main() -> Result<(), InternalError> {
     Ok(_) => {}
     Err(e) => {
       log::error!("Error serving: {}", e);
-    }
-  }
-  if let Some(handle) = serve_peer_handle {
-    match handle.await {
-      Ok(_) => {}
-      Err(e) => {
-        log::error!("Error serving peer: {}", e);
-      }
     }
   }
   match close_pool().await {

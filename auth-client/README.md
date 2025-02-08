@@ -50,7 +50,6 @@ Class | Method | HTTP request | Description
 *Oauth2ProviderApi* | [**delete_tenant_oauth2_provider**](docs/Oauth2ProviderApi.md#delete_tenant_oauth2_provider) | **DELETE** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
 *Oauth2ProviderApi* | [**update_tenant_oauth2_provider**](docs/Oauth2ProviderApi.md#update_tenant_oauth2_provider) | **PUT** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
 *OpenapiApi* | [**get_openapi**](docs/OpenapiApi.md#get_openapi) | **GET** /openapi.json | 
-*P2pApi* | [**p2p**](docs/P2pApi.md#p2p) | **GET** /p2p | 
 *RegisterApi* | [**register_user**](docs/RegisterApi.md#register_user) | **POST** /register | 
 *ServiceAccountApi* | [**all_service_accounts**](docs/ServiceAccountApi.md#all_service_accounts) | **GET** /service-accounts | 
 *ServiceAccountApi* | [**create_service_account**](docs/ServiceAccountApi.md#create_service_account) | **POST** /service-accounts | 
@@ -92,7 +91,6 @@ Class | Method | HTTP request | Description
  - [MfaRequest](docs/MfaRequest.md)
  - [MfaRequestServiceAccount](docs/MfaRequestServiceAccount.md)
  - [MfaRequestTotp](docs/MfaRequestTotp.md)
- - [P2P](docs/P2P.md)
  - [Pagination](docs/Pagination.md)
  - [RegisterUser](docs/RegisterUser.md)
  - [ResetPasswordRequest](docs/ResetPasswordRequest.md)
