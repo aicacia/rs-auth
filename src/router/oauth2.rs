@@ -367,7 +367,7 @@ pub async fn oauth2_callback(
       CreateUserWithOAuth2 {
         active: true,
         tenant_oauth2_provider_id: tenant_oauth2_provider.id,
-        email: email,
+        email: email.clone(),
         email_verified: openid_profile.email_verified.unwrap_or(false),
         phone_number: openid_profile.phone_number,
         phone_number_verified: openid_profile.phone_number_verified.unwrap_or(false),
@@ -392,8 +392,42 @@ pub async fn oauth2_callback(
       Ok(user) => user,
       Err(e) => {
         if e.to_string().to_lowercase().contains("unique constraint") {
-          errors.status(StatusCode::CONFLICT);
-          errors.error("user", ALREADY_EXISTS_ERROR);
+          match get_user_by_oauth2_provider_and_email(
+            &state.pool,
+            tenant_oauth2_provider.id,
+            &email,
+          )
+          .await
+          {
+            Ok(Some(user)) => user,
+            Ok(None) => {
+              errors.status(StatusCode::NOT_FOUND);
+              errors.error("oauth2-provider", NOT_FOUND_ERROR);
+              return redirect_with_query(
+                redirect_url,
+                None,
+                oauth2_state_token.claims.custom_state,
+                Some(errors),
+              )
+              .into_response();
+            }
+            Err(e) => {
+              log::error!("Error fetching user by OAuth2 provider: {}", e);
+              errors.status(StatusCode::FORBIDDEN);
+              errors.error("oauth2-provider", NOT_ALLOWED_ERROR);
+              return redirect_with_query(
+                redirect_url,
+                None,
+                oauth2_state_token.claims.custom_state,
+                Some(errors),
+              )
+              .into_response();
+            }
+          }
+        } else {
+          log::error!("Error creating user with OAuth2 provider: {}", e);
+          errors.status(StatusCode::INTERNAL_SERVER_ERROR);
+          errors.error("oauth2-provider", INTERNAL_ERROR);
           return redirect_with_query(
             redirect_url,
             None,
@@ -402,16 +436,6 @@ pub async fn oauth2_callback(
           )
           .into_response();
         }
-        log::error!("Error creating user with OAuth2 provider: {}", e);
-        errors.status(StatusCode::INTERNAL_SERVER_ERROR);
-        errors.error("oauth2-provider", INTERNAL_ERROR);
-        return redirect_with_query(
-          redirect_url,
-          None,
-          oauth2_state_token.claims.custom_state,
-          Some(errors),
-        )
-        .into_response();
       }
     }
   } else if let Some(user_id) = oauth2_state_token.claims.user_id {
