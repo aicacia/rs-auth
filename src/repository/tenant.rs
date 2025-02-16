@@ -21,13 +21,13 @@ pub fn from_tenants_query<'a>(
   offset: Option<usize>,
 ) {
   qb.push(" FROM tenants t");
-  qb.push(" WHERE t.application_id = ")
-    .push_bind(application_id);
+  qb.push(" WHERE t.application_id = ");
+  qb.push(application_id);
   if let Some(limit) = limit {
-    qb.push(" LIMIT ").push_bind(limit as i64);
+    qb.push(" LIMIT ").push(limit as i64);
   }
   if let Some(offset) = offset {
-    qb.push(" OFFSET ").push_bind(offset as i64);
+    qb.push(" OFFSET ").push(offset as i64);
   }
 }
 

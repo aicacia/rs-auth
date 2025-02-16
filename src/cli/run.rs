@@ -27,7 +27,7 @@ pub async fn run(args: CliArgs) -> Result<(), InternalError> {
     .with(
       tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
         format!(
-          "{}={level},tower_http={level},axum::rejection=trace",
+          "{}={level},tower_http={level},axum::rejection=trace,sqlx::query={level}",
           env!("CARGO_PKG_NAME"),
           level = level.as_str().to_lowercase()
         )

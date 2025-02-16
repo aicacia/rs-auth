@@ -13,10 +13,10 @@ pub async fn get_applications(
 ) -> sqlx::Result<Vec<ApplicationRow>> {
   let mut qb = sqlx::QueryBuilder::new("SELECT a.* FROM applications a");
   if let Some(limit) = limit {
-    qb.push(" LIMIT ").push_bind(limit as i64);
+    qb.push(" LIMIT ").push(limit as i64);
   }
   if let Some(offset) = offset {
-    qb.push(" OFFSET ").push_bind(offset as i64);
+    qb.push(" OFFSET ").push(offset as i64);
   }
   qb.build_query_as().fetch_all(pool).await
 }
