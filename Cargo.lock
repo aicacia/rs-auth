@@ -103,6 +103,7 @@ dependencies = [
  "build-time",
  "chrono",
  "clap",
+ "clap_complete",
  "config",
  "dotenvy",
  "expiringmap",
@@ -369,6 +370,15 @@ checksum = "874e0dd3eb68bf99058751ac9712f622e61e6f393a94f7128fa26e3f02f5c7cd"
 dependencies = [
  "anstyle",
  "clap_lex",
+]
+
+[[package]]
+name = "clap_complete"
+version = "4.5.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "375f9d8255adeeedd51053574fd8d4ba875ea5fa558e86617b07f09f1680c8b6"
+dependencies = [
+ "clap",
 ]
 
 [[package]]

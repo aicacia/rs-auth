@@ -53,6 +53,7 @@ pub struct Config {
   pub password: PasswordConfig,
   pub user: UserConfig,
   pub oauth2: OAuth2,
+  pub default_application_id: i64,
   pub log_level: String,
 }
 
@@ -92,6 +93,7 @@ impl Config {
       .set_default("oauth2.register_enabled", false)?
       .set_default("oauth2.code_timeout_in_seconds", 60 * 5)?
       // Defaults
+      .set_default("default_application_id", 1)?
       .set_default("log_level", "debug")?
       .add_source(config::File::with_name(config_path))
       .add_source(config::Environment::with_prefix("APP"))

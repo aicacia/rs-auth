@@ -1,20 +1,20 @@
-# \ServiceAccountApi
+# \ApplicationApi
 
 All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**all_service_accounts**](ServiceAccountApi.md#all_service_accounts) | **GET** /service-accounts | 
-[**create_service_account**](ServiceAccountApi.md#create_service_account) | **POST** /service-accounts | 
-[**delete_service_account**](ServiceAccountApi.md#delete_service_account) | **DELETE** /service-accounts/{service_account_id} | 
-[**get_service_account_by_id**](ServiceAccountApi.md#get_service_account_by_id) | **GET** /service-accounts/{service_account_id} | 
-[**update_service_account**](ServiceAccountApi.md#update_service_account) | **PUT** /service-accounts/{service_account_id} | 
+[**all_applications**](ApplicationApi.md#all_applications) | **GET** /applications | 
+[**create_application**](ApplicationApi.md#create_application) | **POST** /applications | 
+[**delete_application**](ApplicationApi.md#delete_application) | **DELETE** /applications/{application_id} | 
+[**get_application_by_id**](ApplicationApi.md#get_application_by_id) | **GET** /applications/{application_id} | 
+[**update_application**](ApplicationApi.md#update_application) | **PUT** /applications/{application_id} | 
 
 
 
-## all_service_accounts
+## all_applications
 
-> models::Pagination all_service_accounts(offset, limit)
+> models::Pagination all_applications(offset, limit)
 
 
 ### Parameters
@@ -41,9 +41,9 @@ Name | Type | Description  | Required | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 
-## create_service_account
+## create_application
 
-> models::ServiceAccount create_service_account(create_service_account)
+> models::Application create_application(create_application)
 
 
 ### Parameters
@@ -51,11 +51,11 @@ Name | Type | Description  | Required | Notes
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
-**create_service_account** | [**CreateServiceAccount**](CreateServiceAccount.md) |  | [required] |
+**create_application** | [**CreateApplication**](CreateApplication.md) |  | [required] |
 
 ### Return type
 
-[**models::ServiceAccount**](ServiceAccount.md)
+[**models::Application**](Application.md)
 
 ### Authorization
 
@@ -69,9 +69,9 @@ Name | Type | Description  | Required | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 
-## delete_service_account
+## delete_application
 
-> delete_service_account(service_account_id)
+> delete_application(application_id)
 
 
 ### Parameters
@@ -79,7 +79,7 @@ Name | Type | Description  | Required | Notes
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
-**service_account_id** | **i64** | ServiceAccount ID | [required] |
+**application_id** | **i64** | Application ID | [required] |
 
 ### Return type
 
@@ -97,9 +97,9 @@ Name | Type | Description  | Required | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 
-## get_service_account_by_id
+## get_application_by_id
 
-> models::ServiceAccount get_service_account_by_id(service_account_id)
+> models::Application get_application_by_id(application_id)
 
 
 ### Parameters
@@ -107,11 +107,11 @@ Name | Type | Description  | Required | Notes
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
-**service_account_id** | **i64** | ServiceAccount ID | [required] |
+**application_id** | **i64** | Application ID | [required] |
 
 ### Return type
 
-[**models::ServiceAccount**](ServiceAccount.md)
+[**models::Application**](Application.md)
 
 ### Authorization
 
@@ -125,9 +125,9 @@ Name | Type | Description  | Required | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 
-## update_service_account
+## update_application
 
-> models::ServiceAccount update_service_account(service_account_id, update_service_account)
+> models::Application update_application(application_id, update_application)
 
 
 ### Parameters
@@ -135,12 +135,12 @@ Name | Type | Description  | Required | Notes
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
-**service_account_id** | **i64** | ServiceAccount ID | [required] |
-**update_service_account** | [**UpdateServiceAccount**](UpdateServiceAccount.md) |  | [required] |
+**application_id** | **i64** | Application ID | [required] |
+**update_application** | [**UpdateApplication**](UpdateApplication.md) |  | [required] |
 
 ### Return type
 
-[**models::ServiceAccount**](ServiceAccount.md)
+[**models::Application**](Application.md)
 
 ### Authorization
 

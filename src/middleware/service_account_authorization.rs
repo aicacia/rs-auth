@@ -42,7 +42,13 @@ where
       );
     }
 
-    match get_service_account_by_id(&router_state.pool, authorization.claims.sub).await {
+    match get_service_account_by_id(
+      &router_state.pool,
+      authorization.claims.app,
+      authorization.claims.sub,
+    )
+    .await
+    {
       Ok(Some(service_account)) => {
         if !service_account.is_active() {
           log::error!("invalid authorization service_account is not active");

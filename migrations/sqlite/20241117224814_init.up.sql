@@ -1,5 +1,21 @@
+CREATE TABLE "applications" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "name" TEXT NOT NULL,
+	"updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+	"created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+) STRICT;
+CREATE UNIQUE INDEX "applications_id_unique_idx" ON "applications" ("id");
+
+
+INSERT INTO "applications"
+  ("name")
+  VALUES
+	('Admin');
+
+
 CREATE TABLE "tenants" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "application_id" INTEGER NOT NULL,
 	"client_id" TEXT NOT NULL,
   "issuer" TEXT NOT NULL,
   "audience" TEXT,
@@ -9,15 +25,17 @@ CREATE TABLE "tenants" (
 	"expires_in_seconds" INTEGER NOT NULL DEFAULT 86400,
 	"refresh_expires_in_seconds" INTEGER NOT NULL DEFAULT 604800,
 	"updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-	"created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+	"created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  FOREIGN KEY ("application_id") REFERENCES "applications" ("id") ON DELETE CASCADE
 ) STRICT;
 CREATE UNIQUE INDEX "tenants_id_unique_idx" ON "tenants" ("id");
 CREATE UNIQUE INDEX "tenants_client_id_unique_idx" ON "tenants" ("client_id");
+CREATE INDEX "tenants_application_id_idx" ON "tenants" ("application_id");
 
 INSERT INTO "tenants"
-  ("client_id", "issuer", "audience", "private_key")
+  ("application_id", "client_id", "issuer", "audience", "private_key")
   VALUES
-	('6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Admin', null, hex(randomblob(255)));
+	(1, '6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Admin', null, hex(randomblob(255)));
 
 
 CREATE TABLE "tenant_oauth2_providers" (
@@ -43,6 +61,7 @@ CREATE INDEX "tenant_oauth2_providers_tenant_id_idx" ON "tenant_oauth2_providers
 
 CREATE TABLE "service_accounts" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "application_id" INTEGER NOT NULL,
 	"client_id" TEXT NOT NULL,
   "encrypted_client_secret" TEXT NOT NULL,
   "name" TEXT NOT NULL,
@@ -52,18 +71,21 @@ CREATE TABLE "service_accounts" (
 ) STRICT;
 CREATE UNIQUE INDEX "service_accounts_id_unique_idx" ON "service_accounts" ("id");
 CREATE UNIQUE INDEX "service_accounts_client_id_unique_idx" ON "service_accounts" ("client_id");
-CREATE UNIQUE INDEX "service_accounts_name_unique_idx" ON "service_accounts" ("name");
+CREATE INDEX "service_accounts_application_id_idx" ON "service_accounts" ("application_id");
 
 
 CREATE TABLE "users" (
   "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "application_id" INTEGER NOT NULL,
   "username" TEXT NOT NULL,
   "active" INTEGER NOT NULL DEFAULT 1,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  FOREIGN KEY ("application_id") REFERENCES "applications" ("id") ON DELETE CASCADE
 ) STRICT;
 CREATE UNIQUE INDEX "users_id_unique_idx" ON "users" ("id");
-CREATE UNIQUE INDEX "users_username_unique_idx" ON "users" ("username");
+CREATE UNIQUE INDEX "users_application_id_username_unique_idx" ON "users" ("application_id", "username");
+CREATE INDEX "users_application_id_idx" ON "users" ("application_id");
 
 
 CREATE TABLE "user_configs" (

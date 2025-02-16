@@ -3,6 +3,7 @@ use crate::core::encryption::verify_password;
 #[derive(Clone, sqlx::FromRow)]
 pub struct ServiceAccountRow {
   pub id: i64,
+  pub application_id: i64,
   pub client_id: String,
   pub encrypted_client_secret: String,
   pub name: String,
@@ -22,10 +23,13 @@ impl ServiceAccountRow {
 
 pub async fn get_service_accounts(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   limit: Option<usize>,
   offset: Option<usize>,
 ) -> sqlx::Result<Vec<ServiceAccountRow>> {
   let mut qb = sqlx::QueryBuilder::new("SELECT sa.* FROM service_accounts sa");
+  qb.push(" WHERE sa.application_id = ")
+    .push_bind(application_id);
   if let Some(limit) = limit {
     qb.push(" LIMIT ").push_bind(limit as i64);
   }
@@ -37,14 +41,16 @@ pub async fn get_service_accounts(
 
 pub async fn get_service_account_by_id(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   service_account_id: i64,
 ) -> sqlx::Result<Option<ServiceAccountRow>> {
   sqlx::query_as(
     r#"SELECT sa.*
     FROM service_accounts sa
-    WHERE sa.id = $1
+    WHERE sa.application_id = $1 AND sa.id = $2
     LIMIT 1;"#,
   )
+  .bind(application_id)
   .bind(service_account_id)
   .fetch_optional(pool)
   .await
@@ -73,13 +79,15 @@ pub struct CreateServiceAccount {
 
 pub async fn create_service_account(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   service_account: CreateServiceAccount,
 ) -> sqlx::Result<ServiceAccountRow> {
   sqlx::query_as(
-    r#"INSERT INTO service_accounts (client_id, encrypted_client_secret, name)
-    VALUES ($1, $2, $3)
+    r#"INSERT INTO service_accounts (application_id, client_id, encrypted_client_secret, name)
+    VALUES ($1, $2, $3, $4)
     RETURNING *;"#,
   )
+  .bind(application_id)
   .bind(service_account.client_id)
   .bind(service_account.encrypted_client_secret)
   .bind(service_account.name)
@@ -97,24 +105,26 @@ pub struct UpdateServiceAccount {
 
 pub async fn update_service_account(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   service_account_id: i64,
   service_account: UpdateServiceAccount,
 ) -> sqlx::Result<Option<ServiceAccountRow>> {
   sqlx::query_as(
     r#"UPDATE service_accounts
-    SET client_id = COALESCE($1, client_id),
-        encrypted_client_secret = COALESCE($2, encrypted_client_secret),
-        name = COALESCE($3, name),
-        active = COALESCE($4, active),
-        updated_at = $5
-    WHERE id = $5
+    SET client_id = COALESCE($3, client_id),
+        encrypted_client_secret = COALESCE($4, encrypted_client_secret),
+        name = COALESCE($5, name),
+        active = COALESCE($6, active),
+        updated_at = $7
+    WHERE application_id = $1 AND id = $2
     RETURNING *;"#,
   )
+  .bind(application_id)
+  .bind(service_account_id)
   .bind(service_account.client_id)
   .bind(service_account.encrypted_client_secret)
   .bind(service_account.name)
   .bind(service_account.active)
-  .bind(service_account_id)
   .bind(chrono::Utc::now().timestamp())
   .fetch_optional(pool)
   .await
@@ -122,13 +132,15 @@ pub async fn update_service_account(
 
 pub async fn delete_service_account(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   service_account_id: i64,
 ) -> sqlx::Result<Option<ServiceAccountRow>> {
   sqlx::query_as(
     r#"DELETE FROM service_accounts
-    WHERE id = $1
+    WHERE application_id = $1 AND id = $2
     RETURNING *;"#,
   )
+  .bind(application_id)
   .bind(service_account_id)
   .fetch_optional(pool)
   .await

@@ -26,6 +26,11 @@ All URIs are relative to *http://localhost:3000*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*ApplicationApi* | [**all_applications**](docs/ApplicationApi.md#all_applications) | **GET** /applications | 
+*ApplicationApi* | [**create_application**](docs/ApplicationApi.md#create_application) | **POST** /applications | 
+*ApplicationApi* | [**delete_application**](docs/ApplicationApi.md#delete_application) | **DELETE** /applications/{application_id} | 
+*ApplicationApi* | [**get_application_by_id**](docs/ApplicationApi.md#get_application_by_id) | **GET** /applications/{application_id} | 
+*ApplicationApi* | [**update_application**](docs/ApplicationApi.md#update_application) | **PUT** /applications/{application_id} | 
 *CurrentUserApi* | [**create_current_user_add_oauth2_provider_url**](docs/CurrentUserApi.md#create_current_user_add_oauth2_provider_url) | **POST** /current-user/oauth2/{provider} | 
 *CurrentUserApi* | [**create_current_user_email**](docs/CurrentUserApi.md#create_current_user_email) | **POST** /current-user/emails | 
 *CurrentUserApi* | [**create_current_user_phone_number**](docs/CurrentUserApi.md#create_current_user_phone_number) | **POST** /current-user/phone-numbers | 
@@ -53,6 +58,7 @@ Class | Method | HTTP request | Description
 *RegisterApi* | [**register_user**](docs/RegisterApi.md#register_user) | **POST** /register | 
 *ServiceAccountApi* | [**all_service_accounts**](docs/ServiceAccountApi.md#all_service_accounts) | **GET** /service-accounts | 
 *ServiceAccountApi* | [**create_service_account**](docs/ServiceAccountApi.md#create_service_account) | **POST** /service-accounts | 
+*ServiceAccountApi* | [**delete_service_account**](docs/ServiceAccountApi.md#delete_service_account) | **DELETE** /service-accounts/{service_account_id} | 
 *ServiceAccountApi* | [**get_service_account_by_id**](docs/ServiceAccountApi.md#get_service_account_by_id) | **GET** /service-accounts/{service_account_id} | 
 *ServiceAccountApi* | [**update_service_account**](docs/ServiceAccountApi.md#update_service_account) | **PUT** /service-accounts/{service_account_id} | 
 *TenantApi* | [**all_tenants**](docs/TenantApi.md#all_tenants) | **GET** /tenants | 
@@ -79,6 +85,8 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [Algorithm](docs/Algorithm.md)
+ - [Application](docs/Application.md)
+ - [CreateApplication](docs/CreateApplication.md)
  - [CreateServiceAccount](docs/CreateServiceAccount.md)
  - [CreateTenant](docs/CreateTenant.md)
  - [CreateTenantOAuth2Provider](docs/CreateTenantOAuth2Provider.md)
@@ -107,6 +115,7 @@ Class | Method | HTTP request | Description
  - [TokenRequestPassword](docs/TokenRequestPassword.md)
  - [TokenRequestRefreshToken](docs/TokenRequestRefreshToken.md)
  - [TokenRequestServiceAccount](docs/TokenRequestServiceAccount.md)
+ - [UpdateApplication](docs/UpdateApplication.md)
  - [UpdateServiceAccount](docs/UpdateServiceAccount.md)
  - [UpdateTenant](docs/UpdateTenant.md)
  - [UpdateTenantOAuth2Provider](docs/UpdateTenantOAuth2Provider.md)

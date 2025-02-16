@@ -42,21 +42,27 @@ pub const SERVICE_ACCOUNT_TAG: &str = "service-account";
 )]
 pub async fn all_service_accounts(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Query(query): Query<OffsetAndLimit>,
 ) -> impl IntoResponse {
-  let rows =
-    match repository::service_account::get_service_accounts(&state.pool, query.limit, query.offset)
-      .await
-    {
-      Ok(rows) => rows,
-      Err(e) => {
-        log::error!("error getting service_accounts: {}", e);
-        return InternalError::internal_error()
-          .with_application_error(INTERNAL_ERROR)
-          .into_response();
-      }
-    };
+  let rows = match repository::service_account::get_service_accounts(
+    &state.pool,
+    service_account.application_id,
+    query.limit,
+    query.offset,
+  )
+  .await
+  {
+    Ok(rows) => rows,
+    Err(e) => {
+      log::error!("error getting service_accounts: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   let service_accounts = rows
     .into_iter()
     .map(ServiceAccount::from)
@@ -91,26 +97,31 @@ pub async fn all_service_accounts(
 )]
 pub async fn get_service_account_by_id(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(service_account_id): Path<i64>,
 ) -> impl IntoResponse {
-  let row =
-    match repository::service_account::get_service_account_by_id(&state.pool, service_account_id)
-      .await
-    {
-      Ok(Some(row)) => row,
-      Ok(None) => {
-        return InternalError::not_found()
-          .with_error("service_account", NOT_FOUND_ERROR)
-          .into_response()
-      }
-      Err(e) => {
-        log::error!("error getting service_accounts: {}", e);
-        return InternalError::internal_error()
-          .with_application_error(INTERNAL_ERROR)
-          .into_response();
-      }
-    };
+  let row = match repository::service_account::get_service_account_by_id(
+    &state.pool,
+    service_account.application_id,
+    service_account_id,
+  )
+  .await
+  {
+    Ok(Some(row)) => row,
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("service_account", NOT_FOUND_ERROR)
+        .into_response()
+    }
+    Err(e) => {
+      log::error!("error getting service_accounts: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   let service_account = ServiceAccount::from(row);
   axum::Json(service_account).into_response()
 }
@@ -132,7 +143,9 @@ pub async fn get_service_account_by_id(
 )]
 pub async fn create_service_account(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Json(payload): Json<CreateServiceAccount>,
 ) -> impl IntoResponse {
   let client_id = payload.client_id.unwrap_or_else(uuid::Uuid::new_v4);
@@ -149,6 +162,7 @@ pub async fn create_service_account(
     };
   let row = match repository::service_account::create_service_account(
     &state.pool,
+    service_account.application_id,
     repository::service_account::CreateServiceAccount {
       name: payload.name,
       client_id: client_id.to_string(),
@@ -190,7 +204,9 @@ pub async fn create_service_account(
 )]
 pub async fn update_service_account(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(service_account_id): Path<i64>,
   Json(payload): Json<UpdateServiceAccount>,
 ) -> impl IntoResponse {
@@ -213,6 +229,7 @@ pub async fn update_service_account(
   }
   let row = match repository::service_account::update_service_account(
     &state.pool,
+    service_account.application_id,
     service_account_id,
     params,
   )
@@ -257,10 +274,18 @@ pub async fn update_service_account(
 )]
 pub async fn delete_service_account(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(service_account_id): Path<i64>,
 ) -> impl IntoResponse {
-  match repository::service_account::delete_service_account(&state.pool, service_account_id).await {
+  match repository::service_account::delete_service_account(
+    &state.pool,
+    service_account.application_id,
+    service_account_id,
+  )
+  .await
+  {
     Ok(Some(_)) => {}
     Ok(None) => {
       return InternalError::not_found()
@@ -283,5 +308,6 @@ pub fn create_router(state: RouterState) -> OpenApiRouter {
     .routes(routes!(get_service_account_by_id))
     .routes(routes!(create_service_account))
     .routes(routes!(update_service_account))
+    .routes(routes!(delete_service_account))
     .with_state(state)
 }

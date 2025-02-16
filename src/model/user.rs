@@ -11,7 +11,7 @@ use crate::repository::{
   user_phone_number::UserPhoneNumberRow,
 };
 
-use super::{register::validate_unique_username, util::Pagination};
+use super::util::Pagination;
 
 #[derive(Serialize, ToSchema, Default)]
 pub struct User {
@@ -216,20 +216,20 @@ impl From<UserMFATypeRow> for UserMFAType {
 
 #[derive(Validate, Deserialize, ToSchema)]
 pub struct UpdateUsername {
-  #[validate(length(min = 1), custom(function = "validate_unique_username"))]
+  #[validate(length(min = 1))]
   pub username: Option<String>,
 }
 
 #[derive(Validate, Deserialize, ToSchema)]
 pub struct CreateUser {
-  #[validate(length(min = 1), custom(function = "validate_unique_username"))]
+  #[validate(length(min = 1))]
   pub username: String,
   pub active: bool,
 }
 
 #[derive(Validate, Deserialize, ToSchema)]
 pub struct UserResetPassword {
-  pub tenant_id: i64,
+  pub tenant_id: Option<i64>,
   pub scope: Option<String>,
 }
 

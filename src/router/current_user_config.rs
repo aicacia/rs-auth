@@ -48,7 +48,7 @@ pub async fn update_current_user_config(
           .with_error("mfa-type", NOT_FOUND_ERROR)
           .into_response();
       }
-      log::error!("Error updating user config: {}", e);
+      log::error!("error updating user config: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();

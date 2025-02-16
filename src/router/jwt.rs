@@ -169,7 +169,7 @@ pub async fn jwt_is_valid(
   {
     Ok(result) => result,
     Err(e) => {
-      log::error!("Error parsing authorization: {}", e);
+      log::error!("error parsing authorization: {}", e);
       return InternalError::unauthorized()
         .with_error(AUTHORIZATION_HEADER, INVALID_ERROR)
         .into_response();

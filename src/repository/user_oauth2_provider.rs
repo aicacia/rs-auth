@@ -1,4 +1,4 @@
-use super::user::UserRow;
+use super::user::{from_users_query, UserRow};
 
 #[derive(sqlx::FromRow)]
 pub struct UserOAuth2ProviderRow {
@@ -13,19 +13,19 @@ pub struct UserOAuth2ProviderRow {
 
 pub async fn get_users_oauth2_providers(
   pool: &sqlx::AnyPool,
-  limit: usize,
-  offset: usize,
+  application_id: i64,
+  limit: Option<usize>,
+  offset: Option<usize>,
 ) -> sqlx::Result<Vec<UserOAuth2ProviderRow>> {
-  sqlx::query_as(
+  let mut qb = sqlx::QueryBuilder::new(
     r#"SELECT uop.*, toap.provider
     FROM user_oauth2_providers uop 
     JOIN tenant_oauth2_providers toap ON toap.id = uop.tenant_oauth2_provider_id 
-    WHERE toap.active = 1 AND uop.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#,
-  )
-  .bind(limit as i64)
-  .bind(offset as i64)
-  .fetch_all(pool)
-  .await
+    WHERE toap.active = 1 AND uop.user_id IN (SELECT u.id"#,
+  );
+  from_users_query(&mut qb, application_id, limit, offset);
+  qb.push(")");
+  qb.build_query_as().fetch_all(pool).await
 }
 
 pub async fn get_user_by_oauth2_provider_and_email(

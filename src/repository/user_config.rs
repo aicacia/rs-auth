@@ -1,6 +1,6 @@
 use crate::core::database::run_transaction;
 
-use super::user_mfa::get_user_mfa_types_by_user_id_internal;
+use super::{user::from_users_query, user_mfa::get_user_mfa_types_by_user_id_internal};
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct UserConfigRow {
@@ -12,18 +12,18 @@ pub struct UserConfigRow {
 
 pub async fn get_users_configs(
   pool: &sqlx::AnyPool,
-  limit: usize,
-  offset: usize,
+  application_id: i64,
+  limit: Option<usize>,
+  offset: Option<usize>,
 ) -> sqlx::Result<Vec<UserConfigRow>> {
-  sqlx::query_as(
+  let mut qb = sqlx::QueryBuilder::new(
     r#"SELECT ui.* 
             FROM user_configs ui 
-            WHERE ui.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#,
-  )
-  .bind(limit as i64)
-  .bind(offset as i64)
-  .fetch_all(pool)
-  .await
+            WHERE ui.user_id IN (SELECT u.id"#,
+  );
+  from_users_query(&mut qb, application_id, limit, offset);
+  qb.push(")");
+  qb.build_query_as().fetch_all(pool).await
 }
 
 pub async fn get_user_config_by_user_id(

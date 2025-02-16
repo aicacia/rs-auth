@@ -1,11 +1,14 @@
 use crate::{
-  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_ALLOWED_ERROR},
+  core::error::{Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_ALLOWED_ERROR},
   middleware::{openid_claims::SCOPE_OPENID, tenant_id::TenantId, validated_json::ValidatedJson},
   model::{
     register::RegisterUser,
     token::{Token, TOKEN_ISSUED_TYPE_REGISTER},
   },
-  repository::user::{create_user_with_password, CreateUserWithPassword},
+  repository::{
+    self,
+    user::{create_user_with_password, CreateUserWithPassword},
+  },
 };
 
 use axum::{extract::State, response::IntoResponse};
@@ -41,9 +44,30 @@ pub async fn register_user(
       .with_application_error(NOT_ALLOWED_ERROR)
       .into_response();
   }
+  match repository::user::get_user_by_username(
+    &state.pool,
+    tenant.application_id,
+    &payload.username,
+  )
+  .await
+  {
+    Ok(Some(_user)) => {
+      return InternalError::from(StatusCode::BAD_REQUEST)
+        .with_error("username", ALREADY_EXISTS_ERROR)
+        .into_response();
+    }
+    Ok(None) => {}
+    Err(e) => {
+      log::error!("error getting user: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
   let new_user = match create_user_with_password(
     &state.pool,
     state.config.as_ref(),
+    tenant.application_id,
     CreateUserWithPassword {
       username: payload.username,
       password: payload.password,

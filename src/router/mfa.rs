@@ -55,7 +55,7 @@ pub async fn mfa(
   }
   let mfa_type = &claims.r#type[(TOKEN_TYPE_MFA_TOTP_PREFIX.len())..];
   log::debug!("MFA type: {}", mfa_type);
-  let user = match get_user_by_id(&state.pool, claims.sub).await {
+  let user = match get_user_by_id(&state.pool, claims.app, claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => {
       return InternalError::not_found()
@@ -63,7 +63,7 @@ pub async fn mfa(
         .into_response();
     }
     Err(e) => {
-      log::error!("Error getting user: {}", e);
+      log::error!("error getting user: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -96,7 +96,7 @@ async fn totp_request(
         .into_response();
     }
     Err(e) => {
-      log::error!("Error getting user TOTP: {}", e);
+      log::error!("error getting user TOTP: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -111,7 +111,7 @@ async fn totp_request(
         .into_response();
     }
     Err(e) => {
-      log::error!("Error verifying TOTP: {}", e);
+      log::error!("error verifying TOTP: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();

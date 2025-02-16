@@ -15,15 +15,15 @@ use serde::{Deserialize, Serialize};
 pub struct UserResetPassword {
     #[serde(rename = "scope", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub scope: Option<Option<String>>,
-    #[serde(rename = "tenant_id")]
-    pub tenant_id: i64,
+    #[serde(rename = "tenant_id", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    pub tenant_id: Option<Option<i64>>,
 }
 
 impl UserResetPassword {
-    pub fn new(tenant_id: i64) -> UserResetPassword {
+    pub fn new() -> UserResetPassword {
         UserResetPassword {
             scope: None,
-            tenant_id,
+            tenant_id: None,
         }
     }
 }

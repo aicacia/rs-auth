@@ -1,5 +1,7 @@
 use crate::core::config::Config;
 
+use super::tenant::from_tenants_query;
+
 #[derive(sqlx::FromRow)]
 pub struct TenantOAuth2ProviderRow {
   pub id: i64,
@@ -77,18 +79,16 @@ pub async fn get_tenant_oauth2_providers(
 
 pub async fn get_tenants_oauth2_providers(
   pool: &sqlx::AnyPool,
-  limit: usize,
-  offset: usize,
+  application_id: i64,
+  limit: Option<usize>,
+  offset: Option<usize>,
 ) -> sqlx::Result<Vec<TenantOAuth2ProviderRow>> {
-  sqlx::query_as(
-    r#"SELECT toap.* 
-    FROM tenant_oauth2_providers toap 
-    WHERE toap.tenant_id IN (SELECT t.id FROM tenants t LIMIT $1 OFFSET $2);"#,
-  )
-  .bind(limit as i64)
-  .bind(offset as i64)
-  .fetch_all(pool)
-  .await
+  let mut qb = sqlx::QueryBuilder::new(
+    "SELECT toap.* FROM tenant_oauth2_providers toap WHERE toap.tenant_id IN (SELECT t.id",
+  );
+  from_tenants_query(&mut qb, application_id, limit, offset);
+  qb.push(")");
+  qb.build_query_as().fetch_all(pool).await
 }
 
 #[derive(Default)]

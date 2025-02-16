@@ -1,3 +1,5 @@
+use super::user::from_users_query;
+
 #[derive(Debug, sqlx::FromRow)]
 pub struct UserInfoRow {
   pub user_id: i64,
@@ -19,14 +21,15 @@ pub struct UserInfoRow {
 
 pub async fn get_users_infos(
   pool: &sqlx::AnyPool,
-  limit: usize,
-  offset: usize,
+  application_id: i64,
+  limit: Option<usize>,
+  offset: Option<usize>,
 ) -> sqlx::Result<Vec<UserInfoRow>> {
-  sqlx::query_as(r#"SELECT ui.* FROM user_infos ui WHERE ui.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#)
-    .bind(limit as i64)
-    .bind(offset as i64)
-    .fetch_all(pool)
-    .await
+  let mut qb =
+    sqlx::QueryBuilder::new("SELECT ui.* FROM user_infos ui WHERE ui.user_id IN (SELECT u.id");
+  from_users_query(&mut qb, application_id, limit, offset);
+  qb.push(")");
+  qb.build_query_as().fetch_all(pool).await
 }
 
 pub async fn get_user_info_by_user_id(

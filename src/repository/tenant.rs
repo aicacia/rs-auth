@@ -1,6 +1,7 @@
 #[derive(sqlx::FromRow)]
 pub struct TenantRow {
   pub id: i64,
+  pub application_id: i64,
   pub client_id: String,
   pub issuer: String,
   pub audience: Option<String>,
@@ -13,16 +14,32 @@ pub struct TenantRow {
   pub created_at: i64,
 }
 
+pub fn from_tenants_query<'a>(
+  qb: &mut sqlx::QueryBuilder<'a, sqlx::Any>,
+  application_id: i64,
+  limit: Option<usize>,
+  offset: Option<usize>,
+) {
+  qb.push(" FROM tenants t");
+  qb.push(" WHERE t.application_id = ")
+    .push_bind(application_id);
+  if let Some(limit) = limit {
+    qb.push(" LIMIT ").push_bind(limit as i64);
+  }
+  if let Some(offset) = offset {
+    qb.push(" OFFSET ").push_bind(offset as i64);
+  }
+}
+
 pub async fn get_tenants(
   pool: &sqlx::AnyPool,
-  limit: usize,
-  offset: usize,
+  application_id: i64,
+  limit: Option<usize>,
+  offset: Option<usize>,
 ) -> sqlx::Result<Vec<TenantRow>> {
-  sqlx::query_as(r#"SELECT t.* FROM tenants t LIMIT $1 OFFSET $2;"#)
-    .bind(limit as i64)
-    .bind(offset as i64)
-    .fetch_all(pool)
-    .await
+  let mut qb = sqlx::QueryBuilder::new("SELECT t.* ");
+  from_tenants_query(&mut qb, application_id, limit, offset);
+  qb.build_query_as().fetch_all(pool).await
 }
 
 pub async fn get_tenant_by_id(
@@ -66,9 +83,14 @@ pub struct CreateTenant {
   pub refresh_expires_in_seconds: i64,
 }
 
-pub async fn create_tenant(pool: &sqlx::AnyPool, tenant: CreateTenant) -> sqlx::Result<TenantRow> {
+pub async fn create_tenant(
+  pool: &sqlx::AnyPool,
+  application_id: i64,
+  tenant: CreateTenant,
+) -> sqlx::Result<TenantRow> {
   sqlx::query_as(
     r#"INSERT INTO tenants (
+      application_id,
       client_id,
       issuer,
       audience,
@@ -77,9 +99,10 @@ pub async fn create_tenant(pool: &sqlx::AnyPool, tenant: CreateTenant) -> sqlx::
       private_key,
       expires_in_seconds,
       refresh_expires_in_seconds
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING *;"#,
   )
+  .bind(application_id)
   .bind(tenant.client_id)
   .bind(tenant.issuer)
   .bind(tenant.audience)
@@ -105,23 +128,25 @@ pub struct UpdateTenant {
 
 pub async fn update_tenant(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   tenant_id: i64,
   tenant: UpdateTenant,
 ) -> sqlx::Result<Option<TenantRow>> {
   sqlx::query_as(
     r#"UPDATE tenants SET
-      client_id = COALESCE($2, client_id),
-      issuer = COALESCE($3, issuer),
-      audience = COALESCE($4, audience),
-      algorithm = COALESCE($5, algorithm),
-      public_key = COALESCE($6, public_key),
-      private_key = COALESCE($7, private_key),
-      expires_in_seconds = COALESCE($8, expires_in_seconds),
-      refresh_expires_in_seconds = COALESCE($9, refresh_expires_in_seconds),
-      updated_at = $10
-    WHERE id = $1
+      client_id = COALESCE($3, client_id),
+      issuer = COALESCE($4, issuer),
+      audience = COALESCE($5, audience),
+      algorithm = COALESCE($6, algorithm),
+      public_key = COALESCE($7, public_key),
+      private_key = COALESCE($8, private_key),
+      expires_in_seconds = COALESCE($9, expires_in_seconds),
+      refresh_expires_in_seconds = COALESCE($10, refresh_expires_in_seconds),
+      updated_at = $11
+    WHERE application_id = $1 AND id = $2
     RETURNING *;"#,
   )
+  .bind(application_id)
   .bind(tenant_id)
   .bind(tenant.client_id)
   .bind(tenant.issuer)
@@ -138,13 +163,15 @@ pub async fn update_tenant(
 
 pub async fn delete_tenant(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   tenant_id: i64,
 ) -> sqlx::Result<Option<TenantRow>> {
   sqlx::query_as(
     r#"DELETE FROM tenants
-    WHERE id = $1
+    WHERE application_id = $1 AND id = $2
     RETURNING *;"#,
   )
+  .bind(application_id)
   .bind(tenant_id)
   .fetch_optional(pool)
   .await

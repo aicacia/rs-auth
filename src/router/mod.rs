@@ -1,3 +1,4 @@
+pub mod application;
 pub mod current_user;
 pub mod current_user_config;
 pub mod current_user_email;
@@ -19,6 +20,7 @@ pub mod util;
 
 use std::sync::Arc;
 
+use application::APPLICATION_TAG;
 use axum::Router;
 use current_user::CURRENT_USER_TAG;
 use jwt::JWT_TAG;
@@ -55,6 +57,7 @@ unsafe impl Sync for RouterState {}
 #[openapi(
   info(license(name = "MIT OR Apache-2.0", identifier = "https://spdx.org/licenses/MIT.html")),
   tags(
+    (name = APPLICATION_TAG, description = "Application endpoints"),
     (name = CURRENT_USER_TAG, description = "Current user endpoints"),
     (name = JWT_TAG, description = "JSON Web Token endpoints"),
     (name = MFA_TAG, description = "Multi-factor authentication endpoints"),
@@ -78,6 +81,7 @@ pub fn create_router(state: RouterState) -> Router {
   servers_addon.modify(&mut openapi);
 
   let open_api_router = OpenApiRouter::with_openapi(openapi)
+    .merge(application::create_router(state.clone()))
     .merge(current_user::create_router(state.clone()))
     .merge(current_user_config::create_router(state.clone()))
     .merge(current_user_email::create_router(state.clone()))

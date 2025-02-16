@@ -87,7 +87,7 @@ pub async fn create_oauth2_url(
           .into_response();
       }
       Err(e) => {
-        log::error!("Error getting tenant oauth2 provider: {}", e);
+        log::error!("error getting tenant oauth2 provider: {}", e);
         return InternalError::internal_error()
           .with_application_error(INTERNAL_ERROR)
           .into_response();
@@ -96,7 +96,7 @@ pub async fn create_oauth2_url(
   let basic_client = match tenant_oauth2_provider.basic_client(state.config.as_ref()) {
     Ok(client) => client,
     Err(e) => {
-      log::error!("Error getting basic client: {}", e);
+      log::error!("error getting basic client: {}", e);
       return InternalError::internal_error()
         .with_error("oauth2-provider", INVALID_ERROR)
         .into_response();
@@ -115,7 +115,7 @@ pub async fn create_oauth2_url(
   ) {
     Ok(tuple) => tuple,
     Err(e) => {
-      log::error!("Error parsing OAuth2 provider: {}", e);
+      log::error!("error parsing OAuth2 provider: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -131,7 +131,7 @@ pub async fn create_oauth2_url(
       );
     }
     Err(e) => {
-      log::error!("Error aquiring PKCE verifier map: {}", e);
+      log::error!("error aquiring PKCE verifier map: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -169,7 +169,7 @@ pub async fn oauth2_callback(
     match parse_jwt_no_validation::<OAuth2State>(&oauth2_state_token_string) {
       Ok(token) => token,
       Err(e) => {
-        log::error!("Error parsing OAuth2 state: {}", e);
+        log::error!("error parsing OAuth2 state: {}", e);
         return InternalError::internal_error()
           .with_error("oauth2-state-token", INVALID_ERROR)
           .into_response();
@@ -184,7 +184,7 @@ pub async fn oauth2_callback(
   {
     Some(Ok(tenant_id)) => tenant_id,
     Some(Err(e)) => {
-      log::error!("Error parsing tenant id: {}", e);
+      log::error!("error parsing tenant id: {}", e);
       return InternalError::internal_error()
         .with_error("oauth2-state-token", PARSE_ERROR)
         .into_response();
@@ -207,7 +207,7 @@ pub async fn oauth2_callback(
           .into_response();
       }
       Err(e) => {
-        log::error!("Error getting tenant oauth2 provider: {}", e);
+        log::error!("error getting tenant oauth2 provider: {}", e);
         return InternalError::internal_error()
           .with_error("oauth2-provider", INTERNAL_ERROR)
           .into_response();
@@ -218,7 +218,7 @@ pub async fn oauth2_callback(
     Ok(url) => url.to_owned(),
     Err(e) => {
       log::error!(
-        "Error parsing redirect url from tenant oauth2 provider: {}",
+        "error parsing redirect url from tenant oauth2 provider: {}",
         e
       );
       return InternalError::internal_error()
@@ -235,7 +235,7 @@ pub async fn oauth2_callback(
       return redirect_with_query(redirect_url, None, None, Some(errors)).into_response();
     }
     Err(e) => {
-      log::error!("Error getting tenant from OAuth2 state: {}", e);
+      log::error!("error getting tenant from OAuth2 state: {}", e);
       errors.error("oauth2-state-token", INVALID_ERROR);
       return redirect_with_query(redirect_url, None, None, Some(errors)).into_response();
     }
@@ -245,7 +245,7 @@ pub async fn oauth2_callback(
     match parse_jwt::<OAuth2State>(&oauth2_state_token_string, &tenant) {
       Ok(token) => token,
       Err(e) => {
-        log::error!("Error parsing OAuth2 state: {}", e);
+        log::error!("error parsing OAuth2 state: {}", e);
         errors.status(StatusCode::INTERNAL_SERVER_ERROR);
         errors.error("oauth2-state-token", PARSE_ERROR);
         return redirect_with_query(redirect_url, None, None, Some(errors)).into_response();
@@ -255,7 +255,7 @@ pub async fn oauth2_callback(
   let basic_client = match tenant_oauth2_provider.basic_client(state.config.as_ref()) {
     Ok(client) => client,
     Err(e) => {
-      log::error!("Error getting basic client: {}", e);
+      log::error!("error getting basic client: {}", e);
       errors.error("oauth2-provider", INVALID_ERROR);
       return redirect_with_query(
         redirect_url,
@@ -284,7 +284,7 @@ pub async fn oauth2_callback(
       }
     },
     Err(e) => {
-      log::error!("Error aquiring PKCE verifier map: {}", e);
+      log::error!("error aquiring PKCE verifier map: {}", e);
       errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("pkce-code-verifier", INTERNAL_ERROR);
       return redirect_with_query(
@@ -305,7 +305,7 @@ pub async fn oauth2_callback(
   {
     Ok(token_response) => token_response,
     Err(e) => {
-      log::error!("Error exchanging code for token: {}", e);
+      log::error!("error exchanging code for token: {}", e);
       errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("oauth2-code-exchange", INTERNAL_ERROR);
       return redirect_with_query(
@@ -321,7 +321,7 @@ pub async fn oauth2_callback(
   let openid_profile = match oauth2_profile(&tenant_oauth2_provider, token_response).await {
     Ok(p) => p,
     Err(e) => {
-      log::error!("Error getting OAuth2 profile: {}", e);
+      log::error!("error getting OAuth2 profile: {}", e);
       errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("oauth2-provider-profile", INVALID_ERROR);
       return redirect_with_query(
@@ -364,6 +364,7 @@ pub async fn oauth2_callback(
   let user = if oauth2_state_token.claims.register {
     match create_user_with_oauth2(
       &state.pool,
+      tenant.application_id,
       CreateUserWithOAuth2 {
         active: true,
         tenant_oauth2_provider_id: tenant_oauth2_provider.id,
@@ -412,7 +413,7 @@ pub async fn oauth2_callback(
               .into_response();
             }
             Err(e) => {
-              log::error!("Error fetching user by OAuth2 provider: {}", e);
+              log::error!("error fetching user by OAuth2 provider: {}", e);
               errors.status(StatusCode::FORBIDDEN);
               errors.error("oauth2-provider", NOT_ALLOWED_ERROR);
               return redirect_with_query(
@@ -425,7 +426,7 @@ pub async fn oauth2_callback(
             }
           }
         } else {
-          log::error!("Error creating user with OAuth2 provider: {}", e);
+          log::error!("error creating user with OAuth2 provider: {}", e);
           errors.status(StatusCode::INTERNAL_SERVER_ERROR);
           errors.error("oauth2-provider", INTERNAL_ERROR);
           return redirect_with_query(
@@ -439,7 +440,7 @@ pub async fn oauth2_callback(
       }
     }
   } else if let Some(user_id) = oauth2_state_token.claims.user_id {
-    let user = match get_user_by_id(&state.pool, user_id).await {
+    let user = match get_user_by_id(&state.pool, tenant.application_id, user_id).await {
       Ok(Some(user)) => user,
       Ok(None) => {
         errors.error("user", NOT_FOUND_ERROR);
@@ -457,7 +458,7 @@ pub async fn oauth2_callback(
             .with_error("oauth2-provider", ALREADY_EXISTS_ERROR)
             .into_response();
         }
-        log::error!("Error fetching user by ID: {}", e);
+        log::error!("error fetching user by ID: {}", e);
         errors.error("oauth2-provider", REQUIRED_ERROR);
         return redirect_with_query(
           redirect_url,
@@ -480,7 +481,7 @@ pub async fn oauth2_callback(
     {
       Ok(_) => {}
       Err(e) => {
-        log::error!("Error creating user OAuth2 provider: {}", e);
+        log::error!("error creating user OAuth2 provider: {}", e);
         errors.status(StatusCode::INTERNAL_SERVER_ERROR);
         errors.error("oauth2-provider", INTERNAL_ERROR);
         return redirect_with_query(
@@ -511,7 +512,7 @@ pub async fn oauth2_callback(
         .into_response();
       }
       Err(e) => {
-        log::error!("Error fetching user by OAuth2 provider: {}", e);
+        log::error!("error fetching user by OAuth2 provider: {}", e);
         errors.status(StatusCode::FORBIDDEN);
         errors.error("oauth2-provider", NOT_ALLOWED_ERROR);
         return redirect_with_query(
@@ -581,7 +582,7 @@ fn redirect_with_query(
     let errors = match serde_json::to_string(&error.errors()) {
       Ok(errors) => errors,
       Err(e) => {
-        log::error!("Error serializing errors: {}", e);
+        log::error!("error serializing errors: {}", e);
         return InternalError::internal_error()
           .with_error("redirect-url", INTERNAL_ERROR)
           .into_response();
@@ -605,7 +606,7 @@ fn redirect(redirect_url: Url) -> impl IntoResponse {
   let url_header = match HeaderValue::try_from(redirect_url.as_str()) {
     Ok(url_header) => url_header,
     Err(e) => {
-      log::error!("Error converting url to header value URL: {}", e);
+      log::error!("error converting url to header value URL: {}", e);
       return InternalError::internal_error()
         .with_error("redirect_url", INVALID_ERROR)
         .into_response();

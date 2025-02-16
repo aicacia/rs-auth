@@ -110,20 +110,21 @@ async fn password_request(
   password: String,
   scope: Option<String>,
 ) -> impl IntoResponse {
-  let user = match get_user_by_username_or_primary_email(pool, &username).await {
-    Ok(Some(user)) => user,
-    Ok(None) => {
-      return InternalError::from(StatusCode::UNAUTHORIZED)
-        .with_error("credentials", INVALID_ERROR)
-        .into_response()
-    }
-    Err(e) => {
-      log::error!("error fetching user from database: {}", e);
-      return InternalError::from(StatusCode::UNAUTHORIZED)
-        .with_application_error(INTERNAL_ERROR)
-        .into_response();
-    }
-  };
+  let user =
+    match get_user_by_username_or_primary_email(pool, tenant.application_id, &username).await {
+      Ok(Some(user)) => user,
+      Ok(None) => {
+        return InternalError::from(StatusCode::UNAUTHORIZED)
+          .with_error("credentials", INVALID_ERROR)
+          .into_response()
+      }
+      Err(e) => {
+        log::error!("error fetching user from database: {}", e);
+        return InternalError::from(StatusCode::UNAUTHORIZED)
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
   let user_password = match get_user_active_password_by_user_id(pool, user.id).await {
     Ok(Some(user_password)) => user_password,
     Ok(None) => {
@@ -199,7 +200,7 @@ async fn refresh_token_request(
       .with_application_error(INTERNAL_ERROR)
       .into_response();
   }
-  let user = match get_user_by_id(pool, jwt.claims.sub).await {
+  let user = match get_user_by_id(pool, jwt.claims.app, jwt.claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => {
       return InternalError::from(StatusCode::UNAUTHORIZED)
@@ -253,7 +254,7 @@ async fn authorization_code_request(
       .with_application_error(INTERNAL_ERROR)
       .into_response();
   }
-  let user = match get_user_by_id(pool, jwt.claims.sub).await {
+  let user = match get_user_by_id(pool, jwt.claims.app, jwt.claims.sub).await {
     Ok(Some(user)) => user,
     Ok(None) => return InternalError::from(StatusCode::UNAUTHORIZED).into_response(),
     Err(e) => {
@@ -321,7 +322,7 @@ async fn create_service_token_token(
 
   let claims = BasicClaims {
     r#type: TOKEN_TYPE_BEARER.to_owned(),
-    app: tenant.id,
+    app: tenant.application_id,
     sub_type: TOKEN_SUB_TYPE_SERVICE_ACCOUNT.to_owned(),
     sub: service_account.id,
     iat: now.timestamp(),
@@ -335,7 +336,7 @@ async fn create_service_token_token(
   let access_token = match claims.encode(&tenant) {
     Ok(token) => token,
     Err(e) => {
-      log::error!("error encoding jwt: {}", e);
+      log::error!("error encoding JWT: {}", e);
       return InternalError::from(StatusCode::INTERNAL_SERVER_ERROR)
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -411,7 +412,7 @@ pub(crate) async fn create_user_token(
 
   let claims = BasicClaims {
     r#type: TOKEN_TYPE_BEARER.to_owned(),
-    app: tenant.id,
+    app: tenant.application_id,
     sub_type: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
@@ -506,7 +507,7 @@ pub(crate) async fn create_user_token(
           }
         }
         Err(e) => {
-          log::error!("Error getting user primary email: {}", e);
+          log::error!("error getting user primary email: {}", e);
           return InternalError::internal_error()
             .with_application_error(INTERNAL_ERROR)
             .into_response();
@@ -534,7 +535,7 @@ pub(crate) async fn create_user_token(
           }
         }
         Err(e) => {
-          log::error!("Error getting user primary phone number: {}", e);
+          log::error!("error getting user primary phone number: {}", e);
           return InternalError::internal_error()
             .with_application_error(INTERNAL_ERROR)
             .into_response();
@@ -581,7 +582,7 @@ pub(crate) async fn create_reset_password_token(
 
   let claims = BasicClaims {
     r#type: TOKEN_TYPE_RESET_PASSWORD.to_owned(),
-    app: tenant.id,
+    app: tenant.application_id,
     sub_type: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),
@@ -631,7 +632,7 @@ async fn create_mfa_token(
 
   let claims = BasicClaims {
     r#type: mfa_token_type,
-    app: tenant.id,
+    app: tenant.application_id,
     sub_type: TOKEN_SUB_TYPE_USER.to_owned(),
     sub: user.id,
     iat: now.timestamp(),

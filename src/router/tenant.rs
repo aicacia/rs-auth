@@ -6,7 +6,7 @@ use crate::{
   model::{
     tenant::{CreateTenant, Tenant, TenantPagination, TenantQuery, UpdateTenant},
     tenant_oauth2_provider::TenantOAuth2Provider,
-    util::{OffsetAndLimit, Pagination, DEFAULT_LIMIT},
+    util::{OffsetAndLimit, Pagination},
   },
   repository::{
     self,
@@ -47,15 +47,25 @@ pub const TENANT_TAG: &str = "tenant";
 )]
 pub async fn all_tenants(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Query(offset_and_limit): Query<OffsetAndLimit>,
   Query(query): Query<TenantQuery>,
 ) -> impl IntoResponse {
-  let limit = offset_and_limit.limit.unwrap_or(DEFAULT_LIMIT);
-  let offset = offset_and_limit.offset.unwrap_or(0);
   let (rows, oauth2_providers) = match tokio::try_join!(
-    get_tenants(&state.pool, limit, offset),
-    get_tenants_oauth2_providers(&state.pool, limit, offset),
+    get_tenants(
+      &state.pool,
+      service_account.application_id,
+      offset_and_limit.limit,
+      offset_and_limit.offset
+    ),
+    get_tenants_oauth2_providers(
+      &state.pool,
+      service_account.application_id,
+      offset_and_limit.limit,
+      offset_and_limit.offset
+    ),
   ) {
     Ok(results) => results,
     Err(e) => {
@@ -94,7 +104,11 @@ pub async fn all_tenants(
     .collect::<Vec<_>>();
 
   axum::Json(Pagination {
-    has_more: tenants.len() == limit,
+    has_more: if let Some(limit) = offset_and_limit.limit {
+      limit == tenants.len()
+    } else {
+      false
+    },
     items: tenants,
   })
   .into_response()
@@ -241,13 +255,16 @@ pub async fn get_tenant_by_id(
 )]
 pub async fn create_tenant(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Json(payload): Json<CreateTenant>,
 ) -> impl IntoResponse {
   let algorithm = payload.algorithm.unwrap_or_default();
   let (public_key, private_key) = algorithm.keys(payload.public_key, payload.private_key);
   let tenant_row = match repository::tenant::create_tenant(
     &state.pool,
+    service_account.application_id,
     repository::tenant::CreateTenant {
       client_id: payload
         .client_id
@@ -298,12 +315,15 @@ pub async fn create_tenant(
 )]
 pub async fn update_tenant(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(tenant_id): Path<i64>,
   Json(payload): Json<UpdateTenant>,
 ) -> impl IntoResponse {
   let tenant = match repository::tenant::update_tenant(
     &state.pool,
+    service_account.application_id,
     tenant_id,
     repository::tenant::UpdateTenant {
       client_id: payload.client_id.as_ref().map(ToString::to_string),
@@ -353,10 +373,14 @@ pub async fn update_tenant(
 )]
 pub async fn delete_tenant(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(tenant_id): Path<i64>,
 ) -> impl IntoResponse {
-  match repository::tenant::delete_tenant(&state.pool, tenant_id).await {
+  match repository::tenant::delete_tenant(&state.pool, service_account.application_id, tenant_id)
+    .await
+  {
     Ok(Some(_)) => {}
     Ok(None) => {
       return InternalError::not_found()

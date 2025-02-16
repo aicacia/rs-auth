@@ -1,5 +1,9 @@
 pub mod algorithm;
 pub use self::algorithm::Algorithm;
+pub mod application;
+pub use self::application::Application;
+pub mod create_application;
+pub use self::create_application::CreateApplication;
 pub mod create_service_account;
 pub use self::create_service_account::CreateServiceAccount;
 pub mod create_tenant;
@@ -56,6 +60,8 @@ pub mod token_request_refresh_token;
 pub use self::token_request_refresh_token::TokenRequestRefreshToken;
 pub mod token_request_service_account;
 pub use self::token_request_service_account::TokenRequestServiceAccount;
+pub mod update_application;
+pub use self::update_application::UpdateApplication;
 pub mod update_service_account;
 pub use self::update_service_account::UpdateServiceAccount;
 pub mod update_tenant;

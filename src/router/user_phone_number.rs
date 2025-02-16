@@ -61,7 +61,7 @@ pub async fn create_user_phone_number(
           .with_error("phone_number", ALREADY_EXISTS_ERROR)
           .into_response();
       }
-      log::error!("Error creating user's phone number: {e}");
+      log::error!("error creating user's phone number: {e}");
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -117,7 +117,7 @@ pub async fn update_user_phone_number(
         .into_response();
     }
     Err(e) => {
-      log::error!("Error updating user's phone number: {e}");
+      log::error!("error updating user's phone number: {e}");
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -163,7 +163,7 @@ pub async fn delete_user_phone_number(
         .into_response();
     }
     Err(e) => {
-      log::error!("Error deleting user's phone number: {e}");
+      log::error!("error deleting user's phone number: {e}");
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();

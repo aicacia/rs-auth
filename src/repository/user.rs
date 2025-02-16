@@ -7,6 +7,7 @@ use super::user_info::UserInfoUpdate;
 #[derive(Clone, sqlx::FromRow)]
 pub struct UserRow {
   pub id: i64,
+  pub application_id: i64,
   pub username: String,
   pub active: i32,
   pub updated_at: i64,
@@ -19,25 +20,46 @@ impl UserRow {
   }
 }
 
-pub async fn get_users(
-  pool: &sqlx::AnyPool,
-  limit: usize,
-  offset: usize,
-) -> sqlx::Result<Vec<UserRow>> {
-  sqlx::query_as(r#"SELECT u.* FROM users u LIMIT $1 OFFSET $2;"#)
-    .bind(limit as i64)
-    .bind(offset as i64)
-    .fetch_all(pool)
-    .await
+pub fn from_users_query<'a>(
+  qb: &mut sqlx::QueryBuilder<'a, sqlx::Any>,
+  application_id: i64,
+  limit: Option<usize>,
+  offset: Option<usize>,
+) {
+  qb.push(" FROM users u");
+  qb.push(" WHERE u.application_id = ")
+    .push_bind(application_id);
+  if let Some(limit) = limit {
+    qb.push(" LIMIT ").push_bind(limit as i64);
+  }
+  if let Some(offset) = offset {
+    qb.push(" OFFSET ").push_bind(offset as i64);
+  }
 }
 
-pub async fn get_user_by_id(pool: &sqlx::AnyPool, user_id: i64) -> sqlx::Result<Option<UserRow>> {
+pub async fn get_users(
+  pool: &sqlx::AnyPool,
+  application_id: i64,
+  limit: Option<usize>,
+  offset: Option<usize>,
+) -> sqlx::Result<Vec<UserRow>> {
+  let mut qb = sqlx::QueryBuilder::new("SELECT u.*");
+  from_users_query(&mut qb, application_id, limit, offset);
+  qb.build_query_as().fetch_all(pool).await
+}
+
+pub async fn get_user_by_id(
+  pool: &sqlx::AnyPool,
+  application_id: i64,
+  user_id: i64,
+) -> sqlx::Result<Option<UserRow>> {
   sqlx::query_as(
     r#"SELECT u.*
     FROM users u
-    WHERE u.id = $1
+    WHERE u.application_id = $1 AND u.id = $2
     LIMIT 1;"#,
   )
+  .bind(application_id)
   .bind(user_id)
   .fetch_optional(pool)
   .await
@@ -45,14 +67,16 @@ pub async fn get_user_by_id(pool: &sqlx::AnyPool, user_id: i64) -> sqlx::Result<
 
 pub async fn get_user_by_username(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   username: &str,
 ) -> sqlx::Result<Option<UserRow>> {
   sqlx::query_as(
     r#"SELECT u.*
     FROM users u
-    WHERE u.username = $1
+    WHERE u.application_id = $1 AND u.username = $2
     LIMIT 1;"#,
   )
+  .bind(application_id)
   .bind(username)
   .fetch_optional(pool)
   .await
@@ -60,23 +84,29 @@ pub async fn get_user_by_username(
 
 pub async fn get_user_by_username_or_primary_email(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   username_or_email: &str,
 ) -> sqlx::Result<Option<UserRow>> {
   sqlx::query_as(
     r#"SELECT u.*
     FROM users u
     LEFT JOIN user_emails ue ON ue.user_id = u.id
-    WHERE u.username = $1 OR (ue.email = $1 AND ue."primary" = 1)
+    WHERE u.application_id = $1 AND u.username = $2 OR (ue.email = $2 AND ue."primary" = 1)
     LIMIT 1;"#,
   )
+  .bind(application_id)
   .bind(username_or_email)
   .fetch_optional(pool)
   .await
 }
 
-pub async fn create_user(pool: &sqlx::AnyPool, params: CreateUser) -> sqlx::Result<UserRow> {
+pub async fn create_user(
+  pool: &sqlx::AnyPool,
+  application_id: i64,
+  params: CreateUser,
+) -> sqlx::Result<UserRow> {
   run_transaction(pool, |transaction| {
-    Box::pin(async move { create_user_internal(transaction, params).await })
+    Box::pin(async move { create_user_internal(transaction, application_id, params).await })
   })
   .await
 }
@@ -89,12 +119,14 @@ pub struct CreateUser {
 
 async fn create_user_internal(
   transaction: &mut sqlx::Transaction<'_, sqlx::Any>,
+  application_id: i64,
   params: CreateUser,
 ) -> sqlx::Result<UserRow> {
   let user: UserRow =
-    sqlx::query_as(r#"INSERT INTO users ("username", "active") VALUES ($1, $2) RETURNING *;"#)
+    sqlx::query_as(r#"INSERT INTO users ("application_id", "username", "active") VALUES ($1, $2, $3) RETURNING *;"#)
+      .bind(application_id)
       .bind(params.username)
-      .bind(true as i32)
+      .bind(true)
       .fetch_one(&mut **transaction)
       .await?;
 
@@ -141,6 +173,7 @@ pub struct CreateUserWithPassword {
 pub async fn create_user_with_password(
   pool: &sqlx::AnyPool,
   config: &Config,
+  application_id: i64,
   params: CreateUserWithPassword,
 ) -> sqlx::Result<UserRow> {
   let encrypted_password = match encrypt_password(config, &params.password) {
@@ -155,6 +188,7 @@ pub async fn create_user_with_password(
     Box::pin(async move {
       let user = create_user_internal(
         transaction,
+        application_id,
         CreateUser {
           username: params.username,
           active: true,
@@ -189,6 +223,7 @@ pub struct CreateUserWithOAuth2 {
 
 pub async fn create_user_with_oauth2(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   params: CreateUserWithOAuth2,
 ) -> sqlx::Result<UserRow> {
   run_transaction(pool, |transaction| {
@@ -203,12 +238,13 @@ pub async fn create_user_with_oauth2(
         return Err(sqlx::Error::Encode("Failed to convert email into username".into()));
       }
 
-      while username_used(transaction, &username).await? {
+      while username_used(transaction, application_id, &username).await? {
         username.push_str(&Alphanumeric.sample_string(&mut rand::thread_rng(), 2));
       }
 
       let user = create_user_internal(
         transaction,
+        application_id,
         CreateUser {
           username,
           active: true,
@@ -231,7 +267,7 @@ pub async fn create_user_with_oauth2(
       )
       .bind(user.id)
       .bind(&params.email)
-      .bind(params.email_verified as i32)
+      .bind(params.email_verified)
       .execute(&mut **transaction)
       .await?;
 
@@ -241,7 +277,7 @@ pub async fn create_user_with_oauth2(
         )
         .bind(user.id)
         .bind(phone_number)
-        .bind(params.phone_number_verified as i32)
+        .bind(params.phone_number_verified)
         .execute(&mut **transaction)
         .await?;
       }
@@ -254,14 +290,16 @@ pub async fn create_user_with_oauth2(
 
 async fn username_used(
   transaction: &mut sqlx::Transaction<'_, sqlx::Any>,
+  application_id: i64,
   username: &str,
 ) -> sqlx::Result<bool> {
   let user: Option<UserRow> = sqlx::query_as(
     r#"SELECT u.*
     FROM users u
-    WHERE u.username = $1
+    WHERE u.application_id = $1 AND u.username = $2
     LIMIT 1;"#,
   )
+  .bind(application_id)
   .bind(username)
   .fetch_optional(&mut **transaction)
   .await?;
@@ -270,20 +308,22 @@ async fn username_used(
 
 pub struct UpdateUser {
   pub username: Option<String>,
-  pub active: Option<i64>,
+  pub active: Option<i32>,
 }
 
 pub async fn update_user(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   user_id: i64,
   params: UpdateUser,
 ) -> sqlx::Result<Option<UserRow>> {
   sqlx::query_as(
-    r#"UPDATE users SET "username" = COALESCE($1, "username"), "active" = COALESCE($2, "active") WHERE id = $3 RETURNING *;"#,
+    r#"UPDATE users SET "username" = COALESCE($2, "username"), "active" = COALESCE($3, "active") WHERE application_id = $1 AND id = $2 RETURNING *;"#,
   )
+  .bind(application_id)
+  .bind(user_id)
   .bind(params.username)
   .bind(params.active)
-  .bind(user_id)
   .fetch_optional(pool)
   .await
 }

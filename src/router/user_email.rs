@@ -59,7 +59,7 @@ pub async fn create_user_email(
           .with_error("email", ALREADY_EXISTS_ERROR)
           .into_response();
       }
-      log::error!("Error creating user's email: {e}");
+      log::error!("error creating user's email: {e}");
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -111,7 +111,7 @@ pub async fn update_user_email(
         .into_response();
     }
     Err(e) => {
-      log::error!("Error updating user's email: {e}");
+      log::error!("error updating user's email: {e}");
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -151,7 +151,7 @@ pub async fn delete_user_email(
         .into_response();
     }
     Err(e) => {
-      log::error!("Error deleting user's email: {e}");
+      log::error!("error deleting user's email: {e}");
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();

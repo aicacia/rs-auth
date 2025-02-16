@@ -1,8 +1,23 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 
+CREATE TABLE "applications" (
+	"id" SERIAL PRIMARY KEY,
+  "name" TEXT NOT NULL,
+	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
+	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc')
+);
+
+
+INSERT INTO "applications"
+  ("name")
+  VALUES
+	('Admin');
+
+
 CREATE TABLE "tenants" (
 	"id" SERIAL PRIMARY KEY,
+	"application_id" BIGINT NOT NULL,
 	"client_id" VARCHAR(36) NOT NULL,
   "issuer" TEXT NOT NULL,
   "audience" TEXT,
@@ -12,14 +27,15 @@ CREATE TABLE "tenants" (
 	"expires_in_seconds" BIGINT NOT NULL DEFAULT 86400,
 	"refresh_expires_in_seconds" BIGINT NOT NULL DEFAULT 604800,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc')
+	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
+  FOREIGN KEY ("application_id") REFERENCES "applications" ("id") ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX "tenants_client_id_unique_idx" ON "tenants" ("client_id");
 
 INSERT INTO "tenants"
-  ("client_id", "issuer", "private_key")
+  ("application_id", "client_id", "issuer", "private_key")
   VALUES
-	('6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Admin', encode(public.gen_random_bytes(255), 'base64'));
+	(1, '6fcf0235-cb11-4160-9df8-b9114f8dcdae', 'Admin', encode(public.gen_random_bytes(255), 'base64'));
 
 
 CREATE TABLE "tenant_oauth2_providers" (
@@ -43,25 +59,28 @@ CREATE UNIQUE INDEX "tenant_oauth2_providers_tenant_id_provider_unique_idx" ON "
 
 CREATE TABLE "service_accounts" (
 	"id" SERIAL PRIMARY KEY,
+	"application_id" BIGINT NOT NULL,
 	"client_id" VARCHAR(36) NOT NULL,
   "encrypted_client_secret" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "active" SMALLINT NOT NULL DEFAULT 1,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc')
+	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
+  FOREIGN KEY ("application_id") REFERENCES "applications" ("id") ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX "service_accounts_client_id_unique_idx" ON "service_accounts" ("client_id");
-CREATE UNIQUE INDEX "service_accounts_name_unique_idx" ON "service_accounts" ("name");
 
 
 CREATE TABLE "users"(
 	"id" SERIAL PRIMARY KEY,
+	"application_id" BIGINT NOT NULL,
   "username" TEXT NOT NULL,
   "active" SMALLINT NOT NULL DEFAULT 1,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
-	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc')
+	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
+  FOREIGN KEY ("application_id") REFERENCES "applications" ("id") ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX "users_username_unique_idx" ON "users" ("username");
+CREATE UNIQUE INDEX "users_application_id_username_unique_idx" ON "users" ("application_id", "username");
 
 
 CREATE TABLE "user_configs" (

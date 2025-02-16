@@ -1,6 +1,6 @@
 use crate::core::database::run_transaction;
 
-use super::user::UserRow;
+use super::user::{from_users_query, UserRow};
 
 #[derive(sqlx::FromRow)]
 pub struct UserEmailRow {
@@ -24,14 +24,15 @@ impl UserEmailRow {
 
 pub async fn get_users_emails(
   pool: &sqlx::AnyPool,
-  limit: usize,
-  offset: usize,
+  application_id: i64,
+  limit: Option<usize>,
+  offset: Option<usize>,
 ) -> sqlx::Result<Vec<UserEmailRow>> {
-  sqlx::query_as(r#"SELECT ue.* FROM user_emails ue WHERE ue.user_id in (SELECT u.id FROM users u LIMIT $1 OFFSET $2);"#)
-    .bind(limit as i64)
-    .bind(offset as i64)
-    .fetch_all(pool)
-    .await
+  let mut qb =
+    sqlx::QueryBuilder::new("SELECT ue.* FROM user_emails ue WHERE ue.user_id IN (SELECT u.id");
+  from_users_query(&mut qb, application_id, limit, offset);
+  qb.push(")");
+  qb.build_query_as().fetch_all(pool).await
 }
 
 pub async fn get_user_by_email(pool: &sqlx::AnyPool, email: &str) -> sqlx::Result<Option<UserRow>> {

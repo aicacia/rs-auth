@@ -1,3 +1,4 @@
+pub mod application;
 pub mod current_user;
 pub mod mfa;
 pub mod oauth2;

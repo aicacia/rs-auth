@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
   middleware::{
     json::Json, service_account_authorization::ServiceAccountAuthorization,
     validated_json::ValidatedJson,
@@ -9,7 +9,7 @@ use crate::{
   model::{
     token::Token,
     user::{CreateUser, User, UserPagination, UserResetPassword},
-    util::{OffsetAndLimit, Pagination, DEFAULT_LIMIT},
+    util::{OffsetAndLimit, Pagination},
   },
   repository::{
     self,
@@ -72,11 +72,11 @@ pub struct ApiDoc;
 )]
 pub async fn all_users(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Query(query): Query<OffsetAndLimit>,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
+  Query(offset_and_limit): Query<OffsetAndLimit>,
 ) -> impl IntoResponse {
-  let limit = query.limit.unwrap_or(DEFAULT_LIMIT);
-  let offset = query.offset.unwrap_or(0);
   let (
     rows,
     users_emails,
@@ -86,13 +86,48 @@ pub async fn all_users(
     users_infos,
     users_mfa_types,
   ) = match tokio::try_join!(
-    get_users(&state.pool, limit, offset),
-    get_users_emails(&state.pool, limit, offset),
-    get_users_phone_numbers(&state.pool, limit, offset),
-    get_users_oauth2_providers(&state.pool, limit, offset),
-    get_users_configs(&state.pool, limit, offset),
-    get_users_infos(&state.pool, limit, offset),
-    get_users_mfa_types(&state.pool, limit, offset)
+    get_users(
+      &state.pool,
+      service_account.application_id,
+      offset_and_limit.limit,
+      offset_and_limit.offset
+    ),
+    get_users_emails(
+      &state.pool,
+      service_account.application_id,
+      offset_and_limit.limit,
+      offset_and_limit.offset
+    ),
+    get_users_phone_numbers(
+      &state.pool,
+      service_account.application_id,
+      offset_and_limit.limit,
+      offset_and_limit.offset
+    ),
+    get_users_oauth2_providers(
+      &state.pool,
+      service_account.application_id,
+      offset_and_limit.limit,
+      offset_and_limit.offset
+    ),
+    get_users_configs(
+      &state.pool,
+      service_account.application_id,
+      offset_and_limit.limit,
+      offset_and_limit.offset
+    ),
+    get_users_infos(
+      &state.pool,
+      service_account.application_id,
+      offset_and_limit.limit,
+      offset_and_limit.offset
+    ),
+    get_users_mfa_types(
+      &state.pool,
+      service_account.application_id,
+      offset_and_limit.limit,
+      offset_and_limit.offset
+    )
   ) {
     Ok(results) => results,
     Err(e) => {
@@ -184,7 +219,11 @@ pub async fn all_users(
     .collect::<Vec<User>>();
 
   axum::Json(Pagination {
-    has_more: users.len() == limit,
+    has_more: if let Some(limit) = offset_and_limit.limit {
+      limit == users.len()
+    } else {
+      false
+    },
     items: users,
   })
   .into_response()
@@ -209,7 +248,9 @@ pub async fn all_users(
 )]
 pub async fn get_user_by_id(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(user_id): Path<i64>,
 ) -> impl IntoResponse {
   let (
@@ -220,7 +261,7 @@ pub async fn get_user_by_id(
     user_info_row_optional,
     user_mfa_types,
   ) = match tokio::try_join!(
-    repository::user::get_user_by_id(&state.pool, user_id),
+    repository::user::get_user_by_id(&state.pool, service_account.application_id, user_id),
     get_user_emails_by_user_id(&state.pool, user_id),
     get_user_phone_numbers_by_user_id(&state.pool, user_id),
     get_user_oauth2_providers_by_user_id(&state.pool, user_id),
@@ -289,11 +330,14 @@ pub async fn get_user_by_id(
 )]
 pub async fn create_user(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   ValidatedJson(payload): ValidatedJson<CreateUser>,
 ) -> impl IntoResponse {
   let new_user = match repository::user::create_user(
     &state.pool,
+    service_account.application_id,
     repository::user::CreateUser {
       username: payload.username,
       active: payload.active,
@@ -304,6 +348,11 @@ pub async fn create_user(
   {
     Ok(user) => user,
     Err(e) => {
+      if e.to_string().to_lowercase().contains("unique constraint") {
+        return InternalError::from(StatusCode::BAD_REQUEST)
+          .with_error("username", ALREADY_EXISTS_ERROR)
+          .into_response();
+      }
       log::error!("error creating user: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
@@ -333,13 +382,17 @@ pub async fn create_user(
 )]
 pub async fn create_user_reset_password_token(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account,
+    tenant,
+    ..
+  }: ServiceAccountAuthorization,
   Path(user_id): Path<i64>,
   Json(payload): Json<UserResetPassword>,
 ) -> impl IntoResponse {
   let (user, tenant) = match tokio::try_join!(
-    repository::user::get_user_by_id(&state.pool, user_id),
-    get_tenant_by_id(&state.pool, payload.tenant_id)
+    repository::user::get_user_by_id(&state.pool, service_account.application_id, user_id),
+    get_tenant_by_id(&state.pool, payload.tenant_id.unwrap_or(tenant.id))
   ) {
     Ok((Some(user), Some(tenant))) => (user, tenant),
     Ok((user, tenant)) => {

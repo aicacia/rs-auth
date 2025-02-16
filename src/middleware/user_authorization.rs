@@ -42,7 +42,13 @@ where
       );
     }
 
-    match get_user_by_id(&router_state.pool, authorization.claims.sub).await {
+    match get_user_by_id(
+      &router_state.pool,
+      authorization.claims.app,
+      authorization.claims.sub,
+    )
+    .await
+    {
       Ok(Some(user)) => {
         if !user.is_active() {
           log::error!("invalid authorization user is not active");

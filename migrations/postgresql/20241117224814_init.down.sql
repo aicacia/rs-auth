@@ -11,3 +11,5 @@ DROP TABLE IF EXISTS "service_accounts" CASCADE;
 
 DROP TABLE IF EXISTS "tenant_oauth2_providers" CASCADE;
 DROP TABLE IF EXISTS "tenants" CASCADE;
+
+DROP TABLE IF EXISTS "applications" CASCADE;

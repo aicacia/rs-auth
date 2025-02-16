@@ -58,7 +58,7 @@ pub async fn create_current_user_phone_number(
           .with_error("phone_number", ALREADY_EXISTS_ERROR)
           .into_response();
       }
-      log::error!("Error creating user phone number: {e}");
+      log::error!("error creating user phone number: {e}");
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -102,7 +102,7 @@ pub async fn set_current_user_phone_number_as_primary(
           .with_error("phone-number", "not-verified")
           .into_response();
       }
-      log::error!("Error setting user phone_number={phone_number_id} as primary: {e}");
+      log::error!("error setting user phone_number={phone_number_id} as primary: {e}");
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -137,7 +137,7 @@ pub async fn delete_current_user_phone_number(
   match delete_user_phone_number(&state.pool, user.id, phone_number_id).await {
     Ok(_) => {}
     Err(e) => {
-      log::error!("Error deleting user phone_number={phone_number_id}: {e}");
+      log::error!("error deleting user phone_number={phone_number_id}: {e}");
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();

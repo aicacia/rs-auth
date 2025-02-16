@@ -1,3 +1,4 @@
+pub mod application;
 pub mod service_account;
 pub mod tenant;
 pub mod tenant_oauth2_provider;

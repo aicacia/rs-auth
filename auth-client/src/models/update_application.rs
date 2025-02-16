@@ -12,18 +12,15 @@ use crate::models;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Pagination {
-    #[serde(rename = "has_more")]
-    pub has_more: bool,
-    #[serde(rename = "items")]
-    pub items: Vec<models::Application>,
+pub struct UpdateApplication {
+    #[serde(rename = "name", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    pub name: Option<Option<String>>,
 }
 
-impl Pagination {
-    pub fn new(has_more: bool, items: Vec<models::Application>) -> Pagination {
-        Pagination {
-            has_more,
-            items,
+impl UpdateApplication {
+    pub fn new() -> UpdateApplication {
+        UpdateApplication {
+            name: None,
         }
     }
 }

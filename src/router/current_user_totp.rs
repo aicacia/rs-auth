@@ -51,7 +51,7 @@ pub async fn create_current_user_totp(
           .with_error("totp", ALREADY_EXISTS_ERROR)
           .into_response();
       }
-      log::error!("Error creating user TOTP: {}", e);
+      log::error!("error creating user TOTP: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
@@ -87,7 +87,7 @@ pub async fn delete_current_user_totp(
         .into_response();
     }
     Err(e) => {
-      log::error!("Error creating user TOTP: {}", e);
+      log::error!("error creating user TOTP: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
