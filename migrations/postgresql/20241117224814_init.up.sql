@@ -8,6 +8,7 @@ CREATE TABLE "applications" (
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc')
 );
 
+
 INSERT INTO "applications"
   ("name")
   VALUES
