@@ -256,7 +256,10 @@ async fn authorization_code_request(
   }
   let user = match get_user_by_id(pool, jwt.claims.app, jwt.claims.sub).await {
     Ok(Some(user)) => user,
-    Ok(None) => return InternalError::from(StatusCode::UNAUTHORIZED).into_response(),
+    Ok(None) => {
+      log::error!("user not found: {}", jwt.claims.sub);
+      return InternalError::from(StatusCode::UNAUTHORIZED).into_response();
+    }
     Err(e) => {
       log::error!("error fetching user from database: {}", e);
       return InternalError::from(StatusCode::UNAUTHORIZED)

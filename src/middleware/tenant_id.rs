@@ -29,6 +29,7 @@ where
             match get_tenant_by_client_id(&router_state.pool, &client_id.to_string()).await {
               Ok(Some(tenant)) => Ok(TenantId(tenant)),
               Ok(None) => {
+                log::error!("invalid tenant id: {}", id_string);
                 Err(InternalError::bad_request().with_error(TENENT_ID_HEADER, INVALID_ERROR))
               }
               Err(e) => {
@@ -48,6 +49,7 @@ where
         }
       }
     } else {
+      log::error!("missing tenant id");
       Err(InternalError::bad_request().with_error(TENENT_ID_HEADER, REQUIRED_ERROR))
     }
   }
