@@ -64,6 +64,7 @@ CREATE TABLE "service_accounts" (
   "encrypted_client_secret" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "active" SMALLINT NOT NULL DEFAULT 1,
+  "admin" SMALLINT NOT NULL DEFAULT 0,
 	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
 	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
   FOREIGN KEY ("application_id") REFERENCES "applications" ("id") ON DELETE CASCADE

@@ -15,6 +15,8 @@ use serde::{Deserialize, Serialize};
 pub struct UpdateServiceAccount {
     #[serde(rename = "active", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub active: Option<Option<bool>>,
+    #[serde(rename = "admin", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    pub admin: Option<Option<bool>>,
     #[serde(rename = "client_id", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub client_id: Option<Option<uuid::Uuid>>,
     #[serde(rename = "client_secret", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
@@ -27,6 +29,7 @@ impl UpdateServiceAccount {
     pub fn new() -> UpdateServiceAccount {
         UpdateServiceAccount {
             active: None,
+            admin: None,
             client_id: None,
             client_secret: None,
             name: None,

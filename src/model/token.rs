@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -14,6 +15,7 @@ pub struct Token {
   pub token_type: String,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub issued_token_type: Option<String>,
+  pub issued_at: DateTime<Utc>,
   pub expires_in: i64,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub scope: Option<String>,

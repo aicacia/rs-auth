@@ -55,10 +55,11 @@ pub enum GetUserByIdError {
 }
 
 
-pub async fn all_users(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>) -> Result<models::Pagination, Error<AllUsersError>> {
+pub async fn all_users(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, application_id: Option<i64>) -> Result<models::Pagination, Error<AllUsersError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_offset = offset;
     let p_limit = limit;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
@@ -68,6 +69,9 @@ pub async fn all_users(configuration: &configuration::Configuration, offset: Opt
     }
     if let Some(ref param_value) = p_limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
     }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
@@ -91,13 +95,17 @@ pub async fn all_users(configuration: &configuration::Configuration, offset: Opt
     }
 }
 
-pub async fn create_user(configuration: &configuration::Configuration, create_user: models::CreateUser) -> Result<models::User, Error<CreateUserError>> {
+pub async fn create_user(configuration: &configuration::Configuration, create_user: models::CreateUser, application_id: Option<i64>) -> Result<models::User, Error<CreateUserError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_create_user = create_user;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -121,14 +129,18 @@ pub async fn create_user(configuration: &configuration::Configuration, create_us
     }
 }
 
-pub async fn create_user_reset_password_token(configuration: &configuration::Configuration, user_id: i64, user_reset_password: models::UserResetPassword) -> Result<models::Token, Error<CreateUserResetPasswordTokenError>> {
+pub async fn create_user_reset_password_token(configuration: &configuration::Configuration, user_id: i64, user_reset_password: models::UserResetPassword, application_id: Option<i64>) -> Result<models::Token, Error<CreateUserResetPasswordTokenError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_user_reset_password = user_reset_password;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}/reset-password", configuration.base_path, user_id=p_user_id);
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -152,13 +164,17 @@ pub async fn create_user_reset_password_token(configuration: &configuration::Con
     }
 }
 
-pub async fn get_user_by_id(configuration: &configuration::Configuration, user_id: i64) -> Result<models::Pagination, Error<GetUserByIdError>> {
+pub async fn get_user_by_id(configuration: &configuration::Configuration, user_id: i64, application_id: Option<i64>) -> Result<models::Pagination, Error<GetUserByIdError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}", configuration.base_path, user_id=p_user_id);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }

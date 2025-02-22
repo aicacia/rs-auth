@@ -44,14 +44,16 @@ pub async fn get_tenants(
 
 pub async fn get_tenant_by_id(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   tenant_id: i64,
 ) -> sqlx::Result<Option<TenantRow>> {
   sqlx::query_as(
     r#"SELECT t.*
     FROM tenants t
-    WHERE t.id = $1
+    WHERE t.application_id = $1 AND t.id = $2
     LIMIT 1;"#,
   )
+  .bind(application_id)
   .bind(tenant_id)
   .fetch_optional(pool)
   .await

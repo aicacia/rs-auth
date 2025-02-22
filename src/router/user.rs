@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use crate::{
-  core::error::{Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{
+    Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR,
+  },
   middleware::{
     json::Json, service_account_authorization::ServiceAccountAuthorization,
     validated_json::ValidatedJson,
@@ -9,7 +11,7 @@ use crate::{
   model::{
     token::Token,
     user::{CreateUser, User, UserPagination, UserResetPassword},
-    util::{OffsetAndLimit, Pagination},
+    util::{ApplicationId, OffsetAndLimit, Pagination},
   },
   repository::{
     self,
@@ -60,6 +62,7 @@ pub struct ApiDoc;
   tags = ["users"],
   params(
     OffsetAndLimit,
+    ApplicationId,
   ),
   responses(
     (status = 200, content_type = "application/json", body = UserPagination),
@@ -75,8 +78,17 @@ pub async fn all_users(
   ServiceAccountAuthorization {
     service_account, ..
   }: ServiceAccountAuthorization,
+  Query(application_id): Query<ApplicationId>,
   Query(offset_and_limit): Query<OffsetAndLimit>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("view-users", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let (
     rows,
     users_emails,
@@ -88,43 +100,43 @@ pub async fn all_users(
   ) = match tokio::try_join!(
     get_users(
       &state.pool,
-      service_account.application_id,
+      application_id,
       offset_and_limit.limit,
       offset_and_limit.offset
     ),
     get_users_emails(
       &state.pool,
-      service_account.application_id,
+      application_id,
       offset_and_limit.limit,
       offset_and_limit.offset
     ),
     get_users_phone_numbers(
       &state.pool,
-      service_account.application_id,
+      application_id,
       offset_and_limit.limit,
       offset_and_limit.offset
     ),
     get_users_oauth2_providers(
       &state.pool,
-      service_account.application_id,
+      application_id,
       offset_and_limit.limit,
       offset_and_limit.offset
     ),
     get_users_configs(
       &state.pool,
-      service_account.application_id,
+      application_id,
       offset_and_limit.limit,
       offset_and_limit.offset
     ),
     get_users_infos(
       &state.pool,
-      service_account.application_id,
+      application_id,
       offset_and_limit.limit,
       offset_and_limit.offset
     ),
     get_users_mfa_types(
       &state.pool,
-      service_account.application_id,
+      application_id,
       offset_and_limit.limit,
       offset_and_limit.offset
     )
@@ -235,6 +247,7 @@ pub async fn all_users(
   tags = ["users"],
   params(
     ("user_id" = i64, Path, description = "User id"),
+    ApplicationId,
   ),
   responses(
     (status = 200, content_type = "application/json", body = UserPagination),
@@ -252,7 +265,16 @@ pub async fn get_user_by_id(
     service_account, ..
   }: ServiceAccountAuthorization,
   Path(user_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("view-user", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let (
     row_optional,
     user_emails,
@@ -261,12 +283,12 @@ pub async fn get_user_by_id(
     user_info_row_optional,
     user_mfa_types,
   ) = match tokio::try_join!(
-    repository::user::get_user_by_id(&state.pool, service_account.application_id, user_id),
-    get_user_emails_by_user_id(&state.pool, user_id),
-    get_user_phone_numbers_by_user_id(&state.pool, user_id),
-    get_user_oauth2_providers_by_user_id(&state.pool, user_id),
-    get_user_info_by_user_id(&state.pool, user_id),
-    get_user_mfa_types_by_user_id(&state.pool, user_id)
+    repository::user::get_user_by_id(&state.pool, application_id, user_id),
+    get_user_emails_by_user_id(&state.pool, application_id, user_id),
+    get_user_phone_numbers_by_user_id(&state.pool, application_id, user_id),
+    get_user_oauth2_providers_by_user_id(&state.pool, application_id, user_id),
+    get_user_info_by_user_id(&state.pool, application_id, user_id),
+    get_user_mfa_types_by_user_id(&state.pool, application_id, user_id)
   ) {
     Ok(results) => results,
     Err(e) => {
@@ -280,7 +302,7 @@ pub async fn get_user_by_id(
     Some(row) => row,
     None => {
       return InternalError::not_found()
-        .with_error("tenant", NOT_FOUND_ERROR)
+        .with_error("user", NOT_FOUND_ERROR)
         .into_response()
     }
   };
@@ -318,6 +340,9 @@ pub async fn get_user_by_id(
   path = "/users",
   tags = ["users"],
   request_body = CreateUser,
+  params(
+    ApplicationId,
+  ),
   responses(
     (status = 201, content_type = "application/json", body = User),
     (status = 400, content_type = "application/json", body = Errors),
@@ -333,11 +358,20 @@ pub async fn create_user(
   ServiceAccountAuthorization {
     service_account, ..
   }: ServiceAccountAuthorization,
+  Query(application_id): Query<ApplicationId>,
   ValidatedJson(payload): ValidatedJson<CreateUser>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("create-user", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let new_user = match repository::user::create_user(
     &state.pool,
-    service_account.application_id,
+    application_id,
     repository::user::CreateUser {
       username: payload.username,
       active: payload.active,
@@ -369,6 +403,7 @@ pub async fn create_user(
   request_body = UserResetPassword,
   params(
     ("user_id" = i64, Path, description = "User id"),
+    ApplicationId,
   ),
   responses(
     (status = 201, content_type = "application/json", body = Token),
@@ -388,11 +423,24 @@ pub async fn create_user_reset_password_token(
     ..
   }: ServiceAccountAuthorization,
   Path(user_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
   Json(payload): Json<UserResetPassword>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("update-user", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let (user, tenant) = match tokio::try_join!(
-    repository::user::get_user_by_id(&state.pool, service_account.application_id, user_id),
-    get_tenant_by_id(&state.pool, payload.tenant_id.unwrap_or(tenant.id))
+    repository::user::get_user_by_id(&state.pool, application_id, user_id),
+    get_tenant_by_id(
+      &state.pool,
+      application_id,
+      payload.tenant_id.unwrap_or(tenant.id)
+    )
   ) {
     Ok((Some(user), Some(tenant))) => (user, tenant),
     Ok((user, tenant)) => {

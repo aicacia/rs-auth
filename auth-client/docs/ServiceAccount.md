@@ -5,6 +5,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **active** | **bool** |  | 
+**admin** | **bool** |  | 
 **client_id** | [**uuid::Uuid**](uuid::Uuid.md) |  | 
 **client_secret** | Option<[**uuid::Uuid**](uuid::Uuid.md)> |  | [optional]
 **created_at** | **String** |  | 

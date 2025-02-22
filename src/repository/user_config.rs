@@ -48,12 +48,14 @@ pub struct UserConfigUpdate {
 
 pub async fn update_user_config(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   user_id: i64,
   updates: UserConfigUpdate,
 ) -> sqlx::Result<UserConfigRow> {
   run_transaction(pool, |transaction| {
     Box::pin(async move {
-      let mfa_types = get_user_mfa_types_by_user_id_internal(transaction, user_id).await?;
+      let mfa_types =
+        get_user_mfa_types_by_user_id_internal(transaction, application_id, user_id).await?;
 
       if let Some(updated_mfa_type) = updates.mfa_type.as_ref() {
         if updated_mfa_type != "none" {

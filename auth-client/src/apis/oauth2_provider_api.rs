@@ -50,14 +50,18 @@ pub enum UpdateTenantOauth2ProviderError {
 }
 
 
-pub async fn create_tenant_oauth2_provider(configuration: &configuration::Configuration, tenant_id: i64, create_tenant_o_auth2_provider: models::CreateTenantOAuth2Provider) -> Result<models::TenantOAuth2Provider, Error<CreateTenantOauth2ProviderError>> {
+pub async fn create_tenant_oauth2_provider(configuration: &configuration::Configuration, tenant_id: i64, create_tenant_o_auth2_provider: models::CreateTenantOAuth2Provider, application_id: Option<i64>) -> Result<models::TenantOAuth2Provider, Error<CreateTenantOauth2ProviderError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_tenant_id = tenant_id;
     let p_create_tenant_o_auth2_provider = create_tenant_o_auth2_provider;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/tenants/{tenant_id}/oauth2-providers", configuration.base_path, tenant_id=p_tenant_id);
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -81,14 +85,18 @@ pub async fn create_tenant_oauth2_provider(configuration: &configuration::Config
     }
 }
 
-pub async fn delete_tenant_oauth2_provider(configuration: &configuration::Configuration, tenant_id: i64, tenant_oauht2_provider_id: i64) -> Result<(), Error<DeleteTenantOauth2ProviderError>> {
+pub async fn delete_tenant_oauth2_provider(configuration: &configuration::Configuration, tenant_id: i64, tenant_oauht2_provider_id: i64, application_id: Option<i64>) -> Result<(), Error<DeleteTenantOauth2ProviderError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_tenant_id = tenant_id;
     let p_tenant_oauht2_provider_id = tenant_oauht2_provider_id;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}", configuration.base_path, tenant_id=p_tenant_id, tenant_oauht2_provider_id=p_tenant_oauht2_provider_id);
     let mut req_builder = configuration.client.request(reqwest::Method::DELETE, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -110,15 +118,19 @@ pub async fn delete_tenant_oauth2_provider(configuration: &configuration::Config
     }
 }
 
-pub async fn update_tenant_oauth2_provider(configuration: &configuration::Configuration, tenant_id: i64, tenant_oauht2_provider_id: i64, update_tenant_o_auth2_provider: models::UpdateTenantOAuth2Provider) -> Result<(), Error<UpdateTenantOauth2ProviderError>> {
+pub async fn update_tenant_oauth2_provider(configuration: &configuration::Configuration, tenant_id: i64, tenant_oauht2_provider_id: i64, update_tenant_o_auth2_provider: models::UpdateTenantOAuth2Provider, application_id: Option<i64>) -> Result<(), Error<UpdateTenantOauth2ProviderError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_tenant_id = tenant_id;
     let p_tenant_oauht2_provider_id = tenant_oauht2_provider_id;
     let p_update_tenant_o_auth2_provider = update_tenant_o_auth2_provider;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}", configuration.base_path, tenant_id=p_tenant_id, tenant_oauht2_provider_id=p_tenant_oauht2_provider_id);
     let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }

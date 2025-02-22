@@ -39,6 +39,11 @@ pub struct OffsetAndLimit {
   pub limit: Option<usize>,
 }
 
+#[derive(Deserialize, IntoParams)]
+pub struct ApplicationId {
+  pub application_id: Option<i64>,
+}
+
 #[derive(Serialize, ToSchema)]
 pub struct Pagination<T> {
   pub has_more: bool,

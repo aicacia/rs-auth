@@ -66,19 +66,21 @@ pub async fn get_current_user(
   State(state): State<RouterState>,
   UserAuthorization { user, scopes, .. }: UserAuthorization,
 ) -> impl IntoResponse {
+  let application_id = user.application_id;
   let mut current_user = User::from(user);
 
   let show_email = has_email_scope(&scopes);
   if show_email {
-    let emails = match get_user_emails_by_user_id(&state.pool, current_user.id).await {
-      Ok(emails) => emails,
-      Err(e) => {
-        log::error!("error getting user emails: {}", e);
-        return InternalError::internal_error()
-          .with_application_error(INTERNAL_ERROR)
-          .into_response();
-      }
-    };
+    let emails =
+      match get_user_emails_by_user_id(&state.pool, application_id, current_user.id).await {
+        Ok(emails) => emails,
+        Err(e) => {
+          log::error!("error getting user emails: {}", e);
+          return InternalError::internal_error()
+            .with_application_error(INTERNAL_ERROR)
+            .into_response();
+        }
+      };
     for email in emails {
       if email.is_primary() {
         current_user.email = Some(email.into());
@@ -88,16 +90,16 @@ pub async fn get_current_user(
     }
   }
   if has_phone_scope(&scopes) {
-    let phone_numbers = match get_user_phone_numbers_by_user_id(&state.pool, current_user.id).await
-    {
-      Ok(phone_numbers) => phone_numbers,
-      Err(e) => {
-        log::error!("error getting user phone numbers: {}", e);
-        return InternalError::internal_error()
-          .with_application_error(INTERNAL_ERROR)
-          .into_response();
-      }
-    };
+    let phone_numbers =
+      match get_user_phone_numbers_by_user_id(&state.pool, application_id, current_user.id).await {
+        Ok(phone_numbers) => phone_numbers,
+        Err(e) => {
+          log::error!("error getting user phone numbers: {}", e);
+          return InternalError::internal_error()
+            .with_application_error(INTERNAL_ERROR)
+            .into_response();
+        }
+      };
     for phone_number in phone_numbers {
       if phone_number.is_primary() {
         current_user.phone_number = Some(phone_number.into());
@@ -107,16 +109,21 @@ pub async fn get_current_user(
     }
   }
 
-  let oauth2_providers =
-    match get_user_oauth2_providers_by_user_id(&state.pool, current_user.id).await {
-      Ok(oauth2_providers) => oauth2_providers,
-      Err(e) => {
-        log::error!("error getting user oauth2 providers: {}", e);
-        return InternalError::internal_error()
-          .with_application_error(INTERNAL_ERROR)
-          .into_response();
-      }
-    };
+  let oauth2_providers = match get_user_oauth2_providers_by_user_id(
+    &state.pool,
+    application_id,
+    current_user.id,
+  )
+  .await
+  {
+    Ok(oauth2_providers) => oauth2_providers,
+    Err(e) => {
+      log::error!("error getting user oauth2 providers: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   for row in oauth2_providers {
     let mut oauth2_provider: UserOAuth2Provider = row.into();
     if !show_email {
@@ -125,15 +132,16 @@ pub async fn get_current_user(
     current_user.oauth2_providers.push(oauth2_provider);
   }
 
-  let mfa_types = match get_user_mfa_types_by_user_id(&state.pool, current_user.id).await {
-    Ok(mfa_types) => mfa_types,
-    Err(e) => {
-      log::error!("error getting user MFA types: {}", e);
-      return InternalError::internal_error()
-        .with_application_error(INTERNAL_ERROR)
-        .into_response();
-    }
-  };
+  let mfa_types =
+    match get_user_mfa_types_by_user_id(&state.pool, application_id, current_user.id).await {
+      Ok(mfa_types) => mfa_types,
+      Err(e) => {
+        log::error!("error getting user MFA types: {}", e);
+        return InternalError::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    };
   for row in mfa_types {
     current_user.mfa_types.push(row.into());
   }
@@ -141,15 +149,16 @@ pub async fn get_current_user(
   let show_profile = has_profile_scope(&scopes);
   let show_address = has_address_scope(&scopes);
   if show_address || show_profile {
-    let maybe_user_info = match get_user_info_by_user_id(&state.pool, current_user.id).await {
-      Ok(user_info) => user_info,
-      Err(e) => {
-        log::error!("error getting user info: {}", e);
-        return InternalError::internal_error()
-          .with_application_error(INTERNAL_ERROR)
-          .into_response();
-      }
-    };
+    let maybe_user_info =
+      match get_user_info_by_user_id(&state.pool, application_id, current_user.id).await {
+        Ok(user_info) => user_info,
+        Err(e) => {
+          log::error!("error getting user info: {}", e);
+          return InternalError::internal_error()
+            .with_application_error(INTERNAL_ERROR)
+            .into_response();
+        }
+      };
     if let Some(user_info) = maybe_user_info {
       if show_profile {
         current_user.info.name = user_info.name;
@@ -221,22 +230,28 @@ pub async fn create_current_user_add_oauth2_provider_url(
   }): Query<OAuth2Query>,
   UserAuthorization { user, tenant, .. }: UserAuthorization,
 ) -> impl IntoResponse {
-  let tenant_oauth2_provider =
-    match get_active_tenant_oauth2_provider(&state.pool, tenant.id, &provider).await {
-      Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
-      Ok(None) => {
-        log::error!("Unknown OAuth2 provider: {}", provider);
-        return InternalError::internal_error()
-          .with_error("oauth2-provider", NOT_FOUND_ERROR)
-          .into_response();
-      }
-      Err(e) => {
-        log::error!("error getting tenant oauth2 provider: {}", e);
-        return InternalError::internal_error()
-          .with_error("oauth2-provider", INTERNAL_ERROR)
-          .into_response();
-      }
-    };
+  let tenant_oauth2_provider = match get_active_tenant_oauth2_provider(
+    &state.pool,
+    tenant.application_id,
+    tenant.id,
+    &provider,
+  )
+  .await
+  {
+    Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
+    Ok(None) => {
+      log::error!("Unknown OAuth2 provider: {}", provider);
+      return InternalError::internal_error()
+        .with_error("oauth2-provider", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting tenant oauth2 provider: {}", e);
+      return InternalError::internal_error()
+        .with_error("oauth2-provider", INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   let basic_client = match tenant_oauth2_provider.basic_client(state.config.as_ref()) {
     Ok(client) => client,
     Err(e) => {

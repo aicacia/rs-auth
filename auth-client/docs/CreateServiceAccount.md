@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**admin** | Option<**bool**> |  | [optional]
 **client_id** | Option<[**uuid::Uuid**](uuid::Uuid.md)> |  | [optional]
 **client_secret** | Option<[**uuid::Uuid**](uuid::Uuid.md)> |  | [optional]
 **name** | **String** |  | 

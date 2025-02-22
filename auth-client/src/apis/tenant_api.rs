@@ -44,16 +44,6 @@ pub enum DeleteTenantError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`get_tenant_by_client_id`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GetTenantByClientIdError {
-    Status401(std::collections::HashMap<String, Vec<models::ErrorMessage>>),
-    Status404(std::collections::HashMap<String, Vec<models::ErrorMessage>>),
-    Status500(std::collections::HashMap<String, Vec<models::ErrorMessage>>),
-    UnknownValue(serde_json::Value),
-}
-
 /// struct for typed errors of method [`get_tenant_by_id`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -75,11 +65,12 @@ pub enum UpdateTenantError {
 }
 
 
-pub async fn all_tenants(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, show_private_key: Option<bool>) -> Result<models::Pagination, Error<AllTenantsError>> {
+pub async fn all_tenants(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, show_private_key: Option<bool>, application_id: Option<i64>) -> Result<models::Pagination, Error<AllTenantsError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_offset = offset;
     let p_limit = limit;
     let p_show_private_key = show_private_key;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/tenants", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
@@ -92,6 +83,9 @@ pub async fn all_tenants(configuration: &configuration::Configuration, offset: O
     }
     if let Some(ref param_value) = p_show_private_key {
         req_builder = req_builder.query(&[("show_private_key", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
     }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
@@ -115,13 +109,17 @@ pub async fn all_tenants(configuration: &configuration::Configuration, offset: O
     }
 }
 
-pub async fn create_tenant(configuration: &configuration::Configuration, create_tenant: models::CreateTenant) -> Result<models::Tenant, Error<CreateTenantError>> {
+pub async fn create_tenant(configuration: &configuration::Configuration, create_tenant: models::CreateTenant, application_id: Option<i64>) -> Result<models::Tenant, Error<CreateTenantError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_create_tenant = create_tenant;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/tenants", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -145,13 +143,17 @@ pub async fn create_tenant(configuration: &configuration::Configuration, create_
     }
 }
 
-pub async fn delete_tenant(configuration: &configuration::Configuration, tenant_id: i64) -> Result<(), Error<DeleteTenantError>> {
+pub async fn delete_tenant(configuration: &configuration::Configuration, tenant_id: i64, application_id: Option<i64>) -> Result<(), Error<DeleteTenantError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_tenant_id = tenant_id;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/tenants/{tenant_id}", configuration.base_path, tenant_id=p_tenant_id);
     let mut req_builder = configuration.client.request(reqwest::Method::DELETE, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -173,49 +175,20 @@ pub async fn delete_tenant(configuration: &configuration::Configuration, tenant_
     }
 }
 
-pub async fn get_tenant_by_client_id(configuration: &configuration::Configuration, tenant_client_id: &str, show_private_key: Option<bool>) -> Result<models::Tenant, Error<GetTenantByClientIdError>> {
-    // add a prefix to parameters to efficiently prevent name collisions
-    let p_tenant_client_id = tenant_client_id;
-    let p_show_private_key = show_private_key;
-
-    let uri_str = format!("{}/tenants/by-client-id/{tenant_client_id}", configuration.base_path, tenant_client_id=crate::apis::urlencode(p_tenant_client_id));
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
-
-    if let Some(ref param_value) = p_show_private_key {
-        req_builder = req_builder.query(&[("show_private_key", &param_value.to_string())]);
-    }
-    if let Some(ref user_agent) = configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(ref token) = configuration.bearer_access_token {
-        req_builder = req_builder.bearer_auth(token.to_owned());
-    };
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        serde_json::from_str(&content).map_err(Error::from)
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<GetTenantByClientIdError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent { status, content, entity }))
-    }
-}
-
-pub async fn get_tenant_by_id(configuration: &configuration::Configuration, tenant_id: i64, show_private_key: Option<bool>) -> Result<models::Tenant, Error<GetTenantByIdError>> {
+pub async fn get_tenant_by_id(configuration: &configuration::Configuration, tenant_id: i64, show_private_key: Option<bool>, application_id: Option<i64>) -> Result<models::Tenant, Error<GetTenantByIdError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_tenant_id = tenant_id;
     let p_show_private_key = show_private_key;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/tenants/{tenant_id}", configuration.base_path, tenant_id=p_tenant_id);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     if let Some(ref param_value) = p_show_private_key {
         req_builder = req_builder.query(&[("show_private_key", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
     }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
@@ -239,14 +212,18 @@ pub async fn get_tenant_by_id(configuration: &configuration::Configuration, tena
     }
 }
 
-pub async fn update_tenant(configuration: &configuration::Configuration, tenant_id: i64, update_tenant: models::UpdateTenant) -> Result<models::Tenant, Error<UpdateTenantError>> {
+pub async fn update_tenant(configuration: &configuration::Configuration, tenant_id: i64, update_tenant: models::UpdateTenant, application_id: Option<i64>) -> Result<models::Tenant, Error<UpdateTenantError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_tenant_id = tenant_id;
     let p_update_tenant = update_tenant;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/tenants/{tenant_id}", configuration.base_path, tenant_id=p_tenant_id);
     let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }

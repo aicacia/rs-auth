@@ -34,6 +34,7 @@ pub async fn update_current_user_config(
 ) -> impl IntoResponse {
   match update_user_config(
     &state.pool,
+    user.application_id,
     user.id,
     UserConfigUpdate {
       mfa_type: payload.mfa_type.as_ref().map(ToString::to_string),

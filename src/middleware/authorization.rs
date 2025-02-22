@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use axum::extract::{FromRef, FromRequestParts};
 use http::request::Parts;
 use serde::de::DeserializeOwned;
@@ -5,7 +7,7 @@ use serde::de::DeserializeOwned;
 use super::claims::{parse_jwt, parse_jwt_no_validation, BasicClaims, TOKEN_TYPE_BEARER};
 use crate::{
   core::{
-    error::{InternalError, INVALID_ERROR, REQUIRED_ERROR},
+    error::{InternalError, INVALID_ERROR, PARSE_ERROR, REQUIRED_ERROR},
     openapi::AUTHORIZATION_HEADER,
   },
   repository::tenant::{get_tenant_by_id, TenantRow},
@@ -70,14 +72,17 @@ where
       return Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
-  let tenant_id = match maybe_invalid_token
+  let ApplicationIdTenantId {
+    application_id,
+    tenant_id,
+  } = match maybe_invalid_token
     .header
     .kid
     .as_ref()
     .map(String::as_str)
-    .map(str::parse::<i64>)
+    .map(FromStr::from_str)
   {
-    Some(Ok(tenant_id)) => tenant_id,
+    Some(Ok(application_id_tenant_id)) => application_id_tenant_id,
     Some(Err(e)) => {
       log::error!("invalid authorization failed to parse kid: {}", e);
       return Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
@@ -87,7 +92,7 @@ where
       return Err(InternalError::unauthorized().with_error(AUTHORIZATION_HEADER, INVALID_ERROR));
     }
   };
-  let tenant = match get_tenant_by_id(pool, tenant_id).await {
+  let tenant = match get_tenant_by_id(pool, application_id, tenant_id).await {
     Ok(Some(tenant)) => tenant,
     Ok(None) => {
       log::error!("invalid authorization tenant not found by app");
@@ -106,4 +111,33 @@ where
     }
   };
   Ok((tenant, token_data))
+}
+
+pub struct ApplicationIdTenantId {
+  application_id: i64,
+  tenant_id: i64,
+}
+
+impl ApplicationIdTenantId {
+  pub fn new_kid(application_id: i64, tenant_id: i64) -> String {
+    format!("{}-{}", application_id, tenant_id)
+  }
+}
+
+impl FromStr for ApplicationIdTenantId {
+  type Err = InternalError;
+
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    match s.split_once('-') {
+      Some((application_id, tenant_id)) => Ok(Self {
+        application_id: application_id
+          .parse()
+          .map_err(|_| InternalError::not_found().with_error("kid", PARSE_ERROR))?,
+        tenant_id: tenant_id
+          .parse()
+          .map_err(|_| InternalError::not_found().with_error("kid", PARSE_ERROR))?,
+      }),
+      None => Err(InternalError::not_found().with_error("kid", PARSE_ERROR)),
+    }
+  }
 }

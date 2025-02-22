@@ -8,6 +8,7 @@ pub struct ServiceAccountRow {
   pub encrypted_client_secret: String,
   pub name: String,
   pub active: i32,
+  pub admin: i32,
   pub updated_at: i64,
   pub created_at: i64,
 }
@@ -15,6 +16,9 @@ pub struct ServiceAccountRow {
 impl ServiceAccountRow {
   pub fn is_active(&self) -> bool {
     self.active != 0
+  }
+  pub fn is_admin(&self) -> bool {
+    self.admin != 0
   }
   pub fn verify(&self, secret: &str) -> Result<bool, argon2::Error> {
     verify_password(secret, &self.encrypted_client_secret)
@@ -75,6 +79,7 @@ pub struct CreateServiceAccount {
   pub client_id: String,
   pub encrypted_client_secret: String,
   pub name: String,
+  pub admin: bool,
 }
 
 pub async fn create_service_account(
@@ -83,14 +88,15 @@ pub async fn create_service_account(
   service_account: CreateServiceAccount,
 ) -> sqlx::Result<ServiceAccountRow> {
   sqlx::query_as(
-    r#"INSERT INTO service_accounts (application_id, client_id, encrypted_client_secret, name)
-    VALUES ($1, $2, $3, $4)
+    r#"INSERT INTO service_accounts (application_id, client_id, encrypted_client_secret, name, admin)
+    VALUES ($1, $2, $3, $4, $5)
     RETURNING *;"#,
   )
   .bind(application_id)
   .bind(service_account.client_id)
   .bind(service_account.encrypted_client_secret)
   .bind(service_account.name)
+  .bind(service_account.admin)
   .fetch_one(pool)
   .await
 }
@@ -100,6 +106,7 @@ pub struct UpdateServiceAccount {
   pub client_id: Option<String>,
   pub encrypted_client_secret: Option<String>,
   pub name: Option<String>,
+  pub admin: Option<bool>,
   pub active: Option<i64>,
 }
 
@@ -114,8 +121,9 @@ pub async fn update_service_account(
     SET client_id = COALESCE($3, client_id),
         encrypted_client_secret = COALESCE($4, encrypted_client_secret),
         name = COALESCE($5, name),
-        active = COALESCE($6, active),
-        updated_at = $7
+        admin = COALESCE($6, admin),
+        active = COALESCE($7, active),
+        updated_at = $8
     WHERE application_id = $1 AND id = $2
     RETURNING *;"#,
   )
@@ -124,6 +132,7 @@ pub async fn update_service_account(
   .bind(service_account.client_id)
   .bind(service_account.encrypted_client_secret)
   .bind(service_account.name)
+  .bind(service_account.admin)
   .bind(service_account.active)
   .bind(chrono::Utc::now().timestamp())
   .fetch_optional(pool)

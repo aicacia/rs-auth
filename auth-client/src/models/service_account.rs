@@ -15,6 +15,8 @@ use serde::{Deserialize, Serialize};
 pub struct ServiceAccount {
     #[serde(rename = "active")]
     pub active: bool,
+    #[serde(rename = "admin")]
+    pub admin: bool,
     #[serde(rename = "client_id")]
     pub client_id: uuid::Uuid,
     #[serde(rename = "client_secret", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
@@ -30,9 +32,10 @@ pub struct ServiceAccount {
 }
 
 impl ServiceAccount {
-    pub fn new(active: bool, client_id: uuid::Uuid, created_at: String, id: i64, name: String, updated_at: String) -> ServiceAccount {
+    pub fn new(active: bool, admin: bool, client_id: uuid::Uuid, created_at: String, id: i64, name: String, updated_at: String) -> ServiceAccount {
         ServiceAccount {
             active,
+            admin,
             client_id,
             client_secret: None,
             created_at,

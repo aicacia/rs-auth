@@ -365,6 +365,7 @@ async fn create_service_token_token(
       access_token,
       token_type: claims.r#type,
       issued_token_type,
+      issued_at: DateTime::<Utc>::from_timestamp(claims.iat, 0).unwrap_or_default(),
       expires_in: tenant.expires_in_seconds,
       scope: None,
       refresh_token: Some(refresh_token),
@@ -460,7 +461,7 @@ pub(crate) async fn create_user_token(
       ..Default::default()
     };
     if show_address || show_profile {
-      let user_info = match get_user_info_by_user_id(pool, user.id).await {
+      let user_info = match get_user_info_by_user_id(pool, user.application_id, user.id).await {
         Ok(Some(user_info)) => user_info,
         Ok(None) => {
           log::error!("user info not found for user: {}", user.id);
@@ -496,7 +497,7 @@ pub(crate) async fn create_user_token(
       }
     }
     if show_email {
-      match get_user_emails_by_user_id(pool, user.id).await {
+      match get_user_emails_by_user_id(pool, user.application_id, user.id).await {
         Ok(emails) => {
           if let Some(email) = emails.iter().find(|email| email.is_primary()) {
             id_claims.profile.email_verified = Some(email.is_verified());
@@ -518,7 +519,7 @@ pub(crate) async fn create_user_token(
       }
     }
     if show_phone {
-      match get_user_phone_numbers_by_user_id(pool, user.id).await {
+      match get_user_phone_numbers_by_user_id(pool, user.application_id, user.id).await {
         Ok(phone_numbers) => {
           if let Some(phone_number) = phone_numbers
             .iter()
@@ -563,6 +564,7 @@ pub(crate) async fn create_user_token(
       access_token,
       token_type: claims.r#type,
       issued_token_type,
+      issued_at: DateTime::<Utc>::from_timestamp(claims.iat, 0).unwrap_or_default(),
       expires_in: tenant.expires_in_seconds,
       scope,
       refresh_token: Some(refresh_token),
@@ -612,6 +614,7 @@ pub(crate) async fn create_reset_password_token(
       access_token,
       token_type: claims.r#type,
       issued_token_type,
+      issued_at: DateTime::<Utc>::from_timestamp(claims.iat, 0).unwrap_or_default(),
       expires_in: tenant.expires_in_seconds,
       scope,
       refresh_token: None,
@@ -662,6 +665,7 @@ async fn create_mfa_token(
       access_token,
       token_type: claims.r#type,
       issued_token_type,
+      issued_at: DateTime::<Utc>::from_timestamp(claims.iat, 0).unwrap_or_default(),
       expires_in: tenant.expires_in_seconds,
       scope,
       refresh_token: None,

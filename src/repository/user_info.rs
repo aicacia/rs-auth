@@ -34,14 +34,17 @@ pub async fn get_users_infos(
 
 pub async fn get_user_info_by_user_id(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   user_id: i64,
 ) -> sqlx::Result<Option<UserInfoRow>> {
   sqlx::query_as(
     r#"SELECT ui.*
     FROM user_infos ui
-    WHERE ui.user_id = $1 
+    FROM users u on ui.user_id = u.id
+    WHERE u.application_id = $1 AND ui.user_id = $2
     LIMIT 1;"#,
   )
+  .bind(application_id)
   .bind(user_id)
   .fetch_optional(pool)
   .await

@@ -66,6 +66,7 @@ CREATE TABLE "service_accounts" (
   "encrypted_client_secret" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "active" INTEGER NOT NULL DEFAULT 1,
+  "admin" INTEGER NOT NULL DEFAULT 0,
   "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
   "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 ) STRICT;

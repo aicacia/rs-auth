@@ -1,16 +1,21 @@
 use axum::{
-  extract::{Path, State},
+  extract::{Path, Query, State},
   response::IntoResponse,
 };
 use http::StatusCode;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-  core::error::{Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{
+    Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR,
+  },
   middleware::{
     service_account_authorization::ServiceAccountAuthorization, validated_json::ValidatedJson,
   },
-  model::user::{ServiceAccountCreateUserEmail, ServiceAccountUpdateUserEmail, UserEmail},
+  model::{
+    user::{ServiceAccountCreateUserEmail, ServiceAccountUpdateUserEmail, UserEmail},
+    util::ApplicationId,
+  },
   repository,
 };
 
@@ -22,7 +27,8 @@ use super::{user::USER_TAG, RouterState};
   tags = [USER_TAG],
   request_body = ServiceAccountCreateUserEmail,
   params(
-    ("user_id" = i64, Path, description = "User id")
+    ("user_id" = i64, Path, description = "User id"),
+    ApplicationId
   ),
   responses(
     (status = 201, content_type = "application/json", body = UserEmail),
@@ -37,10 +43,35 @@ use super::{user::USER_TAG, RouterState};
 )]
 pub async fn create_user_email(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(user_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
   ValidatedJson(payload): ValidatedJson<ServiceAccountCreateUserEmail>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("create-user-emails", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user::get_user_by_id(&state.pool, application_id, user_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("user", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting user: {e}");
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   let email = match repository::user_email::create_user_email(
     &state.pool,
     user_id,
@@ -76,6 +107,7 @@ pub async fn create_user_email(
   params(
     ("user_id" = i64, Path, description = "User id"),
     ("email_id" = i64, Path, description = "Email id"),
+    ApplicationId,
   ),
   responses(
     (status = 204),
@@ -89,10 +121,35 @@ pub async fn create_user_email(
 )]
 pub async fn update_user_email(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path((user_id, email_id)): Path<(i64, i64)>,
+  Query(application_id): Query<ApplicationId>,
   ValidatedJson(payload): ValidatedJson<ServiceAccountUpdateUserEmail>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("update-user-emails", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user::get_user_by_id(&state.pool, application_id, user_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("user", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting user: {e}");
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   match repository::user_email::update_user_email(
     &state.pool,
     user_id,
@@ -127,6 +184,7 @@ pub async fn update_user_email(
   params(
     ("user_id" = i64, Path, description = "User id"),
     ("email_id" = i64, Path, description = "Email id"),
+    ApplicationId,
   ),
   responses(
     (status = 204),
@@ -140,9 +198,34 @@ pub async fn update_user_email(
 )]
 pub async fn delete_user_email(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path((user_id, email_id)): Path<(i64, i64)>,
+  Query(application_id): Query<ApplicationId>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("delete-user-emails", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user::get_user_by_id(&state.pool, application_id, user_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("user", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting user: {e}");
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   match repository::user_email::delete_user_email(&state.pool, user_id, email_id).await {
     Ok(Some(_)) => {}
     Ok(None) => {

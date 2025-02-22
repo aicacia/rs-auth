@@ -1803,6 +1803,18 @@
               ],
               "minimum": 0
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "responses": {
@@ -1848,6 +1860,20 @@
           "service-account"
         ],
         "operationId": "create_service_account",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1923,6 +1949,18 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "responses": {
@@ -1986,6 +2024,18 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "int64"
             }
           }
@@ -2061,6 +2111,18 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "int64"
             }
           }
@@ -2148,6 +2210,18 @@
                 "null"
               ]
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "responses": {
@@ -2193,6 +2267,20 @@
           "tenant"
         ],
         "operationId": "create_tenant",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2252,84 +2340,6 @@
         ]
       }
     },
-    "/tenants/by-client-id/{tenant_client_id}": {
-      "get": {
-        "tags": [
-          "tenant"
-        ],
-        "operationId": "get_tenant_by_client_id",
-        "parameters": [
-          {
-            "name": "tenant_client_id",
-            "in": "path",
-            "description": "Tenant ID",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "show_private_key",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Tenant"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HashMap"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HashMap"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HashMap"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Authorization": []
-          }
-        ]
-      }
-    },
     "/tenants/{tenant_id}": {
       "get": {
         "tags": [
@@ -2356,6 +2366,18 @@
                 "boolean",
                 "null"
               ]
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
             }
           }
         ],
@@ -2420,6 +2442,18 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "int64"
             }
           }
@@ -2497,6 +2531,18 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "responses": {
@@ -2555,6 +2601,18 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "int64"
             }
           }
@@ -2664,6 +2722,18 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "requestBody": {
@@ -2750,6 +2820,18 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "int64"
             }
           }
@@ -2911,6 +2993,18 @@
               ],
               "minimum": 0
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "responses": {
@@ -2956,6 +3050,20 @@
           "users"
         ],
         "operationId": "create_user",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3031,6 +3139,18 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "responses": {
@@ -3096,6 +3216,18 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "int64"
             }
           }
@@ -3195,6 +3327,18 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "requestBody": {
@@ -3273,6 +3417,18 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "responses": {
@@ -3341,6 +3497,18 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "int64"
             }
           }
@@ -3421,6 +3589,18 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
           }
         ],
         "responses": {
@@ -3479,6 +3659,18 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "int64"
             }
           }
@@ -3566,6 +3758,18 @@
             "required": true,
             "schema": {
               "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "int64"
             }
           }
@@ -3713,6 +3917,12 @@
           "name"
         ],
         "properties": {
+          "admin": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "client_id": {
             "type": [
               "string",
@@ -4053,11 +4263,15 @@
           "client_id",
           "name",
           "active",
+          "admin",
           "updated_at",
           "created_at"
         ],
         "properties": {
           "active": {
+            "type": "boolean"
+          },
+          "admin": {
             "type": "boolean"
           },
           "client_id": {
@@ -4306,6 +4520,7 @@
         "required": [
           "access_token",
           "token_type",
+          "issued_at",
           "expires_in"
         ],
         "properties": {
@@ -4321,6 +4536,10 @@
               "string",
               "null"
             ]
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time"
           },
           "issued_token_type": {
             "type": [
@@ -4473,6 +4692,12 @@
         "type": "object",
         "properties": {
           "active": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "admin": {
             "type": [
               "boolean",
               "null"

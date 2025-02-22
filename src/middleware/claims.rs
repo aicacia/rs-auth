@@ -4,6 +4,8 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::repository::tenant::TenantRow;
 
+use super::authorization::ApplicationIdTenantId;
+
 pub const TOKEN_TYPE_BEARER: &str = "bearer";
 pub const TOKEN_TYPE_REFRESH: &str = "refresh";
 pub const TOKEN_TYPE_AUTHORIZATION_CODE: &str = "authorization-code";
@@ -30,7 +32,10 @@ pub trait Claims: Serialize + DeserializeOwned {
     let algorithm = jsonwebtoken::Algorithm::from_str(&tenant.algorithm)?;
 
     let mut header = jsonwebtoken::Header::new(algorithm);
-    header.kid = Some(tenant.id.to_string());
+    header.kid = Some(ApplicationIdTenantId::new_kid(
+      tenant.application_id,
+      tenant.id,
+    ));
 
     let key = tenant_encoding_key(tenant, algorithm)?;
 

@@ -49,13 +49,16 @@ pub async fn get_user_by_email(pool: &sqlx::AnyPool, email: &str) -> sqlx::Resul
 
 pub async fn get_user_emails_by_user_id(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   user_id: i64,
 ) -> sqlx::Result<Vec<UserEmailRow>> {
   sqlx::query_as(
     r#"SELECT ue.*
     FROM user_emails ue
-    WHERE ue.user_id = $1;"#,
+    JOIN users u ON u.id = ue.user_id
+    WHERE u.application_id = $1 AND ue.user_id = $2;"#,
   )
+  .bind(application_id)
   .bind(user_id)
   .fetch_all(pool)
   .await

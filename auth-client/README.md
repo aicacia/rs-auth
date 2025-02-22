@@ -64,7 +64,6 @@ Class | Method | HTTP request | Description
 *TenantApi* | [**all_tenants**](docs/TenantApi.md#all_tenants) | **GET** /tenants | 
 *TenantApi* | [**create_tenant**](docs/TenantApi.md#create_tenant) | **POST** /tenants | 
 *TenantApi* | [**delete_tenant**](docs/TenantApi.md#delete_tenant) | **DELETE** /tenants/{tenant_id} | 
-*TenantApi* | [**get_tenant_by_client_id**](docs/TenantApi.md#get_tenant_by_client_id) | **GET** /tenants/by-client-id/{tenant_client_id} | 
 *TenantApi* | [**get_tenant_by_id**](docs/TenantApi.md#get_tenant_by_id) | **GET** /tenants/{tenant_id} | 
 *TenantApi* | [**update_tenant**](docs/TenantApi.md#update_tenant) | **PUT** /tenants/{tenant_id} | 
 *TokenApi* | [**token**](docs/TokenApi.md#token) | **POST** /token | 

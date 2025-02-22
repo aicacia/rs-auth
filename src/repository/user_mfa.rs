@@ -10,24 +10,26 @@ pub struct UserMFATypeRow {
 
 pub(crate) async fn get_user_mfa_types_by_user_id_internal(
   transaction: &mut sqlx::Transaction<'_, sqlx::Any>,
+  application_id: i64,
   user_id: i64,
 ) -> sqlx::Result<Vec<UserMFATypeRow>> {
   sqlx::query_as(
     r#"SELECT ut.user_id, 'totp' as type 
       FROM user_totps ut 
       JOIN users u ON u.id = ut.user_id 
-      WHERE u.id = $1
+      WHERE u.application_id = $1 AND u.id = $2
       UNION
       SELECT ue.user_id, 'email' as type 
       FROM user_emails ue 
       JOIN users u ON u.id = ue.user_id 
-      WHERE u.id = $1 AND ue."verified" = 1
+      WHERE u.application_id = $1 AND u.id = $2 AND ue."verified" = 1
       UNION
       SELECT upn.user_id, 'text' as type 
       FROM user_phone_numbers upn 
       JOIN users u ON u.id = upn.user_id 
-      WHERE u.id = $1 AND upn."verified" = 1;"#,
+      WHERE u.application_id = $1 AND u.id = $2 AND upn."verified" = 1;"#,
   )
+  .bind(application_id)
   .bind(user_id)
   .fetch_all(&mut **transaction)
   .await
@@ -35,10 +37,13 @@ pub(crate) async fn get_user_mfa_types_by_user_id_internal(
 
 pub async fn get_user_mfa_types_by_user_id(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   user_id: i64,
 ) -> sqlx::Result<Vec<UserMFATypeRow>> {
   run_transaction(pool, |transaction| {
-    Box::pin(async move { get_user_mfa_types_by_user_id_internal(transaction, user_id).await })
+    Box::pin(async move {
+      get_user_mfa_types_by_user_id_internal(transaction, application_id, user_id).await
+    })
   })
   .await
 }

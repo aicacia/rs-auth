@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CreateServiceAccount {
+    #[serde(rename = "admin", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    pub admin: Option<Option<bool>>,
     #[serde(rename = "client_id", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub client_id: Option<Option<uuid::Uuid>>,
     #[serde(rename = "client_secret", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
@@ -24,6 +26,7 @@ pub struct CreateServiceAccount {
 impl CreateServiceAccount {
     pub fn new(name: String) -> CreateServiceAccount {
         CreateServiceAccount {
+            admin: None,
             client_id: None,
             client_secret: None,
             name,

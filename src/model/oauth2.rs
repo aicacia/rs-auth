@@ -4,7 +4,9 @@ use utoipa::IntoParams;
 
 use crate::{
   core::config::Config,
-  middleware::{claims::tenant_encoding_key, openid_claims::OpenIdProfile},
+  middleware::{
+    authorization::ApplicationIdTenantId, claims::tenant_encoding_key, openid_claims::OpenIdProfile,
+  },
   repository::{tenant::TenantRow, tenant_oauth2_provider::TenantOAuth2ProviderRow},
 };
 
@@ -24,6 +26,7 @@ pub struct OAuth2CallbackQuery {
 #[derive(Serialize, Deserialize)]
 pub struct OAuth2State {
   pub exp: i64,
+  pub application_id: i64,
   pub tenant_id: i64,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub user_id: Option<i64>,
@@ -34,6 +37,7 @@ pub struct OAuth2State {
 impl OAuth2State {
   pub fn new(
     config: &Config,
+    application_id: i64,
     tenant_id: i64,
     register: bool,
     custom_state: Option<String>,
@@ -41,6 +45,7 @@ impl OAuth2State {
   ) -> Self {
     Self {
       exp: chrono::Utc::now().timestamp() + (config.oauth2.code_timeout_in_seconds as i64),
+      application_id,
       tenant_id,
       register,
       user_id,
@@ -52,7 +57,10 @@ impl OAuth2State {
     let algorithm = jsonwebtoken::Algorithm::from_str(&tenant.algorithm)?;
 
     let mut header = jsonwebtoken::Header::new(algorithm);
-    header.kid = Some(tenant.id.to_string());
+    header.kid = Some(ApplicationIdTenantId::new_kid(
+      tenant.application_id,
+      tenant.id,
+    ));
 
     let key = tenant_encoding_key(tenant, algorithm)?;
 
@@ -81,7 +89,14 @@ where
 {
   let (pkce_code_challenge, pkce_code_verifier) = oauth2::PkceCodeChallenge::new_random_sha256();
 
-  let oauth2_state = OAuth2State::new(config, tenant.id, register, custom_state, user_id);
+  let oauth2_state = OAuth2State::new(
+    config,
+    tenant.application_id,
+    tenant.id,
+    register,
+    custom_state,
+    user_id,
+  );
   let oauth2_state_token = match oauth2_state.encode(tenant) {
     Ok(t) => t,
     Err(err) => return Err(io::Error::new(io::ErrorKind::InvalidData, err)),

@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## all_service_accounts
 
-> models::Pagination all_service_accounts(offset, limit)
+> models::Pagination all_service_accounts(offset, limit, application_id)
 
 
 ### Parameters
@@ -24,6 +24,7 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **offset** | Option<**u32**> |  |  |
 **limit** | Option<**u32**> |  |  |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 
@@ -43,7 +44,7 @@ Name | Type | Description  | Required | Notes
 
 ## create_service_account
 
-> models::ServiceAccount create_service_account(create_service_account)
+> models::ServiceAccount create_service_account(create_service_account, application_id)
 
 
 ### Parameters
@@ -52,6 +53,7 @@ Name | Type | Description  | Required | Notes
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **create_service_account** | [**CreateServiceAccount**](CreateServiceAccount.md) |  | [required] |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 
@@ -71,7 +73,7 @@ Name | Type | Description  | Required | Notes
 
 ## delete_service_account
 
-> delete_service_account(service_account_id)
+> delete_service_account(service_account_id, application_id)
 
 
 ### Parameters
@@ -80,6 +82,7 @@ Name | Type | Description  | Required | Notes
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **service_account_id** | **i64** | ServiceAccount ID | [required] |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 
@@ -99,7 +102,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_service_account_by_id
 
-> models::ServiceAccount get_service_account_by_id(service_account_id)
+> models::ServiceAccount get_service_account_by_id(service_account_id, application_id)
 
 
 ### Parameters
@@ -108,6 +111,7 @@ Name | Type | Description  | Required | Notes
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **service_account_id** | **i64** | ServiceAccount ID | [required] |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 
@@ -127,7 +131,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_service_account
 
-> models::ServiceAccount update_service_account(service_account_id, update_service_account)
+> models::ServiceAccount update_service_account(service_account_id, update_service_account, application_id)
 
 
 ### Parameters
@@ -137,6 +141,7 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **service_account_id** | **i64** | ServiceAccount ID | [required] |
 **update_service_account** | [**UpdateServiceAccount**](UpdateServiceAccount.md) |  | [required] |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 

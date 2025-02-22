@@ -77,22 +77,28 @@ pub async fn create_oauth2_url(
       .with_error("oauth2-provider", NOT_ALLOWED_ERROR)
       .into_response();
   }
-  let tenant_oauth2_provider =
-    match get_active_tenant_oauth2_provider(&state.pool, tenant.id, &provider).await {
-      Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
-      Ok(None) => {
-        log::error!("Unknown OAuth2 provider: {}", provider);
-        return InternalError::internal_error()
-          .with_error("oauth2-provider", NOT_FOUND_ERROR)
-          .into_response();
-      }
-      Err(e) => {
-        log::error!("error getting tenant oauth2 provider: {}", e);
-        return InternalError::internal_error()
-          .with_application_error(INTERNAL_ERROR)
-          .into_response();
-      }
-    };
+  let tenant_oauth2_provider = match get_active_tenant_oauth2_provider(
+    &state.pool,
+    tenant.application_id,
+    tenant.id,
+    &provider,
+  )
+  .await
+  {
+    Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
+    Ok(None) => {
+      log::error!("Unknown OAuth2 provider: {}", provider);
+      return InternalError::internal_error()
+        .with_error("oauth2-provider", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting tenant oauth2 provider: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   let basic_client = match tenant_oauth2_provider.basic_client(state.config.as_ref()) {
     Ok(client) => client,
     Err(e) => {
@@ -175,44 +181,31 @@ pub async fn oauth2_callback(
           .into_response();
       }
     };
-  let tenant_id = match maybe_invalid_oauth2_state_token
-    .header
-    .kid
-    .as_ref()
-    .map(String::as_str)
-    .map(str::parse::<i64>)
+  let application_id = maybe_invalid_oauth2_state_token.claims.application_id;
+  let tenant_id = maybe_invalid_oauth2_state_token.claims.tenant_id;
+
+  let tenant_oauth2_provider = match get_active_tenant_oauth2_provider(
+    &state.pool,
+    application_id,
+    tenant_id,
+    &provider,
+  )
+  .await
   {
-    Some(Ok(tenant_id)) => tenant_id,
-    Some(Err(e)) => {
-      log::error!("error parsing tenant id: {}", e);
+    Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
+    Ok(None) => {
+      log::error!("Unknown OAuth2 provider: {}", provider);
       return InternalError::internal_error()
-        .with_error("oauth2-state-token", PARSE_ERROR)
+        .with_error("oauth2-provider", NOT_FOUND_ERROR)
         .into_response();
     }
-    None => {
-      log::error!("No tenant id found in OAuth2 state");
+    Err(e) => {
+      log::error!("error getting tenant oauth2 provider: {}", e);
       return InternalError::internal_error()
-        .with_error("oauth2-state-token", INVALID_ERROR)
+        .with_error("oauth2-provider", INTERNAL_ERROR)
         .into_response();
     }
   };
-
-  let tenant_oauth2_provider =
-    match get_active_tenant_oauth2_provider(&state.pool, tenant_id, &provider).await {
-      Ok(Some(tenant_oauth2_provider)) => tenant_oauth2_provider,
-      Ok(None) => {
-        log::error!("Unknown OAuth2 provider: {}", provider);
-        return InternalError::internal_error()
-          .with_error("oauth2-provider", NOT_FOUND_ERROR)
-          .into_response();
-      }
-      Err(e) => {
-        log::error!("error getting tenant oauth2 provider: {}", e);
-        return InternalError::internal_error()
-          .with_error("oauth2-provider", INTERNAL_ERROR)
-          .into_response();
-      }
-    };
   let mut errors = InternalError::bad_request();
   let redirect_url = match Url::parse(&tenant_oauth2_provider.redirect_url) {
     Ok(url) => url.to_owned(),
@@ -227,7 +220,7 @@ pub async fn oauth2_callback(
     }
   };
 
-  let tenant = match get_tenant_by_id(&state.pool, tenant_id).await {
+  let tenant = match get_tenant_by_id(&state.pool, application_id, tenant_id).await {
     Ok(Some(tenant)) => tenant,
     Ok(None) => {
       log::error!("Tenant not found");

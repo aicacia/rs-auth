@@ -1,17 +1,22 @@
 use axum::{
-  extract::{Path, State},
+  extract::{Path, Query, State},
   response::IntoResponse,
 };
 use http::StatusCode;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-  core::error::{Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{
+    Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR,
+  },
   middleware::{
     service_account_authorization::ServiceAccountAuthorization, validated_json::ValidatedJson,
   },
-  model::user::{
-    ServiceAccountCreateUserPhoneNumber, ServiceAccountUpdateUserPhoneNumber, UserPhoneNumber,
+  model::{
+    user::{
+      ServiceAccountCreateUserPhoneNumber, ServiceAccountUpdateUserPhoneNumber, UserPhoneNumber,
+    },
+    util::ApplicationId,
   },
   repository,
 };
@@ -24,7 +29,8 @@ use super::{user::USER_TAG, RouterState};
   tags = [USER_TAG],
   request_body = ServiceAccountCreateUserPhoneNumber,
   params(
-    ("user_id" = i64, Path, description = "User id")
+    ("user_id" = i64, Path, description = "User id"),
+    ApplicationId,
   ),
   responses(
     (status = 201, content_type = "application/json", body = UserPhoneNumber),
@@ -39,10 +45,35 @@ use super::{user::USER_TAG, RouterState};
 )]
 pub async fn create_user_phone_number(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(user_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
   ValidatedJson(payload): ValidatedJson<ServiceAccountCreateUserPhoneNumber>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("create-user-phone-numbers", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user::get_user_by_id(&state.pool, application_id, user_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("user", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting user: {e}");
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   let phone_number = match repository::user_phone_number::create_user_phone_number(
     &state.pool,
     user_id,
@@ -82,6 +113,7 @@ pub async fn create_user_phone_number(
   params(
     ("user_id" = i64, Path, description = "User id"),
     ("phone_number_id" = i64, Path, description = "PhoneNumber id"),
+    ApplicationId,
   ),
   responses(
     (status = 204),
@@ -95,10 +127,35 @@ pub async fn create_user_phone_number(
 )]
 pub async fn update_user_phone_number(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path((user_id, phone_number_id)): Path<(i64, i64)>,
+  Query(application_id): Query<ApplicationId>,
   ValidatedJson(payload): ValidatedJson<ServiceAccountUpdateUserPhoneNumber>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("update-user-phone-numbers", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user::get_user_by_id(&state.pool, application_id, user_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("user", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting user: {e}");
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   match repository::user_phone_number::update_user_phone_number(
     &state.pool,
     user_id,
@@ -133,6 +190,7 @@ pub async fn update_user_phone_number(
   params(
     ("user_id" = i64, Path, description = "User id"),
     ("phone_number_id" = i64, Path, description = "PhoneNumber id"),
+    ApplicationId,
   ),
   responses(
     (status = 204),
@@ -146,9 +204,34 @@ pub async fn update_user_phone_number(
 )]
 pub async fn delete_user_phone_number(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path((user_id, phone_number_id)): Path<(i64, i64)>,
+  Query(application_id): Query<ApplicationId>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("delete-user-phone-numbers", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user::get_user_by_id(&state.pool, application_id, user_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("user", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting user: {e}");
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   match repository::user_phone_number::delete_user_phone_number(
     &state.pool,
     user_id,

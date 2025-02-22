@@ -1,5 +1,5 @@
 use crate::{
-  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
     application::{Application, ApplicationPagination, CreateApplication, UpdateApplication},
@@ -37,10 +37,12 @@ pub const APPLICATION_TAG: &str = "application";
 )]
 pub async fn all_applications(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Query(query): Query<OffsetAndLimit>,
 ) -> impl IntoResponse {
-  let rows =
+  let rows = if service_account.is_admin() {
     match repository::application::get_applications(&state.pool, query.limit, query.offset).await {
       Ok(rows) => rows,
       Err(e) => {
@@ -49,7 +51,28 @@ pub async fn all_applications(
           .with_application_error(INTERNAL_ERROR)
           .into_response();
       }
-    };
+    }
+  } else {
+    match repository::application::get_application_by_id(
+      &state.pool,
+      service_account.application_id,
+    )
+    .await
+    {
+      Ok(Some(row)) => vec![row],
+      Ok(None) => {
+        return InternalError::not_found()
+          .with_error("application", NOT_FOUND_ERROR)
+          .into_response()
+      }
+      Err(e) => {
+        log::error!("error getting applications: {}", e);
+        return InternalError::internal_error()
+          .with_application_error(INTERNAL_ERROR)
+          .into_response();
+      }
+    }
+  };
   let applications = rows.into_iter().map(Application::from).collect::<Vec<_>>();
 
   axum::Json(Pagination {
@@ -81,9 +104,16 @@ pub async fn all_applications(
 )]
 pub async fn get_application_by_id(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(application_id): Path<i64>,
 ) -> impl IntoResponse {
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("view-application", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let row = match repository::application::get_application_by_id(&state.pool, application_id).await
   {
     Ok(Some(row)) => row,
@@ -120,9 +150,16 @@ pub async fn get_application_by_id(
 )]
 pub async fn create_application(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Json(payload): Json<CreateApplication>,
 ) -> impl IntoResponse {
+  if !service_account.is_admin() {
+    return InternalError::unauthorized()
+      .with_error("create-application", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let row = match repository::application::create_application(
     &state.pool,
     repository::application::CreateApplication { name: payload.name },
@@ -160,10 +197,17 @@ pub async fn create_application(
 )]
 pub async fn update_application(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(application_id): Path<i64>,
   Json(payload): Json<UpdateApplication>,
 ) -> impl IntoResponse {
+  if !service_account.is_admin() {
+    return InternalError::unauthorized()
+      .with_error("update-application", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let row = match repository::application::update_application(
     &state.pool,
     application_id,
@@ -206,9 +250,16 @@ pub async fn update_application(
 )]
 pub async fn delete_application(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(application_id): Path<i64>,
 ) -> impl IntoResponse {
+  if !service_account.is_admin() {
+    return InternalError::unauthorized()
+      .with_error("delete-application", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   match repository::application::delete_application(&state.pool, application_id).await {
     Ok(Some(_)) => {}
     Ok(None) => {

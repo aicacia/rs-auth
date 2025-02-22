@@ -19,6 +19,8 @@ pub struct Token {
     pub expires_in: i64,
     #[serde(rename = "id_token", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub id_token: Option<Option<String>>,
+    #[serde(rename = "issued_at")]
+    pub issued_at: String,
     #[serde(rename = "issued_token_type", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub issued_token_type: Option<Option<String>>,
     #[serde(rename = "refresh_token", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
@@ -32,11 +34,12 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(access_token: String, expires_in: i64, token_type: String) -> Token {
+    pub fn new(access_token: String, expires_in: i64, issued_at: String, token_type: String) -> Token {
         Token {
             access_token,
             expires_in,
             id_token: None,
+            issued_at,
             issued_token_type: None,
             refresh_token: None,
             refresh_token_expires_in: None,

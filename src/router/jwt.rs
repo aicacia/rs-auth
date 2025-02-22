@@ -13,7 +13,7 @@ use crate::{
     openapi::{AUTHORIZATION_HEADER, TENENT_ID_HEADER},
   },
   middleware::{
-    authorization::parse_authorization,
+    authorization::{parse_authorization, ApplicationIdTenantId},
     claims::{tenant_encoding_key, TOKEN_TYPE_BEARER},
     json::Json,
     service_account_authorization::ServiceAccountAuthorization,
@@ -54,7 +54,10 @@ pub async fn create_jwt(
   };
 
   let mut header = jsonwebtoken::Header::new(algorithm);
-  header.kid = Some(tenant.id.to_string());
+  header.kid = Some(ApplicationIdTenantId::new_kid(
+    tenant.application_id,
+    tenant.id,
+  ));
 
   let key = match tenant_encoding_key(&tenant, algorithm) {
     Ok(key) => key,
@@ -78,6 +81,7 @@ pub async fn create_jwt(
     axum::Json(Token {
       access_token: token,
       token_type: TOKEN_TYPE_BEARER.to_string(),
+      issued_at: chrono::Utc::now(),
       expires_in: tenant.expires_in_seconds,
       issued_token_type: None,
       scope: None,

@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use crate::{
-  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_FOUND_ERROR},
+  core::error::{Errors, InternalError, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR},
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
     tenant::{CreateTenant, Tenant, TenantPagination, TenantQuery, UpdateTenant},
     tenant_oauth2_provider::TenantOAuth2Provider,
-    util::{OffsetAndLimit, Pagination},
+    util::{ApplicationId, OffsetAndLimit, Pagination},
   },
   repository::{
     self,
@@ -34,7 +34,8 @@ pub const TENANT_TAG: &str = "tenant";
   tags = [TENANT_TAG],
   params(
     OffsetAndLimit,
-    TenantQuery
+    TenantQuery,
+    ApplicationId,
   ),
   responses(
     (status = 200, content_type = "application/json", body = TenantPagination),
@@ -52,17 +53,26 @@ pub async fn all_tenants(
   }: ServiceAccountAuthorization,
   Query(offset_and_limit): Query<OffsetAndLimit>,
   Query(query): Query<TenantQuery>,
+  Query(application_id): Query<ApplicationId>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("view-service-accounts", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let (rows, oauth2_providers) = match tokio::try_join!(
     get_tenants(
       &state.pool,
-      service_account.application_id,
+      application_id,
       offset_and_limit.limit,
       offset_and_limit.offset
     ),
     get_tenants_oauth2_providers(
       &state.pool,
-      service_account.application_id,
+      application_id,
       offset_and_limit.limit,
       offset_and_limit.offset
     ),
@@ -116,78 +126,12 @@ pub async fn all_tenants(
 
 #[utoipa::path(
   get,
-  path = "/tenants/by-client-id/{tenant_client_id}",
-  tags = [TENANT_TAG],
-  params(
-    ("tenant_client_id" = uuid::Uuid, Path, description = "Tenant ID"),
-    TenantQuery,
-  ),
-  responses(
-    (status = 200, content_type = "application/json", body = Tenant),
-    (status = 401, content_type = "application/json", body = Errors),
-    (status = 404, content_type = "application/json", body = Errors),
-    (status = 500, content_type = "application/json", body = Errors),
-  ),
-  security(
-    ("Authorization" = [])
-  )
-)]
-pub async fn get_tenant_by_client_id(
-  State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
-  Path(tenant_client_id): Path<uuid::Uuid>,
-  Query(query): Query<TenantQuery>,
-) -> impl IntoResponse {
-  let row_optional =
-    match repository::tenant::get_tenant_by_client_id(&state.pool, &tenant_client_id.to_string())
-      .await
-    {
-      Ok(row) => row,
-      Err(e) => {
-        log::error!("error getting tenant: {}", e);
-        return InternalError::internal_error()
-          .with_application_error(INTERNAL_ERROR)
-          .into_response();
-      }
-    };
-  let row = match row_optional {
-    Some(row) => row,
-    None => {
-      return InternalError::not_found()
-        .with_error(TENANT_TAG, NOT_FOUND_ERROR)
-        .into_response()
-    }
-  };
-
-  let oauth2_providers = match get_tenant_oauth2_providers(&state.pool, row.id).await {
-    Ok(results) => results,
-    Err(e) => {
-      log::error!("error getting tenants: {}", e);
-      return InternalError::internal_error()
-        .with_application_error(INTERNAL_ERROR)
-        .into_response();
-    }
-  };
-  let private_key = row.private_key.clone();
-  let mut tenant = Tenant::from(row);
-  for oauth2_provider in oauth2_providers {
-    tenant
-      .oauth2_providers
-      .push((state.config.as_ref(), oauth2_provider).into());
-  }
-  if query.show_private_key.unwrap_or(false) {
-    tenant.private_key = Some(private_key);
-  }
-  axum::Json(tenant).into_response()
-}
-
-#[utoipa::path(
-  get,
   path = "/tenants/{tenant_id}",
   tags = [TENANT_TAG],
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID"),
     TenantQuery,
+    ApplicationId
   ),
   responses(
     (status = 200, content_type = "application/json", body = Tenant),
@@ -201,12 +145,23 @@ pub async fn get_tenant_by_client_id(
 )]
 pub async fn get_tenant_by_id(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(tenant_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
   Query(query): Query<TenantQuery>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("view-service-accounts", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let (row_optional, oauth2_providers) = match tokio::try_join!(
-    repository::tenant::get_tenant_by_id(&state.pool, tenant_id),
+    repository::tenant::get_tenant_by_id(&state.pool, application_id, tenant_id),
     get_tenant_oauth2_providers(&state.pool, tenant_id),
   ) {
     Ok(results) => results,
@@ -243,6 +198,9 @@ pub async fn get_tenant_by_id(
   path = "/tenants",
   tags = [TENANT_TAG],
   request_body = CreateTenant,
+  params(
+    ApplicationId,
+  ),
   responses(
     (status = 201, content_type = "application/json", body = Tenant),
     (status = 400, content_type = "application/json", body = Errors),
@@ -258,13 +216,22 @@ pub async fn create_tenant(
   ServiceAccountAuthorization {
     service_account, ..
   }: ServiceAccountAuthorization,
+  Query(application_id): Query<ApplicationId>,
   Json(payload): Json<CreateTenant>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("create-service-accounts", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let algorithm = payload.algorithm.unwrap_or_default();
   let (public_key, private_key) = algorithm.keys(payload.public_key, payload.private_key);
   let tenant_row = match repository::tenant::create_tenant(
     &state.pool,
-    service_account.application_id,
+    application_id,
     repository::tenant::CreateTenant {
       client_id: payload
         .client_id
@@ -301,7 +268,8 @@ pub async fn create_tenant(
   tags = [TENANT_TAG],
   request_body = UpdateTenant,
   params(
-    ("tenant_id" = i64, Path, description = "Tenant ID")
+    ("tenant_id" = i64, Path, description = "Tenant ID"),
+    ApplicationId
   ),
   responses(
     (status = 201, content_type = "application/json", body = Tenant),
@@ -319,11 +287,20 @@ pub async fn update_tenant(
     service_account, ..
   }: ServiceAccountAuthorization,
   Path(tenant_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
   Json(payload): Json<UpdateTenant>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("update-service-accounts", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
   let tenant = match repository::tenant::update_tenant(
     &state.pool,
-    service_account.application_id,
+    application_id,
     tenant_id,
     repository::tenant::UpdateTenant {
       client_id: payload.client_id.as_ref().map(ToString::to_string),
@@ -359,7 +336,8 @@ pub async fn update_tenant(
   path = "/tenants/{tenant_id}",
   tags = [TENANT_TAG],
   params(
-    ("tenant_id" = i64, Path, description = "Tenant ID")
+    ("tenant_id" = i64, Path, description = "Tenant ID"),
+    ApplicationId
   ),
   responses(
     (status = 204),
@@ -377,10 +355,17 @@ pub async fn delete_tenant(
     service_account, ..
   }: ServiceAccountAuthorization,
   Path(tenant_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
 ) -> impl IntoResponse {
-  match repository::tenant::delete_tenant(&state.pool, service_account.application_id, tenant_id)
-    .await
-  {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("delete-service-accounts", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::tenant::delete_tenant(&state.pool, application_id, tenant_id).await {
     Ok(Some(_)) => {}
     Ok(None) => {
       return InternalError::not_found()
@@ -400,7 +385,6 @@ pub async fn delete_tenant(
 pub fn create_router(state: RouterState) -> OpenApiRouter {
   OpenApiRouter::new()
     .routes(routes!(all_tenants))
-    .routes(routes!(get_tenant_by_client_id))
     .routes(routes!(get_tenant_by_id))
     .routes(routes!(create_tenant))
     .routes(routes!(update_tenant))

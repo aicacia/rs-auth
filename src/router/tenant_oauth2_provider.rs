@@ -3,14 +3,17 @@ use crate::{
     Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR,
   },
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
-  model::tenant_oauth2_provider::{
-    CreateTenantOAuth2Provider, TenantOAuth2Provider, UpdateTenantOAuth2Provider,
+  model::{
+    tenant_oauth2_provider::{
+      CreateTenantOAuth2Provider, TenantOAuth2Provider, UpdateTenantOAuth2Provider,
+    },
+    util::ApplicationId,
   },
   repository,
 };
 
 use axum::{
-  extract::{Path, State},
+  extract::{Path, Query, State},
   response::IntoResponse,
 };
 use http::StatusCode;
@@ -26,7 +29,8 @@ pub const OAUTH2_PROVIDER_TAG: &str = "oauth2-provider";
   tags = [OAUTH2_PROVIDER_TAG],
   request_body = CreateTenantOAuth2Provider,
   params(
-    ("tenant_id" = i64, Path, description = "Tenant ID")
+    ("tenant_id" = i64, Path, description = "Tenant ID"),
+    ApplicationId
   ),
   responses(
     (status = 201, content_type = "application/json", body = TenantOAuth2Provider),
@@ -42,10 +46,35 @@ pub const OAUTH2_PROVIDER_TAG: &str = "oauth2-provider";
 )]
 pub async fn create_tenant_oauth2_provider(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path(tenant_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
   Json(payload): Json<CreateTenantOAuth2Provider>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("create-tenant-oauth2-providers", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::tenant::get_tenant_by_id(&state.pool, application_id, tenant_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("tenant", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting tenant: {e}");
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   let mut params =
     match repository::tenant_oauth2_provider::CreateTenantOAuth2Provider::new(&payload.provider) {
       Some(params) => params,
@@ -103,6 +132,7 @@ pub async fn create_tenant_oauth2_provider(
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID"),
     ("tenant_oauht2_provider_id" = i64, Path, description = "OAuth2 Provider ID"),
+    ApplicationId,
   ),
   responses(
     (status = 204),
@@ -117,10 +147,35 @@ pub async fn create_tenant_oauth2_provider(
 )]
 pub async fn update_tenant_oauth2_provider(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path((tenant_id, tenant_oauht2_provider_id)): Path<(i64, i64)>,
+  Query(application_id): Query<ApplicationId>,
   Json(payload): Json<UpdateTenantOAuth2Provider>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("create-tenant-oauth2-providers", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::tenant::get_tenant_by_id(&state.pool, application_id, tenant_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("tenant", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting tenant: {e}");
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   match repository::tenant_oauth2_provider::update_tenant_oauth2_provider(
     &state.pool,
     tenant_id,
@@ -161,6 +216,7 @@ pub async fn update_tenant_oauth2_provider(
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID"),
     ("tenant_oauht2_provider_id" = i64, Path, description = "OAuth2 Provider ID"),
+    ApplicationId,
   ),
   responses(
     (status = 204),
@@ -175,9 +231,34 @@ pub async fn update_tenant_oauth2_provider(
 )]
 pub async fn delete_tenant_oauth2_provider(
   State(state): State<RouterState>,
-  ServiceAccountAuthorization { .. }: ServiceAccountAuthorization,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
   Path((tenant_id, tenant_oauht2_provider_id)): Path<(i64, i64)>,
+  Query(application_id): Query<ApplicationId>,
 ) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("create-tenant-oauth2-providers", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::tenant::get_tenant_by_id(&state.pool, application_id, tenant_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("tenant", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting tenant: {e}");
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
   match repository::tenant_oauth2_provider::delete_tenant_oauth2_provider(
     &state.pool,
     tenant_id,

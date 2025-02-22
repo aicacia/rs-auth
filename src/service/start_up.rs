@@ -52,6 +52,7 @@ pub async fn create_new_admin_service_account(
       client_id: client_id.to_string(),
       encrypted_client_secret,
       name: "Admin".to_owned(),
+      admin: true,
     },
   )
   .await

@@ -78,14 +78,18 @@ pub enum UpdateUserPhoneNumberError {
 }
 
 
-pub async fn create_user_email(configuration: &configuration::Configuration, user_id: i64, service_account_create_user_email: models::ServiceAccountCreateUserEmail) -> Result<models::UserEmail, Error<CreateUserEmailError>> {
+pub async fn create_user_email(configuration: &configuration::Configuration, user_id: i64, service_account_create_user_email: models::ServiceAccountCreateUserEmail, application_id: Option<i64>) -> Result<models::UserEmail, Error<CreateUserEmailError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_service_account_create_user_email = service_account_create_user_email;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}/emails", configuration.base_path, user_id=p_user_id);
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -109,14 +113,18 @@ pub async fn create_user_email(configuration: &configuration::Configuration, use
     }
 }
 
-pub async fn create_user_phone_number(configuration: &configuration::Configuration, user_id: i64, service_account_create_user_phone_number: models::ServiceAccountCreateUserPhoneNumber) -> Result<models::UserPhoneNumber, Error<CreateUserPhoneNumberError>> {
+pub async fn create_user_phone_number(configuration: &configuration::Configuration, user_id: i64, service_account_create_user_phone_number: models::ServiceAccountCreateUserPhoneNumber, application_id: Option<i64>) -> Result<models::UserPhoneNumber, Error<CreateUserPhoneNumberError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_service_account_create_user_phone_number = service_account_create_user_phone_number;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}/phone_numbers", configuration.base_path, user_id=p_user_id);
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -140,14 +148,18 @@ pub async fn create_user_phone_number(configuration: &configuration::Configurati
     }
 }
 
-pub async fn delete_user_email(configuration: &configuration::Configuration, user_id: i64, email_id: i64) -> Result<(), Error<DeleteUserEmailError>> {
+pub async fn delete_user_email(configuration: &configuration::Configuration, user_id: i64, email_id: i64, application_id: Option<i64>) -> Result<(), Error<DeleteUserEmailError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_email_id = email_id;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}/emails/{email_id}", configuration.base_path, user_id=p_user_id, email_id=p_email_id);
     let mut req_builder = configuration.client.request(reqwest::Method::DELETE, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -169,14 +181,18 @@ pub async fn delete_user_email(configuration: &configuration::Configuration, use
     }
 }
 
-pub async fn delete_user_phone_number(configuration: &configuration::Configuration, user_id: i64, phone_number_id: i64) -> Result<(), Error<DeleteUserPhoneNumberError>> {
+pub async fn delete_user_phone_number(configuration: &configuration::Configuration, user_id: i64, phone_number_id: i64, application_id: Option<i64>) -> Result<(), Error<DeleteUserPhoneNumberError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_phone_number_id = phone_number_id;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}/phone-numbers/{phone_number_id}", configuration.base_path, user_id=p_user_id, phone_number_id=p_phone_number_id);
     let mut req_builder = configuration.client.request(reqwest::Method::DELETE, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -198,15 +214,19 @@ pub async fn delete_user_phone_number(configuration: &configuration::Configurati
     }
 }
 
-pub async fn update_user_email(configuration: &configuration::Configuration, user_id: i64, email_id: i64, service_account_update_user_email: models::ServiceAccountUpdateUserEmail) -> Result<(), Error<UpdateUserEmailError>> {
+pub async fn update_user_email(configuration: &configuration::Configuration, user_id: i64, email_id: i64, service_account_update_user_email: models::ServiceAccountUpdateUserEmail, application_id: Option<i64>) -> Result<(), Error<UpdateUserEmailError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_email_id = email_id;
     let p_service_account_update_user_email = service_account_update_user_email;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}/emails/{email_id}", configuration.base_path, user_id=p_user_id, email_id=p_email_id);
     let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -229,15 +249,19 @@ pub async fn update_user_email(configuration: &configuration::Configuration, use
     }
 }
 
-pub async fn update_user_phone_number(configuration: &configuration::Configuration, user_id: i64, phone_number_id: i64, service_account_update_user_phone_number: models::ServiceAccountUpdateUserPhoneNumber) -> Result<(), Error<UpdateUserPhoneNumberError>> {
+pub async fn update_user_phone_number(configuration: &configuration::Configuration, user_id: i64, phone_number_id: i64, service_account_update_user_phone_number: models::ServiceAccountUpdateUserPhoneNumber, application_id: Option<i64>) -> Result<(), Error<UpdateUserPhoneNumberError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_phone_number_id = phone_number_id;
     let p_service_account_update_user_phone_number = service_account_update_user_phone_number;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}/phone-numbers/{phone_number_id}", configuration.base_path, user_id=p_user_id, phone_number_id=p_phone_number_id);
     let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }

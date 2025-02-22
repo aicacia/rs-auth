@@ -47,14 +47,17 @@ pub async fn get_user_by_oauth2_provider_and_email(
 
 pub async fn get_user_oauth2_providers_by_user_id(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   user_id: i64,
 ) -> sqlx::Result<Vec<UserOAuth2ProviderRow>> {
   sqlx::query_as(
     r#"SELECT uop.*, toap.provider
     FROM user_oauth2_providers uop
     JOIN tenant_oauth2_providers toap ON toap.id = uop.tenant_oauth2_provider_id 
-    WHERE toap.active = 1 AND uop.user_id = $1;"#,
+    JOIN users u ON u.id = uop.user_id
+    WHERE u.application_id = $1 AND toap.active = 1 AND uop.user_id = $2;"#,
   )
+  .bind(application_id)
   .bind(user_id)
   .fetch_all(pool)
   .await

@@ -65,10 +65,11 @@ pub enum UpdateServiceAccountError {
 }
 
 
-pub async fn all_service_accounts(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>) -> Result<models::Pagination, Error<AllServiceAccountsError>> {
+pub async fn all_service_accounts(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, application_id: Option<i64>) -> Result<models::Pagination, Error<AllServiceAccountsError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_offset = offset;
     let p_limit = limit;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/service-accounts", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
@@ -78,6 +79,9 @@ pub async fn all_service_accounts(configuration: &configuration::Configuration, 
     }
     if let Some(ref param_value) = p_limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
     }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
@@ -101,13 +105,17 @@ pub async fn all_service_accounts(configuration: &configuration::Configuration, 
     }
 }
 
-pub async fn create_service_account(configuration: &configuration::Configuration, create_service_account: models::CreateServiceAccount) -> Result<models::ServiceAccount, Error<CreateServiceAccountError>> {
+pub async fn create_service_account(configuration: &configuration::Configuration, create_service_account: models::CreateServiceAccount, application_id: Option<i64>) -> Result<models::ServiceAccount, Error<CreateServiceAccountError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_create_service_account = create_service_account;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/service-accounts", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::POST, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -131,13 +139,17 @@ pub async fn create_service_account(configuration: &configuration::Configuration
     }
 }
 
-pub async fn delete_service_account(configuration: &configuration::Configuration, service_account_id: i64) -> Result<(), Error<DeleteServiceAccountError>> {
+pub async fn delete_service_account(configuration: &configuration::Configuration, service_account_id: i64, application_id: Option<i64>) -> Result<(), Error<DeleteServiceAccountError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_service_account_id = service_account_id;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/service-accounts/{service_account_id}", configuration.base_path, service_account_id=p_service_account_id);
     let mut req_builder = configuration.client.request(reqwest::Method::DELETE, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -159,13 +171,17 @@ pub async fn delete_service_account(configuration: &configuration::Configuration
     }
 }
 
-pub async fn get_service_account_by_id(configuration: &configuration::Configuration, service_account_id: i64) -> Result<models::ServiceAccount, Error<GetServiceAccountByIdError>> {
+pub async fn get_service_account_by_id(configuration: &configuration::Configuration, service_account_id: i64, application_id: Option<i64>) -> Result<models::ServiceAccount, Error<GetServiceAccountByIdError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_service_account_id = service_account_id;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/service-accounts/{service_account_id}", configuration.base_path, service_account_id=p_service_account_id);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -188,14 +204,18 @@ pub async fn get_service_account_by_id(configuration: &configuration::Configurat
     }
 }
 
-pub async fn update_service_account(configuration: &configuration::Configuration, service_account_id: i64, update_service_account: models::UpdateServiceAccount) -> Result<models::ServiceAccount, Error<UpdateServiceAccountError>> {
+pub async fn update_service_account(configuration: &configuration::Configuration, service_account_id: i64, update_service_account: models::UpdateServiceAccount, application_id: Option<i64>) -> Result<models::ServiceAccount, Error<UpdateServiceAccountError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_service_account_id = service_account_id;
     let p_update_service_account = update_service_account;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/service-accounts/{service_account_id}", configuration.base_path, service_account_id=p_service_account_id);
     let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }

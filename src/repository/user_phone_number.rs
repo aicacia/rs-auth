@@ -29,7 +29,7 @@ pub async fn get_users_phone_numbers(
   offset: Option<usize>,
 ) -> sqlx::Result<Vec<UserPhoneNumberRow>> {
   let mut qb = sqlx::QueryBuilder::new(
-    r#"SELECT ue.* FROM user_phone_numbers ue WHERE ue.user_id IN (SELECT u.id"#,
+    r#"SELECT upn.* FROM user_phone_numbers upn WHERE upn.user_id IN (SELECT u.id"#,
   );
   from_users_query(&mut qb, application_id, limit, offset);
   qb.push(")");
@@ -43,8 +43,8 @@ pub async fn get_user_by_phone_number(
   sqlx::query_as(
     r#"SELECT u.*
     FROM users u
-    JOIN user_phone_numbers ue ON u.id = ue.user_id
-    WHERE ue.phone_number = $1;"#,
+    JOIN user_phone_numbers upn ON u.id = upn.user_id
+    WHERE upn.phone_number = $1;"#,
   )
   .bind(phone_number)
   .fetch_optional(pool)
@@ -53,13 +53,16 @@ pub async fn get_user_by_phone_number(
 
 pub async fn get_user_phone_numbers_by_user_id(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   user_id: i64,
 ) -> sqlx::Result<Vec<UserPhoneNumberRow>> {
   sqlx::query_as(
-    r#"SELECT ue.*
-    FROM user_phone_numbers ue
-    WHERE ue.user_id = $1;"#,
+    r#"SELECT upn.*
+    FROM user_phone_numbers upn
+    JOIN users u ON u.id = upn.user_id
+    WHERE u.application_id = $1 AND upn.user_id = $2;"#,
   )
+  .bind(application_id)
   .bind(user_id)
   .fetch_all(pool)
   .await

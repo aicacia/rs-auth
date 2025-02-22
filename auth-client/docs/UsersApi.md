@@ -13,7 +13,7 @@ Method | HTTP request | Description
 
 ## all_users
 
-> models::Pagination all_users(offset, limit)
+> models::Pagination all_users(offset, limit, application_id)
 
 
 ### Parameters
@@ -23,6 +23,7 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **offset** | Option<**u32**> |  |  |
 **limit** | Option<**u32**> |  |  |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 
@@ -42,7 +43,7 @@ Name | Type | Description  | Required | Notes
 
 ## create_user
 
-> models::User create_user(create_user)
+> models::User create_user(create_user, application_id)
 
 
 ### Parameters
@@ -51,6 +52,7 @@ Name | Type | Description  | Required | Notes
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **create_user** | [**CreateUser**](CreateUser.md) |  | [required] |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 
@@ -70,7 +72,7 @@ Name | Type | Description  | Required | Notes
 
 ## create_user_reset_password_token
 
-> models::Token create_user_reset_password_token(user_id, user_reset_password)
+> models::Token create_user_reset_password_token(user_id, user_reset_password, application_id)
 
 
 ### Parameters
@@ -80,6 +82,7 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **user_id** | **i64** | User id | [required] |
 **user_reset_password** | [**UserResetPassword**](UserResetPassword.md) |  | [required] |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 
@@ -99,7 +102,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_user_by_id
 
-> models::Pagination get_user_by_id(user_id)
+> models::Pagination get_user_by_id(user_id, application_id)
 
 
 ### Parameters
@@ -108,6 +111,7 @@ Name | Type | Description  | Required | Notes
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **user_id** | **i64** | User id | [required] |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 

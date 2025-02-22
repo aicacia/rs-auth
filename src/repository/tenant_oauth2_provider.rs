@@ -48,15 +48,18 @@ impl TenantOAuth2ProviderRow {
 
 pub async fn get_active_tenant_oauth2_provider(
   pool: &sqlx::AnyPool,
+  application_id: i64,
   tenant_id: i64,
   provider: &str,
 ) -> sqlx::Result<Option<TenantOAuth2ProviderRow>> {
   sqlx::query_as(
     r#"SELECT toap.* 
-    FROM tenant_oauth2_providers toap 
-    WHERE toap.active = 1 AND toap.tenant_id = $1 AND toap.provider = $2 
+    FROM tenant_oauth2_providers toap
+    JOIN tenants t ON t.id = toap.tenant_id 
+    WHERE t.application_id = $1 AND toap.active = 1 AND toap.tenant_id = $2 AND toap.provider = $3 
     LIMIT 1;"#,
   )
+  .bind(application_id)
   .bind(tenant_id)
   .bind(provider)
   .fetch_optional(pool)
