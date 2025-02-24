@@ -12,6 +12,7 @@ pub async fn get_applications(
   offset: Option<usize>,
 ) -> sqlx::Result<Vec<ApplicationRow>> {
   let mut qb = sqlx::QueryBuilder::new("SELECT a.* FROM applications a");
+  qb.push(" ORDER BY a.updated_at DESC ");
   if let Some(limit) = limit {
     qb.push(" LIMIT ").push(limit as i64);
   }
@@ -61,7 +62,7 @@ pub async fn update_application(
 ) -> sqlx::Result<Option<ApplicationRow>> {
   sqlx::query_as(
     r#"UPDATE applications SET
-      name = COALESCE($2, name)
+      name = COALESCE($2, name),
       updated_at = $3
     WHERE id = $1
     RETURNING *;"#,

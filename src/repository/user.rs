@@ -29,6 +29,7 @@ pub fn from_users_query<'a>(
   qb.push(" FROM users u");
   qb.push(" WHERE u.application_id = ");
   qb.push(application_id);
+  qb.push(" ORDER BY u.updated_at DESC ");
   if let Some(limit) = limit {
     qb.push(" LIMIT ").push(limit as i64);
   }

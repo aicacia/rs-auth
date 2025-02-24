@@ -2966,7 +2966,7 @@
     "/users": {
       "get": {
         "tags": [
-          "users"
+          "user"
         ],
         "operationId": "all_users",
         "parameters": [
@@ -3047,7 +3047,7 @@
       },
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "operationId": "create_user",
         "parameters": [
@@ -3126,7 +3126,7 @@
     "/users/{user_id}": {
       "get": {
         "tags": [
-          "users"
+          "user"
         ],
         "operationId": "get_user_by_id",
         "parameters": [
@@ -3747,7 +3747,7 @@
     "/users/{user_id}/reset-password": {
       "post": {
         "tags": [
-          "users"
+          "user"
         ],
         "operationId": "create_user_reset_password_token",
         "parameters": [

@@ -67,16 +67,16 @@ Class | Method | HTTP request | Description
 *TenantApi* | [**get_tenant_by_id**](docs/TenantApi.md#get_tenant_by_id) | **GET** /tenants/{tenant_id} | 
 *TenantApi* | [**update_tenant**](docs/TenantApi.md#update_tenant) | **PUT** /tenants/{tenant_id} | 
 *TokenApi* | [**token**](docs/TokenApi.md#token) | **POST** /token | 
+*UserApi* | [**all_users**](docs/UserApi.md#all_users) | **GET** /users | 
+*UserApi* | [**create_user**](docs/UserApi.md#create_user) | **POST** /users | 
 *UserApi* | [**create_user_email**](docs/UserApi.md#create_user_email) | **POST** /users/{user_id}/emails | 
 *UserApi* | [**create_user_phone_number**](docs/UserApi.md#create_user_phone_number) | **POST** /users/{user_id}/phone_numbers | 
+*UserApi* | [**create_user_reset_password_token**](docs/UserApi.md#create_user_reset_password_token) | **POST** /users/{user_id}/reset-password | 
 *UserApi* | [**delete_user_email**](docs/UserApi.md#delete_user_email) | **DELETE** /users/{user_id}/emails/{email_id} | 
 *UserApi* | [**delete_user_phone_number**](docs/UserApi.md#delete_user_phone_number) | **DELETE** /users/{user_id}/phone-numbers/{phone_number_id} | 
+*UserApi* | [**get_user_by_id**](docs/UserApi.md#get_user_by_id) | **GET** /users/{user_id} | 
 *UserApi* | [**update_user_email**](docs/UserApi.md#update_user_email) | **PUT** /users/{user_id}/emails/{email_id} | 
 *UserApi* | [**update_user_phone_number**](docs/UserApi.md#update_user_phone_number) | **PUT** /users/{user_id}/phone-numbers/{phone_number_id} | 
-*UsersApi* | [**all_users**](docs/UsersApi.md#all_users) | **GET** /users | 
-*UsersApi* | [**create_user**](docs/UsersApi.md#create_user) | **POST** /users | 
-*UsersApi* | [**create_user_reset_password_token**](docs/UsersApi.md#create_user_reset_password_token) | **POST** /users/{user_id}/reset-password | 
-*UsersApi* | [**get_user_by_id**](docs/UsersApi.md#get_user_by_id) | **GET** /users/{user_id} | 
 *UtilApi* | [**health**](docs/UtilApi.md#health) | **GET** /health | 
 *UtilApi* | [**version**](docs/UtilApi.md#version) | **GET** /version | 
 

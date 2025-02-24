@@ -34,6 +34,7 @@ pub async fn get_service_accounts(
   let mut qb = sqlx::QueryBuilder::new("SELECT sa.* FROM service_accounts sa");
   qb.push(" WHERE sa.application_id = ");
   qb.push(application_id);
+  qb.push(" ORDER BY sa.updated_at DESC ");
   if let Some(limit) = limit {
     qb.push(" LIMIT ").push(limit as i64);
   }

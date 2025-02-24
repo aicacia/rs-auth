@@ -102,7 +102,6 @@ pub mod service_account_api;
 pub mod tenant_api;
 pub mod token_api;
 pub mod user_api;
-pub mod users_api;
 pub mod util_api;
 
 pub mod configuration;

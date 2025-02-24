@@ -4,13 +4,76 @@ All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**all_users**](UserApi.md#all_users) | **GET** /users | 
+[**create_user**](UserApi.md#create_user) | **POST** /users | 
 [**create_user_email**](UserApi.md#create_user_email) | **POST** /users/{user_id}/emails | 
 [**create_user_phone_number**](UserApi.md#create_user_phone_number) | **POST** /users/{user_id}/phone_numbers | 
+[**create_user_reset_password_token**](UserApi.md#create_user_reset_password_token) | **POST** /users/{user_id}/reset-password | 
 [**delete_user_email**](UserApi.md#delete_user_email) | **DELETE** /users/{user_id}/emails/{email_id} | 
 [**delete_user_phone_number**](UserApi.md#delete_user_phone_number) | **DELETE** /users/{user_id}/phone-numbers/{phone_number_id} | 
+[**get_user_by_id**](UserApi.md#get_user_by_id) | **GET** /users/{user_id} | 
 [**update_user_email**](UserApi.md#update_user_email) | **PUT** /users/{user_id}/emails/{email_id} | 
 [**update_user_phone_number**](UserApi.md#update_user_phone_number) | **PUT** /users/{user_id}/phone-numbers/{phone_number_id} | 
 
+
+
+## all_users
+
+> models::Pagination all_users(offset, limit, application_id)
+
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**offset** | Option<**u32**> |  |  |
+**limit** | Option<**u32**> |  |  |
+**application_id** | Option<**i64**> |  |  |
+
+### Return type
+
+[**models::Pagination**](Pagination.md)
+
+### Authorization
+
+[Authorization](../README.md#Authorization)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## create_user
+
+> models::User create_user(create_user, application_id)
+
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**create_user** | [**CreateUser**](CreateUser.md) |  | [required] |
+**application_id** | Option<**i64**> |  |  |
+
+### Return type
+
+[**models::User**](User.md)
+
+### Authorization
+
+[Authorization](../README.md#Authorization)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 
 ## create_user_email
@@ -73,6 +136,36 @@ Name | Type | Description  | Required | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 
+## create_user_reset_password_token
+
+> models::Token create_user_reset_password_token(user_id, user_reset_password, application_id)
+
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**user_id** | **i64** | User id | [required] |
+**user_reset_password** | [**UserResetPassword**](UserResetPassword.md) |  | [required] |
+**application_id** | Option<**i64**> |  |  |
+
+### Return type
+
+[**models::Token**](Token.md)
+
+### Authorization
+
+[Authorization](../README.md#Authorization)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
 ## delete_user_email
 
 > delete_user_email(user_id, email_id, application_id)
@@ -120,6 +213,35 @@ Name | Type | Description  | Required | Notes
 ### Return type
 
  (empty response body)
+
+### Authorization
+
+[Authorization](../README.md#Authorization)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## get_user_by_id
+
+> models::Pagination get_user_by_id(user_id, application_id)
+
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**user_id** | **i64** | User id | [required] |
+**application_id** | Option<**i64**> |  |  |
+
+### Return type
+
+[**models::Pagination**](Pagination.md)
 
 ### Authorization
 

@@ -22,6 +22,7 @@ pub fn from_tenants_query<'a>(
 ) {
   qb.push(" FROM tenants t");
   qb.push(" WHERE t.application_id = ");
+  qb.push(" ORDER BY t.updated_at DESC ");
   qb.push(application_id);
   if let Some(limit) = limit {
     qb.push(" LIMIT ").push(limit as i64);

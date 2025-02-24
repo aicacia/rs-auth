@@ -51,7 +51,7 @@ pub const USER_TAG: &str = "user";
     create_user_reset_password_token,
   ),
   tags(
-    (name = "users", description = "User's endpoints"),
+    (name = USER_TAG, description = "User's endpoints"),
   )
 )]
 pub struct ApiDoc;
@@ -59,7 +59,7 @@ pub struct ApiDoc;
 #[utoipa::path(
   get,
   path = "/users",
-  tags = ["users"],
+  tags = [USER_TAG],
   params(
     OffsetAndLimit,
     ApplicationId,
@@ -244,7 +244,7 @@ pub async fn all_users(
 #[utoipa::path(
   get,
   path = "/users/{user_id}",
-  tags = ["users"],
+  tags = [USER_TAG],
   params(
     ("user_id" = i64, Path, description = "User id"),
     ApplicationId,
@@ -338,7 +338,7 @@ pub async fn get_user_by_id(
 #[utoipa::path(
   post,
   path = "/users",
-  tags = ["users"],
+  tags = [USER_TAG],
   request_body = CreateUser,
   params(
     ApplicationId,
@@ -399,7 +399,7 @@ pub async fn create_user(
 #[utoipa::path(
   post,
   path = "/users/{user_id}/reset-password",
-  tags = ["users"],
+  tags = [USER_TAG],
   request_body = UserResetPassword,
   params(
     ("user_id" = i64, Path, description = "User id"),
