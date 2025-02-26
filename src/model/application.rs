@@ -4,8 +4,6 @@ use utoipa::ToSchema;
 
 use crate::repository::application::ApplicationRow;
 
-use super::util::Pagination;
-
 #[derive(Serialize, ToSchema)]
 pub struct Application {
   pub id: i64,
@@ -25,7 +23,11 @@ impl From<ApplicationRow> for Application {
   }
 }
 
-pub type ApplicationPagination = Pagination<Application>;
+#[derive(Serialize, ToSchema)]
+pub struct ApplicationPagination {
+  pub has_more: bool,
+  pub items: Vec<Application>,
+}
 
 #[derive(Deserialize, ToSchema)]
 pub struct CreateApplication {

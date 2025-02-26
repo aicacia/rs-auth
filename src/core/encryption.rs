@@ -4,7 +4,7 @@ use super::config::Config;
 
 pub fn random_bytes(size: usize) -> Vec<u8> {
   let mut bytes = vec![0; size];
-  rand::thread_rng().fill(bytes.as_mut_slice());
+  rand::rng().fill(bytes.as_mut_slice());
   bytes
 }
 

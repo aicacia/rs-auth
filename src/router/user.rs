@@ -11,7 +11,7 @@ use crate::{
   model::{
     token::Token,
     user::{CreateUser, User, UserPagination, UserResetPassword},
-    util::{ApplicationId, OffsetAndLimit, Pagination},
+    util::{ApplicationId, OffsetAndLimit},
   },
   repository::{
     self,
@@ -230,7 +230,7 @@ pub async fn all_users(
     })
     .collect::<Vec<User>>();
 
-  axum::Json(Pagination {
+  axum::Json(UserPagination {
     has_more: if let Some(limit) = offset_and_limit.limit {
       limit == users.len()
     } else {

@@ -65,7 +65,7 @@ pub enum UpdateServiceAccountError {
 }
 
 
-pub async fn all_service_accounts(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, application_id: Option<i64>) -> Result<models::Pagination, Error<AllServiceAccountsError>> {
+pub async fn all_service_accounts(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, application_id: Option<i64>) -> Result<models::ServiceAccountPagination, Error<AllServiceAccountsError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_offset = offset;
     let p_limit = limit;

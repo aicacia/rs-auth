@@ -1,4 +1,4 @@
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distr::{Alphanumeric, SampleString};
 
 use crate::core::{config::Config, database::run_transaction, encryption::encrypt_password};
 
@@ -240,7 +240,7 @@ pub async fn create_user_with_oauth2(
       }
 
       while username_used(transaction, application_id, &username).await? {
-        username.push_str(&Alphanumeric.sample_string(&mut rand::thread_rng(), 2));
+        username.push_str(&Alphanumeric.sample_string(&mut rand::rng(), 2));
       }
 
       let user = create_user_internal(

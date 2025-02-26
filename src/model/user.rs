@@ -11,8 +11,6 @@ use crate::repository::{
   user_phone_number::UserPhoneNumberRow,
 };
 
-use super::util::Pagination;
-
 #[derive(Serialize, ToSchema, Default)]
 pub struct User {
   pub id: i64,
@@ -46,7 +44,11 @@ impl From<UserRow> for User {
   }
 }
 
-pub type UserPagination = Pagination<User>;
+#[derive(Serialize, ToSchema)]
+pub struct UserPagination {
+  pub has_more: bool,
+  pub items: Vec<User>,
+}
 
 #[derive(Serialize, ToSchema, Default)]
 pub struct UserConfig {

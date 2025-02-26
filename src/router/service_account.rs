@@ -8,7 +8,7 @@ use crate::{
     service_account::{
       CreateServiceAccount, ServiceAccount, ServiceAccountPagination, UpdateServiceAccount,
     },
-    util::{ApplicationId, OffsetAndLimit, Pagination},
+    util::{ApplicationId, OffsetAndLimit},
   },
   repository,
 };
@@ -78,7 +78,7 @@ pub async fn all_service_accounts(
     .map(ServiceAccount::from)
     .collect::<Vec<_>>();
 
-  axum::Json(Pagination {
+  axum::Json(ServiceAccountPagination {
     has_more: query
       .limit
       .map(|limit| service_accounts.len() == limit)

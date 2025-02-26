@@ -117,7 +117,7 @@ pub enum UpdateUserPhoneNumberError {
 }
 
 
-pub async fn all_users(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, application_id: Option<i64>) -> Result<models::Pagination, Error<AllUsersError>> {
+pub async fn all_users(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, application_id: Option<i64>) -> Result<models::UserPagination, Error<AllUsersError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_offset = offset;
     let p_limit = limit;
@@ -362,7 +362,7 @@ pub async fn delete_user_phone_number(configuration: &configuration::Configurati
     }
 }
 
-pub async fn get_user_by_id(configuration: &configuration::Configuration, user_id: i64, application_id: Option<i64>) -> Result<models::Pagination, Error<GetUserByIdError>> {
+pub async fn get_user_by_id(configuration: &configuration::Configuration, user_id: i64, application_id: Option<i64>) -> Result<models::UserPagination, Error<GetUserByIdError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_application_id = application_id;

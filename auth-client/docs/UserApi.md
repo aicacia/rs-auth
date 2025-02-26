@@ -19,7 +19,7 @@ Method | HTTP request | Description
 
 ## all_users
 
-> models::Pagination all_users(offset, limit, application_id)
+> models::UserPagination all_users(offset, limit, application_id)
 
 
 ### Parameters
@@ -33,7 +33,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::Pagination**](Pagination.md)
+[**models::UserPagination**](UserPagination.md)
 
 ### Authorization
 
@@ -228,7 +228,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_user_by_id
 
-> models::Pagination get_user_by_id(user_id, application_id)
+> models::UserPagination get_user_by_id(user_id, application_id)
 
 
 ### Parameters
@@ -241,7 +241,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::Pagination**](Pagination.md)
+[**models::UserPagination**](UserPagination.md)
 
 ### Authorization
 

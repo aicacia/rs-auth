@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## all_applications
 
-> models::Pagination all_applications(offset, limit)
+> models::ApplicationPagination all_applications(offset, limit)
 
 
 ### Parameters
@@ -27,7 +27,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::Pagination**](Pagination.md)
+[**models::ApplicationPagination**](ApplicationPagination.md)
 
 ### Authorization
 

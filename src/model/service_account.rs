@@ -4,8 +4,6 @@ use utoipa::ToSchema;
 
 use crate::repository::service_account::ServiceAccountRow;
 
-use super::util::Pagination;
-
 #[derive(Serialize, ToSchema)]
 pub struct ServiceAccount {
   pub id: i64,
@@ -36,7 +34,11 @@ impl From<ServiceAccountRow> for ServiceAccount {
   }
 }
 
-pub type ServiceAccountPagination = Pagination<ServiceAccount>;
+#[derive(Serialize, ToSchema)]
+pub struct ServiceAccountPagination {
+  pub has_more: bool,
+  pub items: Vec<ServiceAccount>,
+}
 
 #[derive(Deserialize, ToSchema)]
 pub struct CreateServiceAccount {

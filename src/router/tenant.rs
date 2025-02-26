@@ -6,7 +6,7 @@ use crate::{
   model::{
     tenant::{CreateTenant, Tenant, TenantPagination, TenantQuery, UpdateTenant},
     tenant_oauth2_provider::TenantOAuth2Provider,
-    util::{ApplicationId, OffsetAndLimit, Pagination},
+    util::{ApplicationId, OffsetAndLimit},
   },
   repository::{
     self,
@@ -113,7 +113,7 @@ pub async fn all_tenants(
     })
     .collect::<Vec<_>>();
 
-  axum::Json(Pagination {
+  axum::Json(TenantPagination {
     has_more: if let Some(limit) = offset_and_limit.limit {
       limit == tenants.len()
     } else {

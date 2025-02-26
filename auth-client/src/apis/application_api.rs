@@ -65,7 +65,7 @@ pub enum UpdateApplicationError {
 }
 
 
-pub async fn all_applications(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>) -> Result<models::Pagination, Error<AllApplicationsError>> {
+pub async fn all_applications(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>) -> Result<models::ApplicationPagination, Error<AllApplicationsError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_offset = offset;
     let p_limit = limit;

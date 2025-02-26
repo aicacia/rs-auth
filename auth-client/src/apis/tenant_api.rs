@@ -65,7 +65,7 @@ pub enum UpdateTenantError {
 }
 
 
-pub async fn all_tenants(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, show_private_key: Option<bool>, application_id: Option<i64>) -> Result<models::Pagination, Error<AllTenantsError>> {
+pub async fn all_tenants(configuration: &configuration::Configuration, offset: Option<u32>, limit: Option<u32>, show_private_key: Option<bool>, application_id: Option<i64>) -> Result<models::TenantPagination, Error<AllTenantsError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_offset = offset;
     let p_limit = limit;

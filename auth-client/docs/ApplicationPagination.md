@@ -1,4 +1,4 @@
-# Pagination
+# ApplicationPagination
 
 ## Properties
 

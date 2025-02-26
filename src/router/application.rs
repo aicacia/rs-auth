@@ -3,7 +3,7 @@ use crate::{
   middleware::{json::Json, service_account_authorization::ServiceAccountAuthorization},
   model::{
     application::{Application, ApplicationPagination, CreateApplication, UpdateApplication},
-    util::{OffsetAndLimit, Pagination},
+    util::OffsetAndLimit,
   },
   repository,
 };
@@ -75,7 +75,7 @@ pub async fn all_applications(
   };
   let applications = rows.into_iter().map(Application::from).collect::<Vec<_>>();
 
-  axum::Json(Pagination {
+  axum::Json(ApplicationPagination {
     has_more: query
       .limit
       .map(|limit| applications.len() == limit)
