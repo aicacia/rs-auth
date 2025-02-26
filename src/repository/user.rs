@@ -328,3 +328,15 @@ pub async fn update_user(
   .fetch_optional(pool)
   .await
 }
+
+pub async fn delete_user(
+  pool: &sqlx::AnyPool,
+  application_id: i64,
+  user_id: i64,
+) -> sqlx::Result<Option<UserRow>> {
+  sqlx::query_as(r#"DELETE FROM users WHERE application_id = $1 AND id = $2 RETURNING *;"#)
+    .bind(application_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await
+}

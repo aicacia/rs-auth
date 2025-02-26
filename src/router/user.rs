@@ -9,8 +9,9 @@ use crate::{
     validated_json::ValidatedJson,
   },
   model::{
+    current_user::UpdateUserInfoRequest,
     token::Token,
-    user::{CreateUser, User, UserPagination, UserResetPassword},
+    user::{CreateUser, UpdateUser, User, UserPagination, UserResetPassword},
     util::{ApplicationId, OffsetAndLimit},
   },
   repository::{
@@ -19,7 +20,7 @@ use crate::{
     user::get_users,
     user_config::{get_users_configs, UserConfigRow},
     user_email::{get_user_emails_by_user_id, get_users_emails, UserEmailRow},
-    user_info::{get_user_info_by_user_id, get_users_infos, UserInfoRow},
+    user_info::{get_user_info_by_user_id, get_users_infos, UserInfoRow, UserInfoUpdate},
     user_mfa::{get_user_mfa_types_by_user_id, get_users_mfa_types, UserMFATypeRow},
     user_oauth2_provider::{
       get_user_oauth2_providers_by_user_id, get_users_oauth2_providers, UserOAuth2ProviderRow,
@@ -34,6 +35,7 @@ use axum::{
   extract::{Path, Query, State},
   response::IntoResponse,
 };
+use chrono::DateTime;
 use http::StatusCode;
 use utoipa::OpenApi;
 use utoipa_axum::{router::OpenApiRouter, routes};
@@ -397,6 +399,144 @@ pub async fn create_user(
 }
 
 #[utoipa::path(
+  put,
+  path = "/users/{user_id}",
+  tags = [USER_TAG],
+  request_body = UpdateUser,
+  responses(
+    (status = 204),
+    (status = 400, content_type = "application/json", body = Errors),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+pub async fn update_user(
+  State(state): State<RouterState>,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
+  Path(user_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
+  ValidatedJson(payload): ValidatedJson<UpdateUser>,
+) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("update-user", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user::update_user(
+    &state.pool,
+    application_id,
+    user_id,
+    repository::user::UpdateUser {
+      username: payload.username,
+      active: None,
+    },
+  )
+  .await
+  {
+    Ok(_) => {}
+    Err(e) => {
+      if e.to_string().to_lowercase().contains("unique constraint") {
+        return InternalError::from(StatusCode::BAD_REQUEST)
+          .with_error("username", ALREADY_EXISTS_ERROR)
+          .into_response();
+      }
+      log::error!("error updating user: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+
+  (StatusCode::NO_CONTENT, ()).into_response()
+}
+
+#[utoipa::path(
+  put,
+  path = "/users/{user_id}/info",
+  tags = [USER_TAG],
+  request_body = UpdateUserInfoRequest,
+  responses(
+    (status = 204),
+    (status = 400, content_type = "application/json", body = Errors),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+pub async fn update_user_info(
+  State(state): State<RouterState>,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
+  Path(user_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
+  Json(payload): Json<UpdateUserInfoRequest>,
+) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("update-user", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user::get_user_by_id(&state.pool, application_id, user_id).await {
+    Ok(Some(_)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("user", NOT_FOUND_ERROR)
+        .into_response();
+    }
+    Err(e) => {
+      log::error!("error getting user: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+  match repository::user_info::update_user_info(
+    &state.pool,
+    user_id,
+    UserInfoUpdate {
+      name: payload.name,
+      given_name: payload.given_name,
+      family_name: payload.family_name,
+      middle_name: payload.middle_name,
+      nickname: payload.nickname,
+      profile_picture: payload.profile_picture,
+      website: payload.website,
+      gender: payload.gender,
+      birthdate: payload.birthdate.as_ref().map(DateTime::timestamp),
+      address: payload.address,
+      zone_info: payload.zone_info,
+      locale: payload.locale,
+    },
+  )
+  .await
+  {
+    Ok(_) => {}
+    Err(e) => {
+      log::error!("error updating user info: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+
+  (StatusCode::NO_CONTENT, ()).into_response()
+}
+
+#[utoipa::path(
   post,
   path = "/users/{user_id}/reset-password",
   tags = [USER_TAG],
@@ -466,11 +606,65 @@ pub async fn create_user_reset_password_token(
     .into_response()
 }
 
+#[utoipa::path(
+  delete,
+  path = "/users/{user_id}",
+  tags = [USER_TAG],
+  params(
+    ("user_id" = i64, Path, description = "User id"),
+    ApplicationId,
+  ),
+  responses(
+    (status = 204),
+    (status = 400, content_type = "application/json", body = Errors),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+pub async fn delete_user(
+  State(state): State<RouterState>,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
+  Path(user_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
+) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("update-user", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user::delete_user(&state.pool, application_id, user_id).await {
+    Ok(Some(..)) => {}
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("user", NOT_FOUND_ERROR)
+        .into_response()
+    }
+    Err(e) => {
+      log::error!("error getting user/tenant: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  }
+  (StatusCode::NO_CONTENT, ()).into_response()
+}
+
 pub fn create_router(state: RouterState) -> OpenApiRouter {
   OpenApiRouter::new()
     .routes(routes!(all_users))
     .routes(routes!(get_user_by_id))
     .routes(routes!(create_user))
     .routes(routes!(create_user_reset_password_token))
+    .routes(routes!(update_user))
+    .routes(routes!(update_user_info))
+    .routes(routes!(delete_user))
     .with_state(state)
 }

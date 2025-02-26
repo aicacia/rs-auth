@@ -217,7 +217,7 @@ impl From<UserMFATypeRow> for UserMFAType {
 }
 
 #[derive(Validate, Deserialize, ToSchema)]
-pub struct UpdateUsername {
+pub struct UpdateUser {
   #[validate(length(min = 1))]
   pub username: Option<String>,
 }

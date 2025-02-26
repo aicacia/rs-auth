@@ -12,14 +12,14 @@ use crate::models;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct UpdateUsername {
+pub struct UpdateUser {
     #[serde(rename = "username", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub username: Option<Option<String>>,
 }
 
-impl UpdateUsername {
-    pub fn new() -> UpdateUsername {
-        UpdateUsername {
+impl UpdateUser {
+    pub fn new() -> UpdateUser {
+        UpdateUser {
             username: None,
         }
     }

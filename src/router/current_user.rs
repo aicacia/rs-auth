@@ -21,7 +21,7 @@ use crate::{
   model::{
     current_user::{OAuth2Query, ResetPasswordRequest, UpdateUserInfoRequest},
     oauth2::oauth2_authorize_url,
-    user::{UpdateUsername, User, UserOAuth2Provider},
+    user::{UpdateUser, User, UserOAuth2Provider},
   },
   repository::{
     self,
@@ -396,7 +396,7 @@ pub async fn reset_current_user_password(
   put,
   path = "/current-user",
   tags = [CURRENT_USER_TAG],
-  request_body = UpdateUsername,
+  request_body = UpdateUser,
   responses(
     (status = 204),
     (status = 400, content_type = "application/json", body = Errors),
@@ -410,7 +410,7 @@ pub async fn reset_current_user_password(
 pub async fn update_current_user(
   State(state): State<RouterState>,
   UserAuthorization { user, .. }: UserAuthorization,
-  ValidatedJson(payload): ValidatedJson<UpdateUsername>,
+  ValidatedJson(payload): ValidatedJson<UpdateUser>,
 ) -> impl IntoResponse {
   match repository::user::update_user(
     &state.pool,

@@ -352,7 +352,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_current_user
 
-> update_current_user(update_username)
+> update_current_user(update_user)
 
 
 ### Parameters
@@ -360,7 +360,7 @@ Name | Type | Description  | Required | Notes
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
-**update_username** | [**UpdateUsername**](UpdateUsername.md) |  | [required] |
+**update_user** | [**UpdateUser**](UpdateUser.md) |  | [required] |
 
 ### Return type
 

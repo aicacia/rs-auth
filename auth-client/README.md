@@ -72,10 +72,13 @@ Class | Method | HTTP request | Description
 *UserApi* | [**create_user_email**](docs/UserApi.md#create_user_email) | **POST** /users/{user_id}/emails | 
 *UserApi* | [**create_user_phone_number**](docs/UserApi.md#create_user_phone_number) | **POST** /users/{user_id}/phone_numbers | 
 *UserApi* | [**create_user_reset_password_token**](docs/UserApi.md#create_user_reset_password_token) | **POST** /users/{user_id}/reset-password | 
+*UserApi* | [**delete_user**](docs/UserApi.md#delete_user) | **DELETE** /users/{user_id} | 
 *UserApi* | [**delete_user_email**](docs/UserApi.md#delete_user_email) | **DELETE** /users/{user_id}/emails/{email_id} | 
 *UserApi* | [**delete_user_phone_number**](docs/UserApi.md#delete_user_phone_number) | **DELETE** /users/{user_id}/phone-numbers/{phone_number_id} | 
 *UserApi* | [**get_user_by_id**](docs/UserApi.md#get_user_by_id) | **GET** /users/{user_id} | 
+*UserApi* | [**update_user**](docs/UserApi.md#update_user) | **PUT** /users/{user_id} | 
 *UserApi* | [**update_user_email**](docs/UserApi.md#update_user_email) | **PUT** /users/{user_id}/emails/{email_id} | 
+*UserApi* | [**update_user_info**](docs/UserApi.md#update_user_info) | **PUT** /users/{user_id}/info | 
 *UserApi* | [**update_user_phone_number**](docs/UserApi.md#update_user_phone_number) | **PUT** /users/{user_id}/phone-numbers/{phone_number_id} | 
 *UtilApi* | [**health**](docs/UtilApi.md#health) | **GET** /health | 
 *UtilApi* | [**version**](docs/UtilApi.md#version) | **GET** /version | 
@@ -120,9 +123,9 @@ Class | Method | HTTP request | Description
  - [UpdateServiceAccount](docs/UpdateServiceAccount.md)
  - [UpdateTenant](docs/UpdateTenant.md)
  - [UpdateTenantOAuth2Provider](docs/UpdateTenantOAuth2Provider.md)
+ - [UpdateUser](docs/UpdateUser.md)
  - [UpdateUserConfigRequest](docs/UpdateUserConfigRequest.md)
  - [UpdateUserInfoRequest](docs/UpdateUserInfoRequest.md)
- - [UpdateUsername](docs/UpdateUsername.md)
  - [User](docs/User.md)
  - [UserConfig](docs/UserConfig.md)
  - [UserEmail](docs/UserEmail.md)

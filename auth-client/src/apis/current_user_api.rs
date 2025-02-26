@@ -515,9 +515,9 @@ pub async fn set_current_user_phone_number_as_primary(configuration: &configurat
     }
 }
 
-pub async fn update_current_user(configuration: &configuration::Configuration, update_username: models::UpdateUsername) -> Result<(), Error<UpdateCurrentUserError>> {
+pub async fn update_current_user(configuration: &configuration::Configuration, update_user: models::UpdateUser) -> Result<(), Error<UpdateCurrentUserError>> {
     // add a prefix to parameters to efficiently prevent name collisions
-    let p_update_username = update_username;
+    let p_update_user = update_user;
 
     let uri_str = format!("{}/current-user", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
@@ -528,7 +528,7 @@ pub async fn update_current_user(configuration: &configuration::Configuration, u
     if let Some(ref token) = configuration.bearer_access_token {
         req_builder = req_builder.bearer_auth(token.to_owned());
     };
-    req_builder = req_builder.json(&p_update_username);
+    req_builder = req_builder.json(&p_update_user);
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
