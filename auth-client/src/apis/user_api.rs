@@ -424,7 +424,7 @@ pub async fn delete_user_phone_number(configuration: &configuration::Configurati
     }
 }
 
-pub async fn get_user_by_id(configuration: &configuration::Configuration, user_id: i64, application_id: Option<i64>) -> Result<models::UserPagination, Error<GetUserByIdError>> {
+pub async fn get_user_by_id(configuration: &configuration::Configuration, user_id: i64, application_id: Option<i64>) -> Result<models::User, Error<GetUserByIdError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_application_id = application_id;
@@ -457,7 +457,7 @@ pub async fn get_user_by_id(configuration: &configuration::Configuration, user_i
     }
 }
 
-pub async fn update_user(configuration: &configuration::Configuration, user_id: i64, update_user: models::UpdateUser) -> Result<(), Error<UpdateUserError>> {
+pub async fn update_user(configuration: &configuration::Configuration, user_id: i64, update_user: models::UpdateUser) -> Result<models::User, Error<UpdateUserError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_update_user = update_user;
@@ -479,7 +479,8 @@ pub async fn update_user(configuration: &configuration::Configuration, user_id: 
     let status = resp.status();
 
     if !status.is_client_error() && !status.is_server_error() {
-        Ok(())
+        let content = resp.text().await?;
+        serde_json::from_str(&content).map_err(Error::from)
     } else {
         let content = resp.text().await?;
         let entity: Option<UpdateUserError> = serde_json::from_str(&content).ok();
@@ -522,7 +523,7 @@ pub async fn update_user_email(configuration: &configuration::Configuration, use
     }
 }
 
-pub async fn update_user_info(configuration: &configuration::Configuration, user_id: i64, update_user_info_request: models::UpdateUserInfoRequest) -> Result<(), Error<UpdateUserInfoError>> {
+pub async fn update_user_info(configuration: &configuration::Configuration, user_id: i64, update_user_info_request: models::UpdateUserInfoRequest) -> Result<models::UserInfo, Error<UpdateUserInfoError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_update_user_info_request = update_user_info_request;
@@ -544,7 +545,8 @@ pub async fn update_user_info(configuration: &configuration::Configuration, user
     let status = resp.status();
 
     if !status.is_client_error() && !status.is_server_error() {
-        Ok(())
+        let content = resp.text().await?;
+        serde_json::from_str(&content).map_err(Error::from)
     } else {
         let content = resp.text().await?;
         let entity: Option<UpdateUserInfoError> = serde_json::from_str(&content).ok();

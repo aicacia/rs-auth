@@ -260,7 +260,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_user_by_id
 
-> models::UserPagination get_user_by_id(user_id, application_id)
+> models::User get_user_by_id(user_id, application_id)
 
 
 ### Parameters
@@ -273,7 +273,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::UserPagination**](UserPagination.md)
+[**models::User**](User.md)
 
 ### Authorization
 
@@ -289,7 +289,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_user
 
-> update_user(user_id, update_user)
+> models::User update_user(user_id, update_user)
 
 
 ### Parameters
@@ -302,7 +302,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
- (empty response body)
+[**models::User**](User.md)
 
 ### Authorization
 
@@ -349,7 +349,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_user_info
 
-> update_user_info(user_id, update_user_info_request)
+> models::UserInfo update_user_info(user_id, update_user_info_request)
 
 
 ### Parameters
@@ -362,7 +362,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
- (empty response body)
+[**models::UserInfo**](UserInfo.md)
 
 ### Authorization
 

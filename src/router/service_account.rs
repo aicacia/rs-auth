@@ -233,7 +233,7 @@ pub async fn create_service_account(
     ApplicationId
   ),
   responses(
-    (status = 201, content_type = "application/json", body = ServiceAccount),
+    (status = 200, content_type = "application/json", body = ServiceAccount),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),

@@ -272,7 +272,7 @@ pub async fn create_tenant(
     ApplicationId
   ),
   responses(
-    (status = 201, content_type = "application/json", body = Tenant),
+    (status = 200, content_type = "application/json", body = Tenant),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),

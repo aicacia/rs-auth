@@ -11,7 +11,7 @@ use crate::{
   model::{
     current_user::UpdateUserInfoRequest,
     token::Token,
-    user::{CreateUser, UpdateUser, User, UserPagination, UserResetPassword},
+    user::{CreateUser, UpdateUser, User, UserInfo, UserPagination, UserResetPassword},
     util::{ApplicationId, OffsetAndLimit},
   },
   repository::{
@@ -252,7 +252,7 @@ pub async fn all_users(
     ApplicationId,
   ),
   responses(
-    (status = 200, content_type = "application/json", body = UserPagination),
+    (status = 200, content_type = "application/json", body = User),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 404, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -404,7 +404,7 @@ pub async fn create_user(
   tags = [USER_TAG],
   request_body = UpdateUser,
   responses(
-    (status = 204),
+    (status = 200, content_type = "application/json", body = User),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -430,7 +430,7 @@ pub async fn update_user(
       .with_error("update-user", NOT_ALLOWED_ERROR)
       .into_response();
   }
-  match repository::user::update_user(
+  let user_row = match repository::user::update_user(
     &state.pool,
     application_id,
     user_id,
@@ -441,7 +441,12 @@ pub async fn update_user(
   )
   .await
   {
-    Ok(_) => {}
+    Ok(Some(user_row)) => user_row,
+    Ok(None) => {
+      return InternalError::not_found()
+        .with_error("user", NOT_FOUND_ERROR)
+        .into_response()
+    }
     Err(e) => {
       if e.to_string().to_lowercase().contains("unique constraint") {
         return InternalError::from(StatusCode::BAD_REQUEST)
@@ -453,9 +458,56 @@ pub async fn update_user(
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
+  };
+
+  let (
+    user_emails,
+    user_phone_numbers,
+    user_oauth2_providers,
+    user_info_row_optional,
+    user_mfa_types,
+  ) = match tokio::try_join!(
+    get_user_emails_by_user_id(&state.pool, application_id, user_id),
+    get_user_phone_numbers_by_user_id(&state.pool, application_id, user_id),
+    get_user_oauth2_providers_by_user_id(&state.pool, application_id, user_id),
+    get_user_info_by_user_id(&state.pool, application_id, user_id),
+    get_user_mfa_types_by_user_id(&state.pool, application_id, user_id)
+  ) {
+    Ok(results) => results,
+    Err(e) => {
+      log::error!("error getting users: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
+
+  let mut user = User::from(user_row);
+  for email in user_emails {
+    if email.is_primary() {
+      user.email = Some(email.into());
+    } else {
+      user.emails.push(email.into());
+    }
+  }
+  for phone_number in user_phone_numbers {
+    if phone_number.is_primary() {
+      user.phone_number = Some(phone_number.into());
+    } else {
+      user.phone_numbers.push(phone_number.into());
+    }
+  }
+  for oauth2_provider in user_oauth2_providers {
+    user.oauth2_providers.push(oauth2_provider.into());
+  }
+  if let Some(user_info_row) = user_info_row_optional {
+    user.info = user_info_row.into();
+  }
+  for mfa_type in user_mfa_types {
+    user.mfa_types.push(mfa_type.into());
   }
 
-  (StatusCode::NO_CONTENT, ()).into_response()
+  axum::Json(user).into_response()
 }
 
 #[utoipa::path(
@@ -464,7 +516,7 @@ pub async fn update_user(
   tags = [USER_TAG],
   request_body = UpdateUserInfoRequest,
   responses(
-    (status = 204),
+    (status = 200, content_type = "application/json", body = UserInfo),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -504,7 +556,7 @@ pub async fn update_user_info(
         .into_response();
     }
   }
-  match repository::user_info::update_user_info(
+  let info = match repository::user_info::update_user_info(
     &state.pool,
     user_id,
     UserInfoUpdate {
@@ -524,16 +576,16 @@ pub async fn update_user_info(
   )
   .await
   {
-    Ok(_) => {}
+    Ok(info) => info,
     Err(e) => {
       log::error!("error updating user info: {}", e);
       return InternalError::internal_error()
         .with_application_error(INTERNAL_ERROR)
         .into_response();
     }
-  }
+  };
 
-  (StatusCode::NO_CONTENT, ()).into_response()
+  axum::Json(UserInfo::from(info)).into_response()
 }
 
 #[utoipa::path(

@@ -186,7 +186,7 @@ pub async fn create_application(
     ("application_id" = i64, Path, description = "Application ID")
   ),
   responses(
-    (status = 201, content_type = "application/json", body = Application),
+    (status = 200, content_type = "application/json", body = Application),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
