@@ -319,7 +319,7 @@ pub async fn update_user(
   params: UpdateUser,
 ) -> sqlx::Result<Option<UserRow>> {
   sqlx::query_as(
-    r#"UPDATE users SET "username" = COALESCE($2, "username"), "active" = COALESCE($3, "active") WHERE application_id = $1 AND id = $2 RETURNING *;"#,
+    r#"UPDATE users SET username = COALESCE($3, username), active = COALESCE($4, active) WHERE application_id = $1 AND id = $2 RETURNING *;"#,
   )
   .bind(application_id)
   .bind(user_id)

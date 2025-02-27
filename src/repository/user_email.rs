@@ -127,9 +127,9 @@ pub async fn update_user_email(
       let now = chrono::Utc::now().timestamp();
       let email: Option<UserEmailRow> = sqlx::query_as(
         r#"UPDATE user_emails SET 
-          "primary" = COALESCE($3, "primary"),
-          "verified" = COALESCE($4, "verified"),
-          "updated_at" = $5
+          primary = COALESCE($3, primary),
+          verified = COALESCE($4, verified),
+          updated_at = $5
         WHERE user_id = $1 AND id = $2
         RETURNING *;"#,
       )

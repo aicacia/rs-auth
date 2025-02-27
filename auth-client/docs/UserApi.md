@@ -289,7 +289,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_user
 
-> models::User update_user(user_id, update_user)
+> models::User update_user(user_id, update_user, application_id)
 
 
 ### Parameters
@@ -299,6 +299,7 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **user_id** | **i64** |  | [required] |
 **update_user** | [**UpdateUser**](UpdateUser.md) |  | [required] |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 
@@ -349,7 +350,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_user_info
 
-> models::UserInfo update_user_info(user_id, update_user_info_request)
+> models::UserInfo update_user_info(user_id, update_user_info_request, application_id)
 
 
 ### Parameters
@@ -359,6 +360,7 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **user_id** | **i64** |  | [required] |
 **update_user_info_request** | [**UpdateUserInfoRequest**](UpdateUserInfoRequest.md) |  | [required] |
+**application_id** | Option<**i64**> |  |  |
 
 ### Return type
 

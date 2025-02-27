@@ -403,6 +403,9 @@ pub async fn create_user(
   path = "/users/{user_id}",
   tags = [USER_TAG],
   request_body = UpdateUser,
+  params(
+    ApplicationId,
+  ),
   responses(
     (status = 200, content_type = "application/json", body = User),
     (status = 400, content_type = "application/json", body = Errors),
@@ -515,6 +518,9 @@ pub async fn update_user(
   path = "/users/{user_id}/info",
   tags = [USER_TAG],
   request_body = UpdateUserInfoRequest,
+  params(
+    ApplicationId,
+  ),
   responses(
     (status = 200, content_type = "application/json", body = UserInfo),
     (status = 400, content_type = "application/json", body = Errors),

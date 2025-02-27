@@ -457,14 +457,18 @@ pub async fn get_user_by_id(configuration: &configuration::Configuration, user_i
     }
 }
 
-pub async fn update_user(configuration: &configuration::Configuration, user_id: i64, update_user: models::UpdateUser) -> Result<models::User, Error<UpdateUserError>> {
+pub async fn update_user(configuration: &configuration::Configuration, user_id: i64, update_user: models::UpdateUser, application_id: Option<i64>) -> Result<models::User, Error<UpdateUserError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_update_user = update_user;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}", configuration.base_path, user_id=p_user_id);
     let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -523,14 +527,18 @@ pub async fn update_user_email(configuration: &configuration::Configuration, use
     }
 }
 
-pub async fn update_user_info(configuration: &configuration::Configuration, user_id: i64, update_user_info_request: models::UpdateUserInfoRequest) -> Result<models::UserInfo, Error<UpdateUserInfoError>> {
+pub async fn update_user_info(configuration: &configuration::Configuration, user_id: i64, update_user_info_request: models::UpdateUserInfoRequest, application_id: Option<i64>) -> Result<models::UserInfo, Error<UpdateUserInfoError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_update_user_info_request = update_user_info_request;
+    let p_application_id = application_id;
 
     let uri_str = format!("{}/users/{user_id}/info", configuration.base_path, user_id=p_user_id);
     let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
 
+    if let Some(ref param_value) = p_application_id {
+        req_builder = req_builder.query(&[("application_id", &param_value.to_string())]);
+    }
     if let Some(ref user_agent) = configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }

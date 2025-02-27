@@ -40,7 +40,7 @@ pub async fn get_user_info_by_user_id(
   sqlx::query_as(
     r#"SELECT ui.*
     FROM user_infos ui
-    FROM users u on ui.user_id = u.id
+    JOIN users u on ui.user_id = u.id
     WHERE u.application_id = $1 AND ui.user_id = $2
     LIMIT 1;"#,
   )

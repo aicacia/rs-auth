@@ -3208,6 +3208,18 @@
         "operationId": "update_user",
         "parameters": [
           {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          },
+          {
             "name": "user_id",
             "in": "path",
             "required": true,
@@ -3624,6 +3636,18 @@
         ],
         "operationId": "update_user_info",
         "parameters": [
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            }
+          },
           {
             "name": "user_id",
             "in": "path",

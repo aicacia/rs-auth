@@ -131,9 +131,9 @@ pub async fn update_user_phone_number(
       let now = chrono::Utc::now().timestamp();
       let phone_number: Option<UserPhoneNumberRow> = sqlx::query_as(
         r#"UPDATE user_phone_numbers SET 
-          "primary" = COALESCE($3, "primary"),
-          "verified" = COALESCE($4, "verified"),
-          "updated_at" = $5
+          primary = COALESCE($3, primary),
+          verified = COALESCE($4, verified),
+          updated_at = $5
         WHERE user_id = $1 AND id = $2
         RETURNING *;"#,
       )
