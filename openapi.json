@@ -4659,7 +4659,7 @@
         ],
         "properties": {
           "algorithm": {
-            "type": "string"
+            "$ref": "#/components/schemas/Algorithm"
           },
           "audience": {
             "type": [
