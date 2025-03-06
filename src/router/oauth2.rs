@@ -298,7 +298,7 @@ pub async fn oauth2_callback(
   {
     Ok(token_response) => token_response,
     Err(e) => {
-      log::error!("error exchanging code for token: {}", e);
+      log::error!("error exchanging code for token: {:?}", e);
       errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("oauth2-code-exchange", INTERNAL_ERROR);
       return redirect_with_query(
