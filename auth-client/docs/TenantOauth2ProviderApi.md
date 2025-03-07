@@ -1,12 +1,12 @@
-# \Oauth2ProviderApi
+# \TenantOauth2ProviderApi
 
 All URIs are relative to *http://localhost:3000*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**create_tenant_oauth2_provider**](Oauth2ProviderApi.md#create_tenant_oauth2_provider) | **POST** /tenants/{tenant_id}/oauth2-providers | 
-[**delete_tenant_oauth2_provider**](Oauth2ProviderApi.md#delete_tenant_oauth2_provider) | **DELETE** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
-[**update_tenant_oauth2_provider**](Oauth2ProviderApi.md#update_tenant_oauth2_provider) | **PUT** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
+[**create_tenant_oauth2_provider**](TenantOauth2ProviderApi.md#create_tenant_oauth2_provider) | **POST** /tenants/{tenant_id}/oauth2-providers | 
+[**delete_tenant_oauth2_provider**](TenantOauth2ProviderApi.md#delete_tenant_oauth2_provider) | **DELETE** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
+[**update_tenant_oauth2_provider**](TenantOauth2ProviderApi.md#update_tenant_oauth2_provider) | **PUT** /tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id} | 
 
 
 
@@ -72,7 +72,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_tenant_oauth2_provider
 
-> update_tenant_oauth2_provider(tenant_id, tenant_oauht2_provider_id, update_tenant_o_auth2_provider, application_id)
+> models::TenantOAuth2Provider update_tenant_oauth2_provider(tenant_id, tenant_oauht2_provider_id, update_tenant_o_auth2_provider, application_id)
 
 
 ### Parameters
@@ -87,7 +87,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
- (empty response body)
+[**models::TenantOAuth2Provider**](TenantOAuth2Provider.md)
 
 ### Authorization
 

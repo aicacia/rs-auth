@@ -31,7 +31,7 @@ use register::REGISTER_TAG;
 use service_account::SERVICE_ACCOUNT_TAG;
 use sqlx::AnyPool;
 use tenant::TENANT_TAG;
-use tenant_oauth2_provider::OAUTH2_PROVIDER_TAG;
+use tenant_oauth2_provider::TENANT_OAUTH2_PROVIDER_TAG;
 use token::TOKEN_TAG;
 use tower_http::{compression::CompressionLayer, cors::CorsLayer, trace::TraceLayer};
 use user::USER_TAG;
@@ -66,7 +66,7 @@ unsafe impl Sync for RouterState {}
     (name = OPENAPI_TAG, description = "OpenApi endpoints"),
     (name = REGISTER_TAG, description = "Register endpoints"),
     (name = SERVICE_ACCOUNT_TAG, description = "Service Account endpoints"),
-    (name = OAUTH2_PROVIDER_TAG, description = "OAuth2 Provider endpoints"),
+    (name = TENANT_OAUTH2_PROVIDER_TAG, description = "Tenant OAuth2 Provider endpoints"),
     (name = TENANT_TAG, description = "Tenant endpoints"),
     (name = TOKEN_TAG, description = "Token endpoints"),
     (name = USER_TAG, description = "User endpoints"),

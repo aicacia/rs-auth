@@ -2590,7 +2590,7 @@
     "/tenants/{tenant_id}/oauth2-providers": {
       "post": {
         "tags": [
-          "oauth2-provider"
+          "tenant-oauth2-provider"
         ],
         "operationId": "create_tenant_oauth2_provider",
         "parameters": [
@@ -2699,7 +2699,7 @@
     "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}": {
       "put": {
         "tags": [
-          "oauth2-provider"
+          "tenant-oauth2-provider"
         ],
         "operationId": "update_tenant_oauth2_provider",
         "parameters": [
@@ -2747,8 +2747,15 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantOAuth2Provider"
+                }
+              }
+            }
           },
           "400": {
             "description": "",
@@ -2799,7 +2806,7 @@
       },
       "delete": {
         "tags": [
-          "oauth2-provider"
+          "tenant-oauth2-provider"
         ],
         "operationId": "delete_tenant_oauth2_provider",
         "parameters": [
@@ -5662,8 +5669,8 @@
       "description": "Service Account endpoints"
     },
     {
-      "name": "oauth2-provider",
-      "description": "OAuth2 Provider endpoints"
+      "name": "tenant-oauth2-provider",
+      "description": "Tenant OAuth2 Provider endpoints"
     },
     {
       "name": "tenant",

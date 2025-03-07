@@ -21,12 +21,12 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
 
-pub const OAUTH2_PROVIDER_TAG: &str = "oauth2-provider";
+pub const TENANT_OAUTH2_PROVIDER_TAG: &str = "tenant-oauth2-provider";
 
 #[utoipa::path(
   post,
   path = "/tenants/{tenant_id}/oauth2-providers",
-  tags = [OAUTH2_PROVIDER_TAG],
+  tags = [TENANT_OAUTH2_PROVIDER_TAG],
   request_body = CreateTenantOAuth2Provider,
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID"),
@@ -112,7 +112,7 @@ pub async fn create_tenant_oauth2_provider(
     Err(e) => {
       if e.to_string().to_lowercase().contains("unique constraint") {
         return InternalError::from(StatusCode::CONFLICT)
-          .with_error(OAUTH2_PROVIDER_TAG, ALREADY_EXISTS_ERROR)
+          .with_error(TENANT_OAUTH2_PROVIDER_TAG, ALREADY_EXISTS_ERROR)
           .into_response();
       }
       log::error!("error creating tenant OAuth2 provider: {}", e);
@@ -127,7 +127,7 @@ pub async fn create_tenant_oauth2_provider(
 #[utoipa::path(
   put,
   path = "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
-  tags = [OAUTH2_PROVIDER_TAG],
+  tags = [TENANT_OAUTH2_PROVIDER_TAG],
   request_body = UpdateTenantOAuth2Provider,
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID"),
@@ -135,7 +135,7 @@ pub async fn create_tenant_oauth2_provider(
     ApplicationId,
   ),
   responses(
-    (status = 204),
+    (status = 200, content_type = "application/json", body = TenantOAuth2Provider),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 404, content_type = "application/json", body = Errors),
@@ -176,7 +176,7 @@ pub async fn update_tenant_oauth2_provider(
         .into_response();
     }
   };
-  match repository::tenant_oauth2_provider::update_tenant_oauth2_provider(
+  let tenant = match repository::tenant_oauth2_provider::update_tenant_oauth2_provider(
     &state.pool,
     tenant_id,
     tenant_oauht2_provider_id,
@@ -193,7 +193,7 @@ pub async fn update_tenant_oauth2_provider(
   )
   .await
   {
-    Ok(Some(_)) => {}
+    Ok(Some(tenant)) => tenant,
     Ok(None) => {
       return InternalError::not_found()
         .with_error("tenant-oauth2-provider", NOT_FOUND_ERROR)
@@ -206,13 +206,14 @@ pub async fn update_tenant_oauth2_provider(
         .into_response();
     }
   };
-  (StatusCode::NO_CONTENT, ()).into_response()
+
+  axum::Json(TenantOAuth2Provider::from((state.config.as_ref(), tenant))).into_response()
 }
 
 #[utoipa::path(
   delete,
   path = "/tenants/{tenant_id}/oauth2-providers/{tenant_oauht2_provider_id}",
-  tags = [OAUTH2_PROVIDER_TAG],
+  tags = [TENANT_OAUTH2_PROVIDER_TAG],
   params(
     ("tenant_id" = i64, Path, description = "Tenant ID"),
     ("tenant_oauht2_provider_id" = i64, Path, description = "OAuth2 Provider ID"),
