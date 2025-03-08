@@ -88,6 +88,7 @@ pub async fn create_tenant_oauth2_provider(
   params.client_id = payload.client_id;
   params.client_secret = payload.client_secret;
   params.redirect_url = payload.redirect_url;
+  params.active = payload.active.unwrap_or(true) as i64;
   if let Some(auth_url) = payload.auth_url {
     params.auth_url = auth_url;
   }

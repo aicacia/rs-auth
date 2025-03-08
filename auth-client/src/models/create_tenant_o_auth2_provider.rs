@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CreateTenantOAuth2Provider {
+    #[serde(rename = "active", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    pub active: Option<Option<bool>>,
     #[serde(rename = "auth_url", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub auth_url: Option<Option<String>>,
     #[serde(rename = "callback_url", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
@@ -34,6 +36,7 @@ pub struct CreateTenantOAuth2Provider {
 impl CreateTenantOAuth2Provider {
     pub fn new(client_id: String, client_secret: String, provider: String, redirect_url: String) -> CreateTenantOAuth2Provider {
         CreateTenantOAuth2Provider {
+            active: None,
             auth_url: None,
             callback_url: None,
             client_id,

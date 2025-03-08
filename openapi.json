@@ -4310,6 +4310,12 @@
           "redirect_url"
         ],
         "properties": {
+          "active": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "auth_url": {
             "type": [
               "string",

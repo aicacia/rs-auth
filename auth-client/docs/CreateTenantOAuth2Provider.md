@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**active** | Option<**bool**> |  | [optional]
 **auth_url** | Option<**String**> |  | [optional]
 **callback_url** | Option<**String**> |  | [optional]
 **client_id** | **String** |  | 

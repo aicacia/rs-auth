@@ -99,6 +99,7 @@ pub struct CreateTenantOAuth2Provider {
   pub provider: String,
   pub client_id: String,
   pub client_secret: String,
+  pub active: i64,
   pub auth_url: String,
   pub token_url: String,
   pub callback_url: Option<String>,
@@ -171,15 +172,16 @@ pub async fn create_tenant_oauth2_provider(
 ) -> sqlx::Result<TenantOAuth2ProviderRow> {
   sqlx::query_as(
     r#"INSERT INTO tenant_oauth2_providers 
-      (tenant_id, provider, client_id, client_secret, auth_url, token_url, callback_url, redirect_url, scope) 
+      (tenant_id, provider, client_id, client_secret, active, auth_url, token_url, callback_url, redirect_url, scope) 
       VALUES 
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
       RETURNING *;"#,
   )
   .bind(tenant_id)
   .bind(params.provider)
   .bind(params.client_id)
   .bind(params.client_secret)
+  .bind(params.active)
   .bind(params.auth_url)
   .bind(params.token_url)
   .bind(params.callback_url)

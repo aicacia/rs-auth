@@ -48,6 +48,7 @@ pub struct CreateTenantOAuth2Provider {
   pub provider: String,
   pub client_id: String,
   pub client_secret: String,
+  pub active: Option<bool>,
   pub auth_url: Option<String>,
   pub token_url: Option<String>,
   pub callback_url: Option<String>,
