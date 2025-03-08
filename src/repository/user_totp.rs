@@ -7,7 +7,7 @@ use crate::core::database::run_transaction;
 #[derive(sqlx::FromRow)]
 pub struct UserTOTPRow {
   pub user_id: i64,
-  pub active: i32,
+  pub active: i64,
   pub algorithm: String,
   pub digits: i64,
   pub step: i64,

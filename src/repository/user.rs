@@ -9,7 +9,7 @@ pub struct UserRow {
   pub id: i64,
   pub application_id: i64,
   pub username: String,
-  pub active: i32,
+  pub active: i64,
   pub updated_at: i64,
   pub created_at: i64,
 }
@@ -309,7 +309,7 @@ async fn username_used(
 
 pub struct UpdateUser {
   pub username: Option<String>,
-  pub active: Option<i32>,
+  pub active: Option<i64>,
 }
 
 pub async fn update_user(

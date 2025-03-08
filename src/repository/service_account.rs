@@ -7,8 +7,8 @@ pub struct ServiceAccountRow {
   pub client_id: String,
   pub encrypted_client_secret: String,
   pub name: String,
-  pub active: i32,
-  pub admin: i32,
+  pub active: i64,
+  pub admin: i64,
   pub updated_at: i64,
   pub created_at: i64,
 }

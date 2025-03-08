@@ -5138,6 +5138,12 @@
       "UpdateUser": {
         "type": "object",
         "properties": {
+          "active": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "username": {
             "type": [
               "string",

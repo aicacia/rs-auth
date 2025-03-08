@@ -439,7 +439,7 @@ pub async fn update_user(
     user_id,
     repository::user::UpdateUser {
       username: payload.username,
-      active: None,
+      active: payload.active.map(|a| a as i64),
     },
   )
   .await

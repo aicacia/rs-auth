@@ -10,7 +10,7 @@ use crate::core::{
 pub struct UserPasswordRow {
   pub id: i64,
   pub user_id: i64,
-  pub active: i32,
+  pub active: i64,
   pub encrypted_password: String,
   pub updated_at: i64,
   pub created_at: i64,

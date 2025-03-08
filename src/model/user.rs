@@ -220,6 +220,7 @@ impl From<UserMFATypeRow> for UserMFAType {
 pub struct UpdateUser {
   #[validate(length(min = 1))]
   pub username: Option<String>,
+  pub active: Option<bool>,
 }
 
 #[derive(Validate, Deserialize, ToSchema)]

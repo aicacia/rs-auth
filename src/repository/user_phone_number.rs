@@ -6,8 +6,8 @@ use super::user::{from_users_query, UserRow};
 pub struct UserPhoneNumberRow {
   pub id: i64,
   pub user_id: i64,
-  pub primary: i32,
-  pub verified: i32,
+  pub primary: i64,
+  pub verified: i64,
   pub phone_number: String,
   pub updated_at: i64,
   pub created_at: i64,

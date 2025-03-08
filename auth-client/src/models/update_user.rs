@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UpdateUser {
+    #[serde(rename = "active", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    pub active: Option<Option<bool>>,
     #[serde(rename = "username", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub username: Option<Option<String>>,
 }
@@ -20,6 +22,7 @@ pub struct UpdateUser {
 impl UpdateUser {
     pub fn new() -> UpdateUser {
         UpdateUser {
+            active: None,
             username: None,
         }
     }
