@@ -116,7 +116,7 @@ pub async fn create_user_phone_number(
     ApplicationId,
   ),
   responses(
-    (status = 204),
+    (status = 200, content_type = "application/json", body = UserPhoneNumber),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -156,18 +156,19 @@ pub async fn update_user_phone_number(
         .into_response();
     }
   };
-  match repository::user_phone_number::update_user_phone_number(
+  let row = match repository::user_phone_number::update_user_phone_number(
     &state.pool,
     user_id,
     phone_number_id,
     repository::user_phone_number::UpdateUserPhoneNumber {
+      phone_number: payload.phone_number,
       primary: payload.primary,
       verified: payload.verified,
     },
   )
   .await
   {
-    Ok(Some(_)) => {}
+    Ok(Some(row)) => row,
     Ok(None) => {
       return InternalError::not_found()
         .with_error("phone-number", NOT_FOUND_ERROR)
@@ -180,7 +181,7 @@ pub async fn update_user_phone_number(
         .into_response();
     }
   };
-  (StatusCode::NO_CONTENT, ()).into_response()
+  (StatusCode::OK, axum::Json(UserPhoneNumber::from(row))).into_response()
 }
 
 #[utoipa::path(

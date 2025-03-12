@@ -4,6 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**phone_number** | Option<**String**> |  | [optional]
 **primary** | Option<**bool**> |  | [optional]
 **verified** | Option<**bool**> |  | [optional]
 

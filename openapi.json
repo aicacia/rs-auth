@@ -3515,8 +3515,15 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserEmail"
+                }
+              }
+            }
           },
           "400": {
             "description": "",
@@ -3775,8 +3782,15 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPhoneNumber"
+                }
+              }
+            }
           },
           "400": {
             "description": "",
@@ -4626,6 +4640,12 @@
       "ServiceAccountUpdateUserEmail": {
         "type": "object",
         "properties": {
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "primary": {
             "type": [
               "boolean",
@@ -4643,6 +4663,12 @@
       "ServiceAccountUpdateUserPhoneNumber": {
         "type": "object",
         "properties": {
+          "phone_number": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "primary": {
             "type": [
               "boolean",

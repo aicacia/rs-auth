@@ -116,6 +116,7 @@ pub async fn create_user_phone_number(
 
 #[derive(Default)]
 pub struct UpdateUserPhoneNumber {
+  pub phone_number: Option<String>,
   pub primary: Option<bool>,
   pub verified: Option<bool>,
 }
@@ -131,14 +132,16 @@ pub async fn update_user_phone_number(
       let now = chrono::Utc::now().timestamp();
       let phone_number: Option<UserPhoneNumberRow> = sqlx::query_as(
         r#"UPDATE user_phone_numbers SET 
-          primary = COALESCE($3, primary),
-          verified = COALESCE($4, verified),
-          updated_at = $5
+          phone_number = COALESCE($3, phone_number),
+          "primary" = COALESCE($4, "primary"),
+          verified = COALESCE($5, verified),
+          updated_at = $6
         WHERE user_id = $1 AND id = $2
         RETURNING *;"#,
       )
       .bind(user_id)
       .bind(phone_number_id)
+      .bind(params.phone_number)
       .bind(params.primary)
       .bind(params.verified)
       .bind(now)
@@ -167,7 +170,7 @@ pub async fn update_user_phone_number(
             SELECT upn.id 
             FROM user_phone_numbers upn 
             JOIN users u ON u.id = upn.user_id
-            WHERE u.user_id = $1 AND upn.verified = 1
+            WHERE upn.user_id = $1 AND upn.verified = 1
           )
           RETURNING *;"#,
         )

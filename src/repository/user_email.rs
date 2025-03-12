@@ -112,6 +112,7 @@ pub async fn create_user_email(
 
 #[derive(Default)]
 pub struct UpdateUserEmail {
+  pub email: Option<String>,
   pub primary: Option<bool>,
   pub verified: Option<bool>,
 }
@@ -127,14 +128,16 @@ pub async fn update_user_email(
       let now = chrono::Utc::now().timestamp();
       let email: Option<UserEmailRow> = sqlx::query_as(
         r#"UPDATE user_emails SET 
-          primary = COALESCE($3, primary),
-          verified = COALESCE($4, verified),
-          updated_at = $5
+          email = COALESCE($3, email),
+          "primary" = COALESCE($4, "primary"),
+          verified = COALESCE($5, verified),
+          updated_at = $6
         WHERE user_id = $1 AND id = $2
         RETURNING *;"#,
       )
       .bind(user_id)
       .bind(email_id)
+      .bind(params.email)
       .bind(params.primary)
       .bind(params.verified)
       .bind(now)
@@ -163,7 +166,7 @@ pub async fn update_user_email(
           SELECT ue.id 
           FROM user_emails ue 
           JOIN users u ON u.id = ue.user_id
-          WHERE u.user_id = $1 AND ue.verified = 1
+          WHERE ue.user_id = $1 AND ue.verified = 1
         )
         RETURNING *;"#,
         )

@@ -252,6 +252,7 @@ pub struct ServiceAccountCreateUserEmail {
 
 #[derive(Validate, Deserialize, ToSchema)]
 pub struct ServiceAccountUpdateUserEmail {
+  pub email: Option<String>,
   pub verified: Option<bool>,
   pub primary: Option<bool>,
 }
@@ -272,6 +273,7 @@ pub struct ServiceAccountCreateUserPhoneNumber {
 
 #[derive(Validate, Deserialize, ToSchema)]
 pub struct ServiceAccountUpdateUserPhoneNumber {
+  pub phone_number: Option<String>,
   pub verified: Option<bool>,
   pub primary: Option<bool>,
 }

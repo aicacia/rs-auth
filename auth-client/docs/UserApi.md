@@ -319,7 +319,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_user_email
 
-> update_user_email(user_id, email_id, service_account_update_user_email, application_id)
+> models::UserEmail update_user_email(user_id, email_id, service_account_update_user_email, application_id)
 
 
 ### Parameters
@@ -334,7 +334,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
- (empty response body)
+[**models::UserEmail**](UserEmail.md)
 
 ### Authorization
 
@@ -380,7 +380,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_user_phone_number
 
-> update_user_phone_number(user_id, phone_number_id, service_account_update_user_phone_number, application_id)
+> models::UserPhoneNumber update_user_phone_number(user_id, phone_number_id, service_account_update_user_phone_number, application_id)
 
 
 ### Parameters
@@ -395,7 +395,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
- (empty response body)
+[**models::UserPhoneNumber**](UserPhoneNumber.md)
 
 ### Authorization
 

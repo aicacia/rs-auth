@@ -110,7 +110,7 @@ pub async fn create_user_email(
     ApplicationId,
   ),
   responses(
-    (status = 204),
+    (status = 200, content_type = "application/json", body = UserEmail),
     (status = 400, content_type = "application/json", body = Errors),
     (status = 401, content_type = "application/json", body = Errors),
     (status = 500, content_type = "application/json", body = Errors),
@@ -150,18 +150,19 @@ pub async fn update_user_email(
         .into_response();
     }
   };
-  match repository::user_email::update_user_email(
+  let row = match repository::user_email::update_user_email(
     &state.pool,
     user_id,
     email_id,
     repository::user_email::UpdateUserEmail {
+      email: payload.email,
       primary: payload.primary,
       verified: payload.verified,
     },
   )
   .await
   {
-    Ok(Some(_)) => {}
+    Ok(Some(row)) => row,
     Ok(None) => {
       return InternalError::not_found()
         .with_error("email", NOT_FOUND_ERROR)
@@ -174,7 +175,7 @@ pub async fn update_user_email(
         .into_response();
     }
   };
-  (StatusCode::NO_CONTENT, ()).into_response()
+  (StatusCode::OK, axum::Json(UserEmail::from(row))).into_response()
 }
 
 #[utoipa::path(

@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ServiceAccountUpdateUserPhoneNumber {
+    #[serde(rename = "phone_number", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
+    pub phone_number: Option<Option<String>>,
     #[serde(rename = "primary", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
     pub primary: Option<Option<bool>>,
     #[serde(rename = "verified", default, with = "::serde_with::rust::double_option", skip_serializing_if = "Option::is_none")]
@@ -22,6 +24,7 @@ pub struct ServiceAccountUpdateUserPhoneNumber {
 impl ServiceAccountUpdateUserPhoneNumber {
     pub fn new() -> ServiceAccountUpdateUserPhoneNumber {
         ServiceAccountUpdateUserPhoneNumber {
+            phone_number: None,
             primary: None,
             verified: None,
         }

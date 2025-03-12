@@ -562,7 +562,7 @@ pub async fn update_user(configuration: &configuration::Configuration, user_id: 
     }
 }
 
-pub async fn update_user_email(configuration: &configuration::Configuration, user_id: i64, email_id: i64, service_account_update_user_email: models::ServiceAccountUpdateUserEmail, application_id: Option<i64>) -> Result<(), Error<UpdateUserEmailError>> {
+pub async fn update_user_email(configuration: &configuration::Configuration, user_id: i64, email_id: i64, service_account_update_user_email: models::ServiceAccountUpdateUserEmail, application_id: Option<i64>) -> Result<models::UserEmail, Error<UpdateUserEmailError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_email_id = email_id;
@@ -587,9 +587,20 @@ pub async fn update_user_email(configuration: &configuration::Configuration, use
     let resp = configuration.client.execute(req).await?;
 
     let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
 
     if !status.is_client_error() && !status.is_server_error() {
-        Ok(())
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::UserEmail`"))),
+            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::UserEmail`")))),
+        }
     } else {
         let content = resp.text().await?;
         let entity: Option<UpdateUserEmailError> = serde_json::from_str(&content).ok();
@@ -642,7 +653,7 @@ pub async fn update_user_info(configuration: &configuration::Configuration, user
     }
 }
 
-pub async fn update_user_phone_number(configuration: &configuration::Configuration, user_id: i64, phone_number_id: i64, service_account_update_user_phone_number: models::ServiceAccountUpdateUserPhoneNumber, application_id: Option<i64>) -> Result<(), Error<UpdateUserPhoneNumberError>> {
+pub async fn update_user_phone_number(configuration: &configuration::Configuration, user_id: i64, phone_number_id: i64, service_account_update_user_phone_number: models::ServiceAccountUpdateUserPhoneNumber, application_id: Option<i64>) -> Result<models::UserPhoneNumber, Error<UpdateUserPhoneNumberError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_user_id = user_id;
     let p_phone_number_id = phone_number_id;
@@ -667,9 +678,20 @@ pub async fn update_user_phone_number(configuration: &configuration::Configurati
     let resp = configuration.client.execute(req).await?;
 
     let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
 
     if !status.is_client_error() && !status.is_server_error() {
-        Ok(())
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::UserPhoneNumber`"))),
+            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::UserPhoneNumber`")))),
+        }
     } else {
         let content = resp.text().await?;
         let entity: Option<UpdateUserPhoneNumberError> = serde_json::from_str(&content).ok();
