@@ -7,7 +7,10 @@ use crate::{
   middleware::{
     authorization::ApplicationIdTenantId, claims::tenant_encoding_key, openid_claims::OpenIdProfile,
   },
-  repository::{tenant::TenantRow, tenant_oauth2_provider::TenantOAuth2ProviderRow},
+  repository::{
+    tenant::TenantRow,
+    tenant_oauth2_provider::{TenantOAuth2Client, TenantOAuth2ProviderRow},
+  },
 };
 
 #[derive(Deserialize, IntoParams)]
@@ -70,7 +73,7 @@ impl OAuth2State {
 
 pub fn oauth2_authorize_url<I>(
   config: &Config,
-  client: &oauth2::basic::BasicClient,
+  client: &TenantOAuth2Client,
   tenant: &TenantRow,
   register: bool,
   custom_state: Option<String>,
@@ -112,13 +115,12 @@ where
   Ok((url, csrf_token, pkce_code_verifier))
 }
 
-pub async fn oauth2_profile<TR, TT>(
+pub async fn oauth2_profile<TR>(
   tenant_oauth2_provider: &TenantOAuth2ProviderRow,
   token_response: TR,
 ) -> Result<OpenIdProfile, io::Error>
 where
-  TR: oauth2::TokenResponse<TT>,
-  TT: oauth2::TokenType,
+  TR: oauth2::TokenResponse,
 {
   match tenant_oauth2_provider.provider.as_str() {
     "google" => oauth2_google_profile(token_response.access_token().secret()).await,

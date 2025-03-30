@@ -2,6 +2,22 @@ use crate::core::config::Config;
 
 use super::tenant::from_tenants_query;
 
+pub type TenantOAuth2Client = oauth2::Client<
+  oauth2::StandardErrorResponse<oauth2::basic::BasicErrorResponseType>,
+  oauth2::StandardTokenResponse<oauth2::EmptyExtraTokenFields, oauth2::basic::BasicTokenType>,
+  oauth2::StandardTokenIntrospectionResponse<
+    oauth2::EmptyExtraTokenFields,
+    oauth2::basic::BasicTokenType,
+  >,
+  oauth2::StandardRevocableToken,
+  oauth2::StandardErrorResponse<oauth2::RevocationErrorResponseType>,
+  oauth2::EndpointSet,
+  oauth2::EndpointNotSet,
+  oauth2::EndpointNotSet,
+  oauth2::EndpointNotSet,
+  oauth2::EndpointSet,
+>;
+
 #[derive(sqlx::FromRow)]
 pub struct TenantOAuth2ProviderRow {
   pub id: i64,
@@ -34,14 +50,12 @@ impl TenantOAuth2ProviderRow {
   pub fn basic_client(
     &self,
     config: &Config,
-  ) -> Result<oauth2::basic::BasicClient, oauth2::url::ParseError> {
-    let client = oauth2::basic::BasicClient::new(
-      oauth2::ClientId::new(self.client_id.to_owned()),
-      Some(oauth2::ClientSecret::new(self.client_secret.to_owned())),
-      oauth2::AuthUrl::new(self.auth_url.to_owned())?,
-      Some(oauth2::TokenUrl::new(self.token_url.to_owned())?),
-    )
-    .set_redirect_uri(oauth2::RedirectUrl::new(self.callback_url(config))?);
+  ) -> Result<TenantOAuth2Client, oauth2::url::ParseError> {
+    let client = oauth2::basic::BasicClient::new(oauth2::ClientId::new(self.client_id.to_owned()))
+      .set_client_secret(oauth2::ClientSecret::new(self.client_secret.to_owned()))
+      .set_auth_uri(oauth2::AuthUrl::new(self.auth_url.to_owned())?)
+      .set_token_uri(oauth2::TokenUrl::new(self.token_url.to_owned())?)
+      .set_redirect_uri(oauth2::RedirectUrl::new(self.callback_url(config))?);
     Ok(client)
   }
 }

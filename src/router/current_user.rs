@@ -45,7 +45,7 @@ use http::StatusCode;
 use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
-use super::{oauth2::PKCE_CODE_VERIFIERS, RouterState};
+use super::{oauth2::pkce_code_verifiers, RouterState};
 
 pub const CURRENT_USER_TAG: &str = "current-user";
 
@@ -281,7 +281,7 @@ pub async fn create_current_user_add_oauth2_provider_url(
     }
   };
 
-  match PKCE_CODE_VERIFIERS.write() {
+  match pkce_code_verifiers().write() {
     Ok(mut map) => {
       map.insert(
         csrf_token.secret().to_owned(),

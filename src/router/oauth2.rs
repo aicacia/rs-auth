@@ -1,4 +1,7 @@
-use std::{sync::RwLock, time::Duration};
+use std::{
+  sync::{OnceLock, RwLock},
+  time::Duration,
+};
 
 use crate::{
   core::error::{
@@ -39,9 +42,11 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
 
-lazy_static! {
-  pub(crate) static ref PKCE_CODE_VERIFIERS: RwLock<ExpiringMap<String, oauth2::PkceCodeVerifier>> =
-    RwLock::new(ExpiringMap::new());
+pub(crate) fn pkce_code_verifiers() -> &'static RwLock<ExpiringMap<String, oauth2::PkceCodeVerifier>>
+{
+  static PKCE_CODE_VERIFIERS: OnceLock<RwLock<ExpiringMap<String, oauth2::PkceCodeVerifier>>> =
+    OnceLock::new();
+  PKCE_CODE_VERIFIERS.get_or_init(|| RwLock::new(ExpiringMap::new()))
 }
 
 pub const OAUTH2_TAG: &str = "oauth2";
@@ -128,7 +133,7 @@ pub async fn create_oauth2_url(
     }
   };
 
-  match PKCE_CODE_VERIFIERS.write() {
+  match pkce_code_verifiers().write() {
     Ok(mut map) => {
       map.insert(
         csrf_token.secret().to_owned(),
@@ -260,7 +265,7 @@ pub async fn oauth2_callback(
     }
   };
 
-  let pkce_code_verifier = match PKCE_CODE_VERIFIERS.write() {
+  let pkce_code_verifier = match pkce_code_verifiers().write() {
     Ok(mut map) => match map.remove_entry(&oauth2_state_token_string) {
       Some((_, pkce_code_verifier)) => pkce_code_verifier,
       None => {
@@ -290,10 +295,28 @@ pub async fn oauth2_callback(
     }
   };
 
+  let http_client = match reqwest::ClientBuilder::new()
+    .redirect(reqwest::redirect::Policy::none())
+    .build()
+  {
+    Ok(http_client) => http_client,
+    Err(e) => {
+      log::error!("error building HTTP client: {:?}", e);
+      errors.status(StatusCode::INTERNAL_SERVER_ERROR);
+      errors.error("http-client", INTERNAL_ERROR);
+      return redirect_with_query(
+        redirect_url,
+        None,
+        oauth2_state_token.claims.custom_state,
+        Some(errors),
+      )
+      .into_response();
+    }
+  };
   let token_response = match basic_client
     .exchange_code(oauth2::AuthorizationCode::new(code))
     .set_pkce_verifier(pkce_code_verifier)
-    .request_async(oauth2::reqwest::async_http_client)
+    .request_async(&http_client)
     .await
   {
     Ok(token_response) => token_response,
