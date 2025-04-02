@@ -224,6 +224,14 @@ pub struct UpdateUser {
 }
 
 #[derive(Validate, Deserialize, ToSchema)]
+pub struct UpdateUserPassword {
+  #[validate(length(min = 6), must_match(other = "password_confirmation"))]
+  pub password: String,
+  #[validate(length(min = 6))]
+  pub password_confirmation: String,
+}
+
+#[derive(Validate, Deserialize, ToSchema)]
 pub struct CreateUser {
   #[validate(length(min = 1))]
   pub username: String,

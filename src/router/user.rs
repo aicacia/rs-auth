@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use crate::{
   core::error::{
-    Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, NOT_ALLOWED_ERROR, NOT_FOUND_ERROR,
+    Errors, InternalError, ALREADY_EXISTS_ERROR, ALREADY_USED_ERROR, INTERNAL_ERROR,
+    NOT_ALLOWED_ERROR, NOT_FOUND_ERROR,
   },
   middleware::{
     json::Json, service_account_authorization::ServiceAccountAuthorization,
@@ -11,7 +12,9 @@ use crate::{
   model::{
     current_user::UpdateUserInfoRequest,
     token::Token,
-    user::{CreateUser, UpdateUser, User, UserInfo, UserPagination, UserResetPassword},
+    user::{
+      CreateUser, UpdateUser, UpdateUserPassword, User, UserInfo, UserPagination, UserResetPassword,
+    },
     util::{ApplicationId, OffsetAndLimit},
   },
   repository::{
@@ -37,6 +40,7 @@ use axum::{
 };
 use chrono::DateTime;
 use http::StatusCode;
+use serde_json::json;
 use utoipa::OpenApi;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
@@ -514,6 +518,80 @@ pub async fn update_user(
 }
 
 #[utoipa::path(
+  post,
+  path = "/users/{user_id}/password",
+  tags = [USER_TAG],
+  request_body = UpdateUserPassword,
+  params(
+    ApplicationId,
+  ),
+  responses(
+    (status = 204),
+    (status = 400, content_type = "application/json", body = Errors),
+    (status = 401, content_type = "application/json", body = Errors),
+    (status = 500, content_type = "application/json", body = Errors),
+  ),
+  security(
+    ("Authorization" = [])
+  )
+)]
+pub async fn update_user_password(
+  State(state): State<RouterState>,
+  ServiceAccountAuthorization {
+    service_account, ..
+  }: ServiceAccountAuthorization,
+  Path(user_id): Path<i64>,
+  Query(application_id): Query<ApplicationId>,
+  ValidatedJson(payload): ValidatedJson<UpdateUserPassword>,
+) -> impl IntoResponse {
+  let application_id = application_id
+    .application_id
+    .unwrap_or(service_account.application_id);
+  if !service_account.is_admin() && service_account.application_id != application_id {
+    return InternalError::unauthorized()
+      .with_error("update-user", NOT_ALLOWED_ERROR)
+      .into_response();
+  }
+  match repository::user_password::create_user_password(
+    &state.pool,
+    state.config.clone(),
+    user_id,
+    &payload.password,
+  )
+  .await
+  {
+    Ok(_) => {}
+    Err(e) => {
+      match &e {
+        sqlx::Error::Configuration(e) => {
+          if e.to_string().contains("password_already_used") {
+            return InternalError::bad_request()
+              .with_error(
+                "password",
+                (
+                  ALREADY_USED_ERROR,
+                  HashMap::from([(
+                    "password.history".to_owned(),
+                    json!(state.config.password.history),
+                  )]),
+                ),
+              )
+              .into_response();
+          }
+        }
+        _ => {}
+      }
+      log::error!("error creating user password: {}", e);
+      return InternalError::internal_error()
+        .with_application_error(INTERNAL_ERROR)
+        .into_response();
+    }
+  };
+
+  (StatusCode::NO_CONTENT, ()).into_response()
+}
+
+#[utoipa::path(
   put,
   path = "/users/{user_id}/info",
   tags = [USER_TAG],
@@ -722,6 +800,7 @@ pub fn create_router(state: RouterState) -> OpenApiRouter {
     .routes(routes!(create_user))
     .routes(routes!(create_user_reset_password_token))
     .routes(routes!(update_user))
+    .routes(routes!(update_user_password))
     .routes(routes!(update_user_info))
     .routes(routes!(delete_user))
     .with_state(state)
