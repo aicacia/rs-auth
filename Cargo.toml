@@ -2,11 +2,11 @@
 authors = ["nathanfaucett@gmail.com"]
 default-run = "auth"
 description = "Aicacia Auth API provides authentication services for applications."
-edition = "2021"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 name = "auth"
 repository = "https://github.com/aicacia/rs-auth"
-rust-version = "1.56"
+rust-version = "1.85"
 version = "0.1.0"
 
 [lib]
@@ -70,7 +70,7 @@ reqwest = { version = "0.12", default-features = false, features = [
   "json",
 ] }
 
-tokio = { version = "1.44", default-features = false, features = [
+tokio = { version = "1.45", default-features = false, features = [
   "rt",
   "rt-multi-thread",
   "macros",
@@ -94,7 +94,7 @@ validator = { version = "0.20", default-features = false, features = [
 ] }
 build-time = { version = "0.1", default-features = false }
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
-uuid = { version = "1.16", features = ["serde", "v4"] }
+uuid = { version = "1.17", features = ["serde", "v4"] }
 atomicoption = "0.1"
 urlencoding = { version = "2.1", default-features = false }
 form_urlencoded = { version = "1.2", default-features = false }
@@ -108,7 +108,7 @@ oauth2 = { version = "5.0", default-features = false, features = [
   "reqwest",
   "rustls-tls",
 ] }
-totp-rs = { version = "5.6", default-features = false, features = [
+totp-rs = { version = "5.7", default-features = false, features = [
   "gen_secret",
 ] }
 
