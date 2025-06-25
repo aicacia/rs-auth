@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS "key_values" CASCADE;
+
 DROP TABLE IF EXISTS "user_oauth2_providers" CASCADE;
 DROP TABLE IF EXISTS "user_phone_numbers" CASCADE;
 DROP TABLE IF EXISTS "user_emails" CASCADE;

@@ -98,7 +98,6 @@ uuid = { version = "1.17", features = ["serde", "v4"] }
 atomicoption = "0.1"
 urlencoding = { version = "2.1", default-features = false }
 form_urlencoded = { version = "1.2", default-features = false }
-expiringmap = { version = "0.1", default-features = false }
 rust-argon2 = { version = "2.1", default-features = false }
 rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
 jsonwebtoken = { version = "9.3", default-features = false }

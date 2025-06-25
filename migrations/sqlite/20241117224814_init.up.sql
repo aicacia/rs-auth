@@ -191,3 +191,12 @@ CREATE UNIQUE INDEX "user_oauth2_providers_id_unique_idx" ON "user_oauth2_provid
 CREATE UNIQUE INDEX "user_oauth2_providers_tenant_oauth2_provider_id_email_unique_idx" ON "user_oauth2_providers" ("tenant_oauth2_provider_id", "email");
 CREATE INDEX "user_oauth2_providers_user_id_idx" ON "user_oauth2_providers" ("user_id");
 CREATE INDEX "user_oauth2_providers_tenant_oauth2_provider_id_idx" ON "user_oauth2_providers" ("tenant_oauth2_provider_id");
+
+CREATE TABLE "key_values" (
+  "key" TEXT NOT NULL PRIMARY KEY,
+  "value" TEXT NOT NULL,
+  "expires_at" INTEGER,
+  "updated_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+  "created_at" INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+CREATE UNIQUE INDEX "key_values_key_unique_idx" ON "key_values" ("key");

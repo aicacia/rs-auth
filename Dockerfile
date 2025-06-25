@@ -1,4 +1,4 @@
-FROM rust:1.84-bookworm AS builder
+FROM rust:1.87-bookworm AS builder
 
 RUN apt update && apt -yq upgrade
 RUN apt -yq install musl-tools libpq-dev

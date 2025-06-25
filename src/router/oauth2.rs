@@ -1,28 +1,24 @@
-use std::{
-  sync::{OnceLock, RwLock},
-  time::Duration,
-};
-
 use crate::{
   core::error::{
-    Errors, InternalError, ALREADY_EXISTS_ERROR, INTERNAL_ERROR, INVALID_ERROR, NOT_ALLOWED_ERROR,
+    ALREADY_EXISTS_ERROR, Errors, INTERNAL_ERROR, INVALID_ERROR, InternalError, NOT_ALLOWED_ERROR,
     NOT_FOUND_ERROR, PARSE_ERROR, REQUIRED_ERROR,
   },
   middleware::{
     claims::{
-      parse_jwt, parse_jwt_no_validation, BasicClaims, Claims, TOKEN_SUB_TYPE_USER,
-      TOKEN_TYPE_AUTHORIZATION_CODE,
+      BasicClaims, Claims, TOKEN_SUB_TYPE_USER, TOKEN_TYPE_AUTHORIZATION_CODE, parse_jwt,
+      parse_jwt_no_validation,
     },
-    openid_claims::{parse_scopes, SCOPE_ADDRESS, SCOPE_EMAIL, SCOPE_PHONE, SCOPE_PROFILE},
+    openid_claims::{SCOPE_ADDRESS, SCOPE_EMAIL, SCOPE_PHONE, SCOPE_PROFILE, parse_scopes},
     tenant_id::TenantId,
   },
   model::oauth2::{
-    oauth2_authorize_url, oauth2_profile, OAuth2CallbackQuery, OAuth2Query, OAuth2State,
+    OAuth2CallbackQuery, OAuth2Query, OAuth2State, oauth2_authorize_url, oauth2_profile,
   },
   repository::{
+    kv,
     tenant::get_tenant_by_id,
     tenant_oauth2_provider::get_active_tenant_oauth2_provider,
-    user::{create_user_with_oauth2, get_user_by_id, CreateUserWithOAuth2},
+    user::{CreateUserWithOAuth2, create_user_with_oauth2, get_user_by_id},
     user_info::UserInfoUpdate,
     user_oauth2_provider::{
       create_user_oauth2_provider_and_email, get_user_by_oauth2_provider_and_email,
@@ -34,20 +30,12 @@ use axum::{
   extract::{Path, Query, State},
   response::IntoResponse,
 };
-use chrono::DateTime;
-use expiringmap::ExpiringMap;
-use http::{header::LOCATION, HeaderValue, StatusCode};
+use chrono::{DateTime, Duration};
+use http::{HeaderValue, StatusCode, header::LOCATION};
 use reqwest::Url;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use super::RouterState;
-
-pub(crate) fn pkce_code_verifiers() -> &'static RwLock<ExpiringMap<String, oauth2::PkceCodeVerifier>>
-{
-  static PKCE_CODE_VERIFIERS: OnceLock<RwLock<ExpiringMap<String, oauth2::PkceCodeVerifier>>> =
-    OnceLock::new();
-  PKCE_CODE_VERIFIERS.get_or_init(|| RwLock::new(ExpiringMap::new()))
-}
 
 pub const OAUTH2_TAG: &str = "oauth2";
 
@@ -133,20 +121,20 @@ pub async fn create_oauth2_url(
     }
   };
 
-  match pkce_code_verifiers().write() {
-    Ok(mut map) => {
-      map.insert(
-        csrf_token.secret().to_owned(),
-        pkce_code_verifier,
-        Duration::from_secs(state.config.oauth2.code_timeout_in_seconds),
-      );
-    }
-    Err(e) => {
-      log::error!("error aquiring PKCE verifier map: {}", e);
-      return InternalError::internal_error()
-        .with_application_error(INTERNAL_ERROR)
-        .into_response();
-    }
+  if !kv::set(
+    &state.pool,
+    csrf_token.secret(),
+    pkce_code_verifier.secret(),
+    Some(Duration::seconds(
+      state.config.oauth2.code_timeout_in_seconds as i64,
+    )),
+  )
+  .await
+  {
+    log::error!("error setting pkce code verifier");
+    return InternalError::internal_error()
+      .with_application_error(INTERNAL_ERROR)
+      .into_response();
   }
 
   url.as_str().to_owned().into_response()
@@ -265,24 +253,10 @@ pub async fn oauth2_callback(
     }
   };
 
-  let pkce_code_verifier = match pkce_code_verifiers().write() {
-    Ok(mut map) => match map.remove_entry(&oauth2_state_token_string) {
-      Some((_, pkce_code_verifier)) => pkce_code_verifier,
-      None => {
-        log::error!("No PKCE code verifier found for CSRF token");
-        errors.status(StatusCode::INTERNAL_SERVER_ERROR);
-        errors.error("pkce-code-verifier", INTERNAL_ERROR);
-        return redirect_with_query(
-          redirect_url,
-          None,
-          oauth2_state_token.claims.custom_state,
-          Some(errors),
-        )
-        .into_response();
-      }
-    },
-    Err(e) => {
-      log::error!("error aquiring PKCE verifier map: {}", e);
+  let pkce_code_verifier = match kv::delete(&state.pool, &oauth2_state_token_string).await {
+    Some(value) => oauth2::PkceCodeVerifier::new(value),
+    _ => {
+      log::error!("No PKCE code verifier found for CSRF token");
       errors.status(StatusCode::INTERNAL_SERVER_ERROR);
       errors.error("pkce-code-verifier", INTERNAL_ERROR);
       return redirect_with_query(

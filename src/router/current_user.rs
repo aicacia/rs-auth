@@ -1,10 +1,10 @@
-use std::{collections::HashMap, time::Duration};
+use std::collections::HashMap;
 
 use crate::{
   core::{
     error::{
-      Errors, InternalError, ALREADY_EXISTS_ERROR, ALREADY_USED_ERROR, INTERNAL_ERROR,
-      INVALID_ERROR, NOT_FOUND_ERROR,
+      ALREADY_EXISTS_ERROR, ALREADY_USED_ERROR, Errors, INTERNAL_ERROR, INVALID_ERROR,
+      InternalError, NOT_FOUND_ERROR,
     },
     openapi::AUTHORIZATION_HEADER,
   },
@@ -24,11 +24,11 @@ use crate::{
     user::{UpdateUser, User, UserOAuth2Provider},
   },
   repository::{
-    self,
+    self, kv,
     tenant_oauth2_provider::get_active_tenant_oauth2_provider,
     user_config::get_user_config_by_user_id,
     user_email::get_user_emails_by_user_id,
-    user_info::{get_user_info_by_user_id, UserInfoUpdate},
+    user_info::{UserInfoUpdate, get_user_info_by_user_id},
     user_mfa::get_user_mfa_types_by_user_id,
     user_oauth2_provider::get_user_oauth2_providers_by_user_id,
     user_password::{create_user_password, get_user_active_password_by_user_id},
@@ -40,12 +40,12 @@ use axum::{
   extract::{Path, Query, State},
   response::IntoResponse,
 };
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use http::StatusCode;
 use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
-use super::{oauth2::pkce_code_verifiers, RouterState};
+use super::RouterState;
 
 pub const CURRENT_USER_TAG: &str = "current-user";
 
@@ -281,20 +281,20 @@ pub async fn create_current_user_add_oauth2_provider_url(
     }
   };
 
-  match pkce_code_verifiers().write() {
-    Ok(mut map) => {
-      map.insert(
-        csrf_token.secret().to_owned(),
-        pkce_code_verifier,
-        Duration::from_secs(state.config.oauth2.code_timeout_in_seconds),
-      );
-    }
-    Err(e) => {
-      log::error!("error aquiring PKCE verifier map: {}", e);
-      return InternalError::internal_error()
-        .with_application_error(INTERNAL_ERROR)
-        .into_response();
-    }
+  if !kv::set(
+    &state.pool,
+    csrf_token.secret(),
+    pkce_code_verifier.secret(),
+    Some(Duration::seconds(
+      state.config.oauth2.code_timeout_in_seconds as i64,
+    )),
+  )
+  .await
+  {
+    log::error!("error setting pkce code verifier");
+    return InternalError::internal_error()
+      .with_application_error(INTERNAL_ERROR)
+      .into_response();
   }
 
   url.as_str().to_owned().into_response()

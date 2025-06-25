@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS "key_values";
+
 DROP TABLE IF EXISTS "user_oauth2_providers";
 DROP TABLE IF EXISTS "user_phone_numbers";
 DROP TABLE IF EXISTS "user_emails";

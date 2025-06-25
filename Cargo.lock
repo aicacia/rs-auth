@@ -106,7 +106,6 @@ dependencies = [
  "clap_complete",
  "config",
  "dotenvy",
- "expiringmap",
  "form_urlencoded",
  "futures-util",
  "http",
@@ -603,12 +602,6 @@ dependencies = [
  "parking",
  "pin-project-lite",
 ]
-
-[[package]]
-name = "expiringmap"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0e78e7e8e4096f86dbf0d9098e7222ee251664edb46183ab5d43e847130cf3f"
 
 [[package]]
 name = "flate2"

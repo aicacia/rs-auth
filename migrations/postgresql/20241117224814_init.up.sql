@@ -176,3 +176,12 @@ CREATE TABLE "user_oauth2_providers" (
   CONSTRAINT "user_oauth2_providers_tenant_oauth2_provider_id_fk" FOREIGN KEY("tenant_oauth2_provider_id") REFERENCES "tenant_oauth2_providers" ("id") ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX "user_oauth2_providers_tenant_oauth2_provider_id_email_unique_idx" ON "user_oauth2_providers" ("tenant_oauth2_provider_id", "email");
+
+
+CREATE TABLE "key_values" (
+  "key" TEXT NOT NULL PRIMARY KEY,
+  "value" TEXT NOT NULL,
+	"expires_at" BIGINT,
+	"updated_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc'),
+	"created_at" BIGINT NOT NULL DEFAULT extract(epoch from now() at time zone 'utc')
+);
